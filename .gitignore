@@ -1,0 +1,79 @@
+# =======================================================
+# Git Ignore Configuration for Étude Math Pro
+# =======================================================
+
+# Python & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.spec
+develop-eggs/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Testing & Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Environment Variables & Secrets
+.env
+.env.*
+!.env.example
+secrets/
+credentials/
+*.pem
+*.key
+*.cert
+*.p12
+
+# Databases (SQLite & local DB files)
+*.db
+*.sqlite
+*.sqlite3
+*.sqlite-journal
+*.db-journal
+backend/data/*.db
+backend/data/*.sqlite*
+
+# Logs
+logs/
+*.log
+
+# Generated Reports & PDFs
+reports/
+backend/reports/
+backend/data/reports/
+*.pdf
+
+# Operating System & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL Cloud/Local
+  db:
+    image: postgres:15-alpine
+    container_name: mathprof_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: mathprof_user
+      POSTGRES_PASSWORD: mathprof_secret_password_2026
+      POSTGRES_DB: mathprof_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mathprof_user -d mathprof_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Application Web & API Étude Math Pro
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mathprof_app
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 8000
+      SECRET_KEY: math-prof-secret-super-key-2026-docker-prod
+      DATABASE_URL: postgresql://mathprof_user:mathprof_secret_password_2026@db:5432/mathprof_db
+      ENVIRONMENT: production
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/data:/app/backend/data
+      - ./reports:/app/reports
+
+volumes:
+  pgdata:

@@ -1,0 +1,281 @@
+/* MathsProf Modern Styling */
+
+/* Custom Smooth Transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Nav Link States */
+.nav-link {
+  color: #475569;
+  font-weight: 600;
+  position: relative;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.nav-link:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+  transform: translateX(2px);
+}
+.nav-link:hover i {
+  color: #4f46e5;
+}
+.nav-link.active {
+  background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
+  color: #4338ca;
+  font-weight: 700;
+  border-left: 3px solid #4f46e5;
+  box-shadow: 0 1px 3px 0 rgba(79, 70, 229, 0.08);
+}
+.nav-link.active i {
+  color: #4f46e5;
+}
+
+/* Mobile Nav Link States */
+.mobile-nav-link {
+  color: #475569;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.mobile-nav-link:hover, .mobile-nav-link.active {
+  background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
+  color: #4338ca;
+  font-weight: 700;
+  border-left: 3px solid #4f46e5;
+}
+.mobile-nav-link.active i {
+  color: #4f46e5;
+}
+
+/* Mobile Bottom Nav States */
+.mobile-bottom-nav {
+  color: #64748b;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mobile-bottom-nav:hover {
+  color: #334155;
+}
+.mobile-bottom-nav.active {
+  color: #4f46e5;
+  font-weight: 800;
+  transform: translateY(-2px);
+}
+.mobile-bottom-nav.active i {
+  color: #4f46e5;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
+.animate-slide-right {
+  animation: slideRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Print Styles for Receipts */
+@media print {
+  @page {
+    margin: 10mm;
+    size: auto;
+  }
+  html, body {
+    overflow: visible !important;
+    height: auto !important;
+    background: #ffffff !important;
+  }
+  #app-root, #modal-backdrop, .no-print, header, aside, nav, button {
+    display: none !important;
+  }
+  #modal-container {
+    display: block !important;
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  #modal-content {
+    display: block !important;
+    position: static !important;
+    max-height: none !important;
+    overflow: visible !important;
+    transform: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: transparent !important;
+  }
+  #modal-content > div:first-child {
+    display: none !important;
+  }
+  #printable-receipt {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 190mm !important;
+    margin: 0 auto !important;
+    padding: 10mm !important;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    visibility: visible !important;
+  }
+  #printable-receipt * {
+    visibility: visible !important;
+  }
+}
+
+/* ==========================================================================
+   Realistic Handwriting & Paper Styles
+   ========================================================================== */
+
+/* A4 Sheet Dimensions & Paper Base */
+.a4-sheet {
+  width: 100%;
+  min-height: 1120px;
+  background-color: #ffffff;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Left Red Margin Line for French Notebook Feel */
+.notebook-left-margin {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 68px;
+  width: 1.5px;
+  background-color: rgba(239, 68, 68, 0.4); /* Subtle red teacher margin */
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* 1. French Séyès Ruled Paper (Grands Carreaux) */
+.paper-texture-seyes {
+  background-color: #fdfdfd;
+  background-image: 
+    linear-gradient(to right, rgba(147, 197, 253, 0.25) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(147, 197, 253, 0.35) 1.5px, transparent 1.5px),
+    linear-gradient(to bottom, rgba(147, 197, 253, 0.15) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 32px 8px;
+}
+
+/* 2. Petits Carreaux (5x5mm Millimeter Grid Paper) */
+.paper-texture-squared_5mm {
+  background-color: #ffffff;
+  background-image: 
+    linear-gradient(to right, rgba(148, 163, 184, 0.18) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(148, 163, 184, 0.18) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+/* 3. Ligné Simple (College Lined Paper) */
+.paper-texture-lined {
+  background-color: #ffffff;
+  background-image: linear-gradient(to bottom, rgba(148, 163, 184, 0.22) 1px, transparent 1px);
+  background-size: 100% 28px;
+}
+
+/* 4. Blanc Pédagogique (Pure Clean White with subtle canvas feel) */
+.paper-texture-blank {
+  background-color: #ffffff;
+  background-image: none;
+}
+
+/* Handwriting Typography & Organic Micro-Variations */
+.handwritten-body {
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+.handwritten-word {
+  display: inline-block;
+  transform-origin: bottom center;
+  transition: transform 0.15s ease;
+}
+
+/* Handwritten Math Formulas Styling */
+.handwritten-math-block .katex-display {
+  margin: 0.5em 0 !important;
+}
+
+.handwritten-math-block .katex {
+  font-family: inherit !important;
+  font-size: 1.18em !important;
+}
+
+/* KaTeX custom handwritten stroke look */
+.handwritten-math-block .katex .frac-line {
+  border-bottom-width: 1.8px !important;
+  border-radius: 2px !important;
+}
+
+.handwritten-math-block .katex .sqrt > .root {
+  stroke-width: 1.8px !important;
+}
+
+/* Handwritten Boxed Results */
+.handwritten-boxed-result {
+  transition: transform 0.2s ease;
+}
+
+.handwritten-boxed-result:hover {
+  transform: scale(1.01);
+}
+
+/* Print Specific Rules for High-Res A4 Output */
+@media print {
+  body {
+    background: white !important;
+  }
+
+  header, aside, nav, #quick-action-menu, .no-print, .top-toolbar {
+    display: none !important;
+  }
+
+  #main-view {
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  #a4-correction-sheet {
+    box-shadow: none !important;
+    width: 100% !important;
+    min-height: 100% !important;
+    page-break-after: always;
+  }
+
+  .exercise-card {
+    page-break-inside: avoid;
+  }
+}
+
