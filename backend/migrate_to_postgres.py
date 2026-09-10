@@ -232,12 +232,18 @@ def migrate(sqlite_path: str, pg_url: str):
                 pg_db.add(MonthlyReport(
                     id=r.id,
                     user_id=r.user_id or 1,
-                    month=r.month,
+                    month_key=r.month_key,
+                    month_name=r.month_name,
                     year=r.year,
-                    report_type=r.report_type,
-                    data_json=r.data_json,
-                    pdf_path=r.pdf_path,
-                    created_at=r.created_at
+                    month_num=r.month_num,
+                    total_students=r.total_students,
+                    paid_count=r.paid_count,
+                    unpaid_count=r.unpaid_count,
+                    total_collected=r.total_collected,
+                    total_remaining=r.total_remaining,
+                    total_expected=r.total_expected,
+                    pdf_filename=r.pdf_filename,
+                    generated_at=r.generated_at
                 ))
         pg_db.commit()
         print(f"   ✅ {len(reports)} rapport(s) mensuel(s) transféré(s)")
@@ -271,12 +277,13 @@ def migrate(sqlite_path: str, pg_url: str):
                     id=hp.id,
                     user_id=hp.user_id or 1,
                     name=hp.name,
-                    slant=hp.slant,
-                    pressure=hp.pressure,
-                    irregularity=hp.irregularity,
-                    spacing=hp.spacing,
-                    baseline_drift=hp.baseline_drift,
-                    sample_text=hp.sample_text,
+                    base_font=hp.base_font,
+                    slant_angle=hp.slant_angle,
+                    stroke_width=hp.stroke_width,
+                    jitter_intensity=hp.jitter_intensity,
+                    baseline_variance=hp.baseline_variance,
+                    letter_spacing=hp.letter_spacing,
+                    sample_images=hp.sample_images,
                     created_at=hp.created_at
                 ))
         pg_db.commit()
@@ -305,9 +312,9 @@ def migrate(sqlite_path: str, pg_url: str):
                     color_correction=cp.color_correction,
                     color_secondary=cp.color_secondary,
                     color_header=cp.color_header,
-                    raw_exam_text=cp.raw_exam_text,
+                    custom_font_settings=cp.custom_font_settings,
+                    source_files=cp.source_files,
                     structured_data=cp.structured_data,
-                    pdf_path=cp.pdf_path,
                     status=cp.status,
                     created_at=cp.created_at,
                     updated_at=cp.updated_at
