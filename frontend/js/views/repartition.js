@@ -1,8 +1,10 @@
-// Smart Repartition & Auto-Balancing View
+// Smart Repartition & Auto-Balancing View — 2026 Commercial Edition (Étude Math Pro)
 const RepartitionView = {
   currentData: null,
 
   async render(container) {
+    const isAr = I18n.currentLang === 'ar';
+
     container.innerHTML = `
       <div class="space-y-6 animate-fade-in">
         
@@ -13,36 +15,36 @@ const RepartitionView = {
               <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
                 <i data-lucide="sparkles" class="w-5 h-5"></i>
               </div>
-              Répartition Automatique des Élèves
+              ${I18n.t('smartRepartitionTitle')}
             </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Équilibrez automatiquement vos promotions en classes selon vos capacités cibles.</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">${I18n.t('smartRepartitionDesc')}</p>
           </div>
         </div>
 
         <!-- Configuration Bar -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
-          <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Paramètres de Répartition</h2>
+          <h2 class="text-xs font-bold text-slate-700 uppercase tracking-wider">${I18n.t('repartitionSettings')}</h2>
           
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Niveau scolaire à répartir</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">${I18n.t('levelToBalance')}</label>
               <select id="rep-level" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 bg-slate-50/50 font-medium">
-                <option value="Baccalauréat">Baccalauréat</option>
-                <option value="2ème Sciences">2ème Sciences</option>
-                <option value="9ème Année">9ème Année</option>
-                <option value="3ème">3ème Année</option>
+                <option value="Bac" selected>${I18n.getLevelLabel('Bac')}</option>
+                <option value="3ème">${I18n.getLevelLabel('3ème')}</option>
+                <option value="2ème">${I18n.getLevelLabel('2ème')}</option>
+                <option value="1ère">${I18n.getLevelLabel('1ère')}</option>
               </select>
             </div>
 
             <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Capacité maximale par groupe</label>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">${I18n.t('maxCapacityPerGroup')}</label>
               <input id="rep-capacity" type="number" min="5" max="35" value="15" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 bg-slate-50/50 font-medium">
             </div>
 
             <div class="flex items-end">
               <button id="rep-generate-btn" class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-sm font-bold rounded-xl shadow-md shadow-amber-600/20 transition-all flex items-center justify-center gap-2">
                 <i data-lucide="wand-2" class="w-4 h-4"></i>
-                Calculer la Répartition Optimale
+                ${I18n.t('calculateOptimalRepartition')}
               </button>
             </div>
           </div>
@@ -51,7 +53,7 @@ const RepartitionView = {
         <!-- Proposal Results Container -->
         <div id="rep-results-container" class="space-y-6">
           <div class="p-12 text-center text-slate-400 text-sm bg-white rounded-3xl border border-slate-100">
-            Cliquez sur <strong>Calculer la Répartition Optimale</strong> pour générer la proposition.
+            ${I18n.t('clickCalculateToGenerate')}
           </div>
         </div>
 
@@ -71,17 +73,18 @@ const RepartitionView = {
     const level = container.querySelector('#rep-level').value;
     const capacity = parseInt(container.querySelector('#rep-capacity').value) || 15;
     const resultsContainer = container.querySelector('#rep-results-container');
+    const levelLabel = I18n.getLevelLabel(level);
 
     try {
-      resultsContainer.innerHTML = '<div class="p-12 text-center text-slate-400 text-sm animate-pulse">Calcul de la répartition en cours...</div>';
+      resultsContainer.innerHTML = `<div class="p-12 text-center text-slate-400 text-sm animate-pulse">${I18n.t('calculatingRepartition')}</div>`;
       const data = await API.get(`/api/repartition/preview?level=${encodeURIComponent(level)}&target_capacity=${capacity}`);
       this.currentData = data;
 
       if (data.total_students === 0) {
         resultsContainer.innerHTML = `
           <div class="p-12 text-center bg-white rounded-3xl border border-slate-200">
-            <p class="text-sm font-bold text-slate-700">Aucun élève trouvé pour le niveau "${level}".</p>
-            <p class="text-xs text-slate-400 mt-1">Inscrivez d'abord des élèves de ce niveau dans la section Élèves.</p>
+            <p class="text-sm font-bold text-slate-700">${I18n.t('noStudentsForLevel')} "${levelLabel}".</p>
+            <p class="text-xs text-slate-400 mt-1">${I18n.t('registerStudentsFirstDesc')}</p>
           </div>
         `;
         return;
@@ -95,16 +98,16 @@ const RepartitionView = {
               ∑
             </div>
             <div>
-              <h3 class="text-sm font-bold text-amber-950">Proposition pour ${data.total_students} élèves (${level})</h3>
+              <h3 class="text-sm font-bold text-amber-950">${I18n.t('proposalFor')} ${data.total_students} ${I18n.t('students')} (${levelLabel})</h3>
               <p class="text-xs text-amber-800">
-                Divisé en <strong>${data.groups_needed} groupe(s)</strong> équilibré(s) (Capacité max : ${data.target_capacity})
+                ${I18n.t('dividedInto')} <strong>${data.groups_needed} ${I18n.t('groups')}</strong> ${I18n.t('balanced')} (${I18n.t('targetCapacity')} : ${data.target_capacity})
               </p>
             </div>
           </div>
 
           <button id="apply-repartition-btn" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-md shadow-emerald-600/20 transition-all flex items-center gap-2">
             <i data-lucide="check-check" class="w-4 h-4"></i>
-            Appliquer cette Répartition
+            ${I18n.t('applyThisRepartition')}
           </button>
         </div>
 
@@ -116,29 +119,29 @@ const RepartitionView = {
                 <div class="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div>
                     <h4 class="text-base font-bold text-slate-900">${prop.group_name}</h4>
-                    <p class="text-[11px] text-slate-400">Capacité cible : ${prop.capacity}</p>
+                    <p class="text-[11px] text-slate-400">${I18n.t('targetCapacity')} : ${prop.capacity}</p>
                   </div>
                   <span class="px-2.5 py-1 text-xs font-bold rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
-                    ${prop.students.length} élèves
+                    ${prop.students.length} ${I18n.t('students')}
                   </span>
                 </div>
 
                 <!-- Students Roster in proposed group -->
-                <div class="space-y-2 mt-4 max-h-80 overflow-y-auto pr-1">
+                <div class="space-y-2 mt-4 max-h-80 overflow-y-auto pr-1 rtl:pr-0 rtl:pl-1">
                   ${prop.students.map(st => `
                     <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
                       <div class="flex items-center gap-2">
                         <span class="font-bold text-slate-800">${st.name}</span>
                         <span class="text-[10px] font-mono text-slate-400">${st.student_code}</span>
                       </div>
-                      <span class="text-[10px] text-slate-400">Actuel: ${st.current_group_name}</span>
+                      <span class="text-[10px] text-slate-400">${I18n.t('current')} : ${st.current_group_name || I18n.t('unassigned')}</span>
                     </div>
                   `).join('')}
                 </div>
               </div>
 
               <div class="pt-2 text-[11px] text-slate-400 italic text-center">
-                ${prop.students.length} élèves affectés
+                ${prop.students.length} ${I18n.t('studentsAssigned')}
               </div>
             </div>
           `).join('')}
@@ -158,11 +161,12 @@ const RepartitionView = {
 
   async applyRepartition() {
     if (!this.currentData) return;
+    const levelLabel = I18n.getLevelLabel(this.currentData.level);
 
     Modal.confirm({
-      title: "Confirmer la Répartition",
-      message: `Voulez-vous appliquer cette répartition pour les ${this.currentData.total_students} élèves du niveau ${this.currentData.level} ? Leurs groupes seront automatiquement mis à jour.`,
-      confirmText: "Oui, Appliquer maintenant",
+      title: I18n.t('confirmRepartition'),
+      message: `Voulez-vous appliquer cette répartition pour les ${this.currentData.total_students} élèves du niveau ${levelLabel} ? Leurs groupes seront automatiquement mis à jour.`,
+      confirmText: I18n.t('applyNow'),
       onConfirm: async () => {
         try {
           const assignments = [];
@@ -200,3 +204,4 @@ const RepartitionView = {
     });
   }
 };
+

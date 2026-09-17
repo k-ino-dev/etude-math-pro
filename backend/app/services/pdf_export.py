@@ -146,7 +146,7 @@ class PDFExportService:
         teacher_name = project_data.get('teacher_name', 'Prof. Mohamed')
         school_name = project_data.get('school_name', 'Académie des Sciences Mathématiques')
         title = project_data.get('title', 'Correction d\'Examen de Mathématiques')
-        level = project_data.get('level', 'Baccalauréat')
+        level = project_data.get('level', 'Bac')
         chapter = project_data.get('chapter', 'Analyse & Algèbre')
         exam_date = project_data.get('exam_date', '2026')
 

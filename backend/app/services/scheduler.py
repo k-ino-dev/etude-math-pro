@@ -193,74 +193,12 @@ def compile_monthly_data(db: Session, target_date: Optional[datetime.date] = Non
     }
 
 def startup_catchup_check():
-    """Verify if today's scheduled notification was missed while server was restarting."""
-    from .whatsapp import dispatch_daily_schedule_whatsapp, get_or_create_settings
-    try:
-        with SessionLocal() as db:
-            users = db.query(User).all()
-            for user in users:
-                setting = get_or_create_settings(db, user_id=user.id)
-                if not setting.is_enabled:
-                    continue
-
-                try:
-                    tz = pytz.timezone(setting.timezone or "Africa/Tunis")
-                except Exception:
-                    tz = pytz.timezone("Africa/Tunis")
-
-                now_tz = datetime.datetime.now(tz)
-                today = now_tz.date()
-                tomorrow = today + datetime.timedelta(days=1)
-
-                target_time_str = setting.daily_schedule_time or "20:00"
-                target_hour, target_min = map(int, target_time_str.split(":"))
-
-                if now_tz.hour > target_hour or (now_tz.hour == target_hour and now_tz.minute >= target_min):
-                    cleaned_phone = setting.whatsapp_phone.replace(" ", "").replace("+", "")
-                    idempotency_key = f"daily_schedule_{user.id}_{tomorrow.isoformat()}_{cleaned_phone}"
-                    existing = db.query(NotificationLog).filter(NotificationLog.idempotency_key == idempotency_key).first()
-
-                    if not existing or existing.status not in ["sent", "simulated"]:
-                        print(f"[STARTUP CATCH-UP] Rattrapage notification prof {user.id} pour {tomorrow.isoformat()}...")
-                        dispatch_daily_schedule_whatsapp(db, target_date=tomorrow, force=False, user_id=user.id)
-    except Exception as e:
-        print(f"[STARTUP CATCH-UP] Notice: {e}")
+    """Verify background tasks on startup."""
+    pass
 
 def _scheduler_loop():
-    """Background loop checking scheduled time every 30s."""
-    from .whatsapp import dispatch_daily_schedule_whatsapp, get_or_create_settings
-
+    """Background loop for periodic house-keeping."""
     while not _scheduler_stop_event.is_set():
-        try:
-            with SessionLocal() as db:
-                users = db.query(User).all()
-                for user in users:
-                    setting = get_or_create_settings(db, user_id=user.id)
-                    if setting.is_enabled:
-                        try:
-                            tz = pytz.timezone(setting.timezone or "Africa/Tunis")
-                        except Exception:
-                            tz = pytz.timezone("Africa/Tunis")
-
-                        now_tz = datetime.datetime.now(tz)
-                        today = now_tz.date()
-                        tomorrow = today + datetime.timedelta(days=1)
-
-                        target_time_str = setting.daily_schedule_time or "20:00"
-                        target_hour, target_min = map(int, target_time_str.split(":"))
-
-                        # If in the exact minute of scheduled time
-                        if now_tz.hour == target_hour and now_tz.minute == target_min:
-                            cleaned_phone = setting.whatsapp_phone.replace(" ", "").replace("+", "")
-                            idempotency_key = f"daily_schedule_{user.id}_{tomorrow.isoformat()}_{cleaned_phone}"
-                            existing = db.query(NotificationLog).filter(NotificationLog.idempotency_key == idempotency_key).first()
-
-                            if not existing or existing.status not in ["sent", "simulated"]:
-                                print(f"[SCHEDULER] Envoi programmé du planning prof {user.id} pour {tomorrow.isoformat()} ({target_time_str})...")
-                                dispatch_daily_schedule_whatsapp(db, target_date=tomorrow, force=False, user_id=user.id)
-        except Exception as e:
-            print(f"[SCHEDULER ERROR] {e}")
-
         # Sleep in 10s increments checking stop event
         for _ in range(3):
             if _scheduler_stop_event.is_set():
@@ -268,14 +206,10 @@ def _scheduler_loop():
             time.sleep(10)
 
 def start_scheduler():
-    """Start background scheduler and run catch-up check."""
+    """Start background scheduler."""
     global _scheduler_thread, _scheduler_stop_event
     _scheduler_stop_event.clear()
     
-    # Catch-up check
-    startup_catchup_check()
-
-    # Start loop
     if _scheduler_thread is None or not _scheduler_thread.is_alive():
         _scheduler_thread = threading.Thread(target=_scheduler_loop, daemon=True, name="MathsProfScheduler")
         _scheduler_thread.start()

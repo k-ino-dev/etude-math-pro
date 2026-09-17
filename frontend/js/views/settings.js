@@ -1,9 +1,11 @@
-// Settings View — Commercial Edition (Étude Math Pro)
+// Settings View — Commercial SaaS Edition (Étude Math Pro)
 const SettingsView = {
   activeAvatar: null,
-  activeTab: 'profile', // 'profile', 'whatsapp', 'backup'
+  activeTab: 'profile', // 'profile', 'display', 'backup'
 
   async render(container) {
+    const isAr = I18n.currentLang === 'ar';
+
     container.innerHTML = `
       <div class="space-y-8 animate-fade-in max-w-4xl mx-auto pb-12">
         
@@ -14,21 +16,26 @@ const SettingsView = {
               <div class="w-10 h-10 rounded-2xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold shadow-sm">
                 <i data-lucide="settings" class="w-5 h-5"></i>
               </div>
-              Paramètres du Compte & Application
+              <span>${I18n.t('accountSettings')}</span>
             </h1>
-            <p class="text-xs sm:text-sm text-slate-500 mt-1">Personnalisez votre profil enseignant, configurez les notifications WhatsApp et gérez vos sauvegardes.</p>
+            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+              ${isAr ? 'تخصيص الملف الشخصي للأستاذ، إعدادات العرض واللغة، والنسخ الاحتياطي.' : 'Personnalisez votre profil enseignant, configurez la langue et gérez vos sauvegardes sécurisées.'}
+            </p>
           </div>
 
           <!-- Tab Navigation Pill -->
           <div class="flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0">
             <button type="button" id="tab-btn-profile" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'profile' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
-              <i data-lucide="user" class="w-3.5 h-3.5"></i> Profil Enseignant
+              <i data-lucide="user" class="w-3.5 h-3.5"></i>
+              <span>${I18n.t('profile')}</span>
             </button>
-            <button type="button" id="tab-btn-whatsapp" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'whatsapp' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
-              <i data-lucide="message-square" class="w-3.5 h-3.5"></i> WhatsApp
+            <button type="button" id="tab-btn-display" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'display' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
+              <i data-lucide="globe" class="w-3.5 h-3.5"></i>
+              <span>${isAr ? 'اللغة والعرض' : 'Langue & Affichage'}</span>
             </button>
             <button type="button" id="tab-btn-backup" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'backup' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
-              <i data-lucide="database" class="w-3.5 h-3.5"></i> Sauvegardes
+              <i data-lucide="database" class="w-3.5 h-3.5"></i>
+              <span>${isAr ? 'النسخ الاحتياطي' : 'Sauvegardes'}</span>
             </button>
           </div>
         </div>
@@ -42,8 +49,8 @@ const SettingsView = {
                 <i data-lucide="user-check" class="w-4 h-4"></i>
               </div>
               <div>
-                <h2 class="text-base font-bold text-slate-900">Identité & Coordonnées Professionnelles</h2>
-                <p class="text-xs text-slate-500">Ces informations apparaissent sur vos reçus de cotisations, vos rapports et vos messages.</p>
+                <h2 class="text-base font-bold text-slate-900">${isAr ? 'الهوية والبيانات المهنية' : 'Identité & Coordonnées Professionnelles'}</h2>
+                <p class="text-xs text-slate-500">${isAr ? 'تظهر هذه المعلومات في وصولات الخلاص، التقارير والوثائق الرسمية.' : 'Ces informations apparaissent sur vos reçus de cotisations, vos rapports et vos documents officiels.'}</p>
               </div>
             </div>
 
@@ -51,34 +58,34 @@ const SettingsView = {
               
               <!-- Avatar Selection Section -->
               <div class="p-5 rounded-2xl bg-slate-50/80 border border-slate-200/70 space-y-4">
-                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Photo de Profil / Avatar</label>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">${isAr ? 'الصورة الرمزية / الصورة الشخصية' : 'Photo de Profil / Avatar'}</label>
                 
                 <div class="flex flex-col sm:flex-row items-center gap-6">
                   
                   <!-- Avatar Preview -->
                   <div class="relative group shrink-0">
                     <div id="avatar-preview-box" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-md overflow-hidden border-2 border-white ring-4 ring-brand-100 transition-transform group-hover:scale-105">
-                      <span id="avatar-preview-initials">MB</span>
+                      <span id="avatar-preview-initials">P</span>
                     </div>
                   </div>
 
                   <!-- Avatar Actions -->
-                  <div class="flex-1 space-y-3 text-center sm:text-left">
-                    <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                  <div class="flex-1 space-y-3 text-center sm:text-left rtl:sm:text-right">
+                    <div class="flex flex-wrap items-center justify-center sm:justify-start rtl:sm:justify-start gap-2.5">
                       <label class="cursor-pointer px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center gap-2">
-                        <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i> Importer une photo
+                        <i data-lucide="upload" class="w-3.5 h-3.5 text-brand-600"></i> ${isAr ? 'تحميل صورة' : 'Importer une photo'}
                         <input id="avatar-file-input" type="file" accept="image/*" class="hidden">
                       </label>
                       
                       <button type="button" id="avatar-reset-btn" class="px-3 py-2 bg-slate-200/70 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition-colors flex items-center gap-1.5">
-                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> Initiales
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> ${isAr ? 'الحروف الأولى' : 'Initiales'}
                       </button>
                     </div>
 
                     <!-- Quick Avatar Presets -->
                     <div>
-                      <p class="text-[11px] font-semibold text-slate-400 mb-1.5">Ou choisir un avatar prédéfini :</p>
-                      <div class="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                      <p class="text-[11px] font-semibold text-slate-400 mb-1.5">${isAr ? 'أو اختر رمزا تعبيرياً جاهزاً :' : 'Ou choisir un avatar prédéfini :'}</p>
+                      <div class="flex flex-wrap items-center justify-center sm:justify-start rtl:sm:justify-start gap-2">
                         <button type="button" class="avatar-preset-btn w-8 h-8 rounded-xl bg-blue-100 hover:ring-2 ring-brand-500 flex items-center justify-center text-sm transition-all" data-preset="👨‍🏫">👨‍🏫</button>
                         <button type="button" class="avatar-preset-btn w-8 h-8 rounded-xl bg-purple-100 hover:ring-2 ring-brand-500 flex items-center justify-center text-sm transition-all" data-preset="👩‍🏫">👩‍🏫</button>
                         <button type="button" class="avatar-preset-btn w-8 h-8 rounded-xl bg-emerald-100 hover:ring-2 ring-brand-500 flex items-center justify-center text-sm transition-all" data-preset="📐">📐</button>
@@ -94,55 +101,53 @@ const SettingsView = {
               <!-- Identity Fields -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nom & Prénom complet *</label>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'الاسم واللقب *' : 'Nom & Prénom complet *'}</label>
                   <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                       <i data-lucide="user" class="w-4 h-4"></i>
                     </div>
-                    <input id="set-name" type="text" required placeholder="Ex: Prof. Mohamed Ben Salem" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-semibold text-slate-900 transition-all">
+                    <input id="set-name" type="text" required placeholder="Ex: Mohamed Ben Salem" class="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-semibold text-slate-900 transition-all">
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email de connexion *</label>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'البريد الإلكتروني لتسجيل الدخول *' : 'Email de connexion *'}</label>
                   <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                       <i data-lucide="mail" class="w-4 h-4"></i>
                     </div>
-                    <input id="set-email" type="email" required placeholder="admin@mathprof.tn" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
+                    <input id="set-email" type="email" required placeholder="admin@mathprof.tn" class="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
                   </div>
                 </div>
               </div>
 
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Téléphone professionnel</label>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'رقم الهاتف' : 'Téléphone professionnel'}</label>
                   <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                       <i data-lucide="phone" class="w-4 h-4"></i>
                     </div>
-                    <input id="set-phone" type="text" placeholder="+216 98 123 456" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
+                    <input id="set-phone" type="text" placeholder="+216 98 123 456" class="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Devise des Tarifs</label>
-                  <select id="set-currency" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 bg-white font-bold text-brand-700 transition-all">
-                    <option value="DT">Dinar Tunisien (DT)</option>
-                    <option value="€">Euro (€)</option>
-                    <option value="$">Dollar ($)</option>
-                    <option value="MAD">Dirham Marocain (MAD)</option>
-                    <option value="DZD">Dinar Algérien (DZD)</option>
-                  </select>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'العملة المعتمدة' : 'Devise des Tarifs'}</label>
+                  <div class="relative">
+                    <select id="set-currency" disabled class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl bg-slate-100 font-bold text-brand-700 cursor-not-allowed">
+                      <option value="DT" selected>Dinar Tunisien (DT / د.ت)</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Année Scolaire</label>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'السنة الدراسية' : 'Année Scolaire'}</label>
                   <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <div class="absolute inset-y-0 left-0 rtl:left-auto rtl:right-0 pl-3.5 rtl:pl-0 rtl:pr-3.5 flex items-center pointer-events-none text-slate-400">
                       <i data-lucide="calendar" class="w-4 h-4"></i>
                     </div>
-                    <input id="set-year" type="text" value="2025-2026" placeholder="2025-2026" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
+                    <input id="set-year" type="text" value="2025-2026" placeholder="2025-2026" class="w-full pl-10 rtl:pl-3.5 rtl:pr-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:border-brand-500 font-medium text-slate-900 transition-all">
                   </div>
                 </div>
               </div>
@@ -150,16 +155,17 @@ const SettingsView = {
               <!-- Password Change Section -->
               <div class="pt-4 border-t border-slate-100">
                 <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i> Sécurité & Mot de passe
+                  <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-500"></i>
+                  <span>${isAr ? 'الأمان وكلمة المرور' : 'Sécurité & Mot de passe'}</span>
                 </h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Nouveau mot de passe</label>
-                    <input id="set-password" type="password" placeholder="Laisser vide pour ne pas modifier" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">${isAr ? 'كلمة المرور الجديدة' : 'Nouveau mot de passe'}</label>
+                    <input id="set-password" type="password" placeholder="${isAr ? 'اتركه فارغاً إن كنت لا ترغب في التعديل' : 'Laisser vide pour ne pas modifier'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
                   </div>
                   <div>
-                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">Confirmer le nouveau mot de passe</label>
-                    <input id="set-password-confirm" type="password" placeholder="Confirmer le nouveau mot de passe" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+                    <label class="block text-[11px] font-semibold text-slate-500 mb-1">${isAr ? 'تأكيد كلمة المرور' : 'Confirmer le nouveau mot de passe'}</label>
+                    <input id="set-password-confirm" type="password" placeholder="${isAr ? 'أعد كتابة كلمة المرور الجديدة' : 'Confirmer le nouveau mot de passe'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
                   </div>
                 </div>
               </div>
@@ -167,107 +173,69 @@ const SettingsView = {
               <!-- Submit Button -->
               <div class="pt-6 border-t border-slate-100 flex items-center justify-end">
                 <button type="submit" id="save-profile-btn" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-sm font-bold rounded-xl shadow-md shadow-brand-600/25 transition-all flex items-center gap-2">
-                  <i data-lucide="check" class="w-4 h-4"></i> Enregistrer les Modifications
+                  <i data-lucide="check" class="w-4 h-4"></i>
+                  <span>${isAr ? 'حفظ التعديلات' : 'Enregistrer les Modifications'}</span>
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        <!-- TAB 2: WhatsApp Notifications & Planning -->
-        <div id="tab-content-whatsapp" class="space-y-6 ${this.activeTab === 'whatsapp' ? '' : 'hidden'}">
+        <!-- TAB 2: Language & Display -->
+        <div id="tab-content-display" class="space-y-6 ${this.activeTab === 'display' ? '' : 'hidden'}">
           <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
             
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                  <i data-lucide="message-circle" class="w-4 h-4"></i>
-                </div>
-                <div>
-                  <h2 class="text-base font-bold text-slate-900">Notifications Automatiques WhatsApp</h2>
-                  <p class="text-xs text-slate-500">Envoi quotidien du planning de vos séances du lendemain sur votre WhatsApp.</p>
-                </div>
+            <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+              <div class="w-9 h-9 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
+                <i data-lucide="globe" class="w-4 h-4"></i>
               </div>
-
-              <div class="flex items-center gap-2">
-                <button type="button" id="send-schedule-now-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2">
-                  <i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer le planning de demain
-                </button>
+              <div>
+                <h2 class="text-base font-bold text-slate-900">${isAr ? 'إعدادات اللغة والواجهة' : 'Langue & Préférences d\'Affichage'}</h2>
+                <p class="text-xs text-slate-500">${isAr ? 'تبديل فوري بين اللغتين الفرنسية والعربية مع دعم اتجاه الكتابة من اليمين إلى اليسار (RTL).' : 'Basculez instantanément entre le Français et l\'Arabe avec prise en charge complète du RTL.'}</p>
               </div>
             </div>
 
-            <form id="settings-whatsapp-form" class="space-y-6">
-              <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Numéro WhatsApp Récepteur *</label>
-                  <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <i data-lucide="phone" class="w-4 h-4"></i>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- French Choice Card -->
+              <div onclick="I18n.setLanguage('fr')" class="p-5 rounded-2xl border-2 cursor-pointer transition-all ${!isAr ? 'border-brand-600 bg-brand-50/40 shadow-sm ring-2 ring-brand-100' : 'border-slate-200 bg-white hover:border-slate-300'}">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">🇫🇷</span>
+                    <div>
+                      <h3 class="font-black text-slate-900 text-sm">Français (Default)</h3>
+                      <p class="text-xs text-slate-500">Interface en Français (LTR)</p>
                     </div>
-                    <input id="wa-phone" type="text" required placeholder="+216 98 123 456" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-semibold text-slate-900">
                   </div>
+                  ${!isAr ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-brand-600"></i>' : ''}
                 </div>
+              </div>
 
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Heure d'Envoi Quotidien</label>
-                  <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                      <i data-lucide="clock" class="w-4 h-4"></i>
+              <!-- Arabic Choice Card -->
+              <div onclick="I18n.setLanguage('ar')" class="p-5 rounded-2xl border-2 cursor-pointer transition-all ${isAr ? 'border-brand-600 bg-brand-50/40 shadow-sm ring-2 ring-brand-100' : 'border-slate-200 bg-white hover:border-slate-300'}">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <span class="text-2xl">🇹🇳</span>
+                    <div>
+                      <h3 class="font-black text-slate-900 text-sm">العربية (تونس)</h3>
+                      <p class="text-xs text-slate-500">واجهة كاملة باللغة العربية (RTL)</p>
                     </div>
-                    <input id="wa-time" type="time" value="20:00" class="w-full pl-10 pr-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-bold text-slate-900">
                   </div>
-                  <p class="text-[10px] text-slate-400 mt-1">Par défaut : 20:00 chaque soir</p>
-                </div>
-
-                <div>
-                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Fournisseur d'Envoi</label>
-                  <select id="wa-provider" class="w-full px-3.5 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-semibold text-slate-800">
-                    <option value="simulation">Mode Simulation Locale (Sans frais / Hors-ligne)</option>
-                    <option value="ultramsg">UltraMsg API (Envoi direct)</option>
-                    <option value="webhook">Webhook Personnalisé</option>
-                  </select>
-                </div>
-
-              </div>
-
-              <!-- UltraMsg Config Details -->
-              <div id="wa-ultramsg-fields" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">UltraMsg Instance ID</label>
-                  <input id="wa-instance" type="text" placeholder="instance12345" class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl">
-                </div>
-                <div>
-                  <label class="block text-[11px] font-bold text-slate-600 mb-1">UltraMsg Token</label>
-                  <input id="wa-token" type="text" placeholder="token_abc123" class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl">
+                  ${isAr ? '<i data-lucide="check-circle-2" class="w-5 h-5 text-brand-600"></i>' : ''}
                 </div>
               </div>
+            </div>
 
-              <!-- Webhook Config Details -->
-              <div id="wa-webhook-fields" class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 hidden">
-                <label class="block text-[11px] font-bold text-slate-600 mb-1">URL Webhook</label>
-                <input id="wa-webhook-url" type="url" placeholder="https://votre-serveur.com/api/whatsapp" class="w-full px-3.5 py-2 text-xs border border-slate-200 rounded-xl">
+            <!-- Typography & Currency Note -->
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2 text-xs text-slate-600">
+              <div class="flex items-center gap-2 font-bold text-slate-800">
+                <i data-lucide="info" class="w-4 h-4 text-brand-600"></i>
+                <span>${isAr ? 'معايير التوطين والتنسيق' : 'Standards de localisation'}</span>
               </div>
-
-              <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                <button type="button" id="wa-test-btn" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors flex items-center gap-2">
-                  <i data-lucide="play" class="w-3.5 h-3.5 text-brand-600"></i> Tester la connexion WhatsApp
-                </button>
-
-                <button type="submit" id="wa-save-btn" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-md transition-all flex items-center gap-2">
-                  <i data-lucide="check" class="w-4 h-4"></i> Enregistrer les paramètres WhatsApp
-                </button>
-              </div>
-            </form>
-
-            <!-- Notification Logs History -->
-            <div class="pt-6 border-t border-slate-100 space-y-3">
-              <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-                <i data-lucide="history" class="w-3.5 h-3.5 text-slate-400"></i> Journal des Envois Récents
-              </h3>
-              <div id="wa-logs-container" class="space-y-2 max-h-60 overflow-y-auto">
-                <p class="text-xs text-slate-400 italic">Chargement du journal...</p>
-              </div>
+              <ul class="list-disc list-inside space-y-1 text-slate-500">
+                <li>${isAr ? 'العملة الرسمية المعتمدة : الدينار التونسي (DT / د.ت).' : 'Devise unique et stricte : Dinar Tunisien (DT).'}</li>
+                <li>${isAr ? 'المستويات الدراسية المعتمدة : 1ère، 2ème، 3ème، Bac.' : 'Niveaux scolaires stricts : 1ère, 2ème, 3ème, Bac.'}</li>
+                <li>${isAr ? 'طرق الاستخلاص المعتمدة : نقداً (Espèces) وتحويل بنكي (Virement bancaire).' : 'Modes de règlement stricts : Espèces et Virement bancaire.'}</li>
+              </ul>
             </div>
 
           </div>
@@ -282,24 +250,24 @@ const SettingsView = {
                 <i data-lucide="database" class="w-4 h-4"></i>
               </div>
               <div>
-                <h2 class="text-base font-bold text-slate-900">Sauvegarde, Restauration & Déploiement</h2>
-                <p class="text-xs text-slate-500">Sécurisez vos élèves et plannings, restaurez une sauvegarde ou préparez une base propre.</p>
+                <h2 class="text-base font-bold text-slate-900">${isAr ? 'النسخ الاحتياطي وإدارة البيانات' : 'Sauvegarde, Restauration & Données'}</h2>
+                <p class="text-xs text-slate-500">${isAr ? 'تصدير كامل بياناتك في ملف آمن أو تفريغ القاعدة لبدء العمل من الصفر.' : 'Sécurisez vos élèves et plannings, restaurez une sauvegarde ou préparez une base propre.'}</p>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
               
               <!-- Export JSON Card -->
               <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 flex flex-col justify-between">
                 <div>
                   <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
                     <i data-lucide="download-cloud" class="w-4 h-4 text-brand-600"></i>
-                    <span>Sauvegarde Complète (JSON)</span>
+                    <span>${isAr ? 'تصدير نسخة احتياطية (JSON)' : 'Sauvegarde Complète (JSON)'}</span>
                   </div>
-                  <p class="text-xs text-slate-500 mt-1.5">Téléchargez l'intégralité de vos élèves, groupes, séances, présences et paiements en un fichier sécurisé.</p>
+                  <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'تنزيل جميع التلاميذ، الأفواج، الحصص والمدفوعات في ملف واحد.' : 'Téléchargez l\'intégralité de vos élèves, groupes, séances et paiements en un fichier sécurisé.'}</p>
                 </div>
                 <button id="export-json-btn" class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="download" class="w-3.5 h-3.5 text-brand-600"></i> Télécharger ma sauvegarde
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-brand-600"></i> ${isAr ? 'تنزيل النسخة' : 'Télécharger ma sauvegarde'}
                 </button>
               </div>
 
@@ -308,28 +276,14 @@ const SettingsView = {
                 <div>
                   <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
                     <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-600"></i>
-                    <span>Restaurer une Sauvegarde</span>
+                    <span>${isAr ? 'استرجاع نسخة احتياطية' : 'Restaurer une Sauvegarde'}</span>
                   </div>
-                  <p class="text-xs text-slate-500 mt-1.5">Importez un fichier JSON préalablement sauvegardé pour restaurer vos données sur ce PC.</p>
+                  <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'استيراد ملف JSON تم حفظه مسبقاً لاستعادة البيانات.' : 'Importez un fichier JSON préalablement sauvegardé pour restaurer vos données.'}</p>
                 </div>
                 <label class="cursor-pointer w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="folder-open" class="w-3.5 h-3.5 text-indigo-600"></i> Choisir un fichier de sauvegarde
+                  <i data-lucide="folder-open" class="w-3.5 h-3.5 text-indigo-600"></i> ${isAr ? 'اختيار ملف JSON' : 'Choisir un fichier JSON'}
                   <input id="import-json-file" type="file" accept=".json" class="hidden">
                 </label>
-              </div>
-
-              <!-- Reset Demo Card -->
-              <div class="p-5 rounded-2xl bg-amber-50/60 border border-amber-200/70 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center gap-2 text-amber-950 font-bold text-sm">
-                    <i data-lucide="refresh-cw" class="w-4 h-4 text-amber-600"></i>
-                    <span>Restaurer les Données Démo</span>
-                  </div>
-                  <p class="text-xs text-amber-800 mt-1.5">Restaure le jeu de démonstration complet (30 élèves, 5 groupes, cotisations) pour tester l'application.</p>
-                </div>
-                <button id="reset-demo-btn" class="w-full py-2.5 px-4 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> Charger les données démo
-                </button>
               </div>
 
               <!-- Clean Customer Wipe Card -->
@@ -337,12 +291,12 @@ const SettingsView = {
                 <div>
                   <div class="flex items-center gap-2 text-rose-950 font-bold text-sm">
                     <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
-                    <span>Base Vierge (Nouveau Client)</span>
+                    <span>${isAr ? 'قاعدة فارغة (0 تلاميذ)' : 'Base Vierge (0 Élèves)'}</span>
                   </div>
-                  <p class="text-xs text-rose-800 mt-1.5">Supprime toutes les données de test pour laisser une base propre à 0 élèves prête pour un nouveau professeur.</p>
+                  <p class="text-xs text-rose-800 mt-1.5">${isAr ? 'حذف جميع البيانات التجريبية لتسليم قاعدة بيانات نظيفة وجاهزة لأستاذ جديد.' : 'Supprime les données pour laisser une base propre à 0 élèves prête pour votre activité.'}</p>
                 </div>
                 <button id="clean-client-btn" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Nettoyer la base (0 élèves)
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ${isAr ? 'تفريغ البيانات (0 تلاميذ)' : 'Nettoyer la base (0 élèves)'}
                 </button>
               </div>
 
@@ -357,12 +311,11 @@ const SettingsView = {
 
     this.bindTabs(container);
     await this.loadProfile(container);
-    await this.loadWhatsAppSettings(container);
     this.bindBackupActions(container);
   },
 
   bindTabs(container) {
-    const tabs = ['profile', 'whatsapp', 'backup'];
+    const tabs = ['profile', 'display', 'backup'];
     tabs.forEach(tab => {
       const btn = container.querySelector(`#tab-btn-${tab}`);
       if (btn) {
@@ -379,13 +332,13 @@ const SettingsView = {
             }
           });
           if (window.lucide) lucide.createIcons();
-          if (tab === 'whatsapp') this.loadWhatsAppLogs(container);
         });
       }
     });
   },
 
   async loadProfile(container) {
+    const isAr = I18n.currentLang === 'ar';
     let user = State.user;
     try {
       const fetched = await API.get('/api/auth/me');
@@ -395,7 +348,7 @@ const SettingsView = {
     }
 
     user = user || {
-      name: 'Prof. Mohamed Ben Salem',
+      name: 'Mohamed Ben Salem',
       email: 'admin@mathprof.tn',
       phone: '+216 98 123 456',
       currency: 'DT',
@@ -414,7 +367,7 @@ const SettingsView = {
     if (nameInput) nameInput.value = user.name || '';
     if (emailInput) emailInput.value = user.email || '';
     if (phoneInput) phoneInput.value = user.phone || '';
-    if (currSelect) currSelect.value = user.currency || 'DT';
+    if (currSelect) currSelect.value = 'DT';
     if (yearInput) yearInput.value = user.school_year || '2025-2026';
 
     this.updateAvatarPreview(container, user.name);
@@ -435,7 +388,7 @@ const SettingsView = {
         const file = e.target.files[0];
         if (file) {
           if (file.size > 2 * 1024 * 1024) {
-            Toast.warning('L\'image dépasse 2 Mo.');
+            Toast.warning(isAr ? 'حجم الصورة يتجاوز 2 ميغابايت.' : 'L\'image dépasse 2 Mo.');
             return;
           }
           const reader = new FileReader();
@@ -467,14 +420,14 @@ const SettingsView = {
         const pwdConf = (container.querySelector('#set-password-confirm') ? container.querySelector('#set-password-confirm').value : '').trim();
 
         if (pwd && pwd !== pwdConf) {
-          Toast.error('Les mots de passe saisis ne correspondent pas.');
+          Toast.error(isAr ? 'كلمات المرور المدخلة غير متطابقة.' : 'Les mots de passe saisis ne correspondent pas.');
           return;
         }
 
         const saveBtn = container.querySelector('#save-profile-btn');
         if (saveBtn) {
           saveBtn.disabled = true;
-          saveBtn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Enregistrement...';
+          saveBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> ${isAr ? 'جاري الحفظ...' : 'Enregistrement...'}`;
           if (window.lucide) lucide.createIcons();
         }
 
@@ -483,7 +436,7 @@ const SettingsView = {
           email: (emailInput ? emailInput.value : '').trim(),
           phone: (phoneInput ? phoneInput.value : '').trim() || null,
           avatar: this.activeAvatar,
-          currency: currSelect ? currSelect.value : 'DT',
+          currency: 'DT',
           school_year: (yearInput ? yearInput.value : '').trim()
         };
 
@@ -492,29 +445,23 @@ const SettingsView = {
         try {
           const updated = await API.put('/api/auth/profile', payload);
           State.user = updated;
-          State.currency = updated.currency;
+          State.currency = 'DT';
           API.setUser(updated);
           State.updateBadges();
-
-          // Sync phone to WhatsApp form if empty
-          const waPhoneInput = container.querySelector('#wa-phone');
-          if (waPhoneInput && !waPhoneInput.value && updated.phone) {
-            waPhoneInput.value = updated.phone;
-          }
 
           if (window.confetti) {
             confetti({ particleCount: 40, spread: 50, origin: { y: 0.7 } });
           }
 
-          Toast.success('Profil enseignant enregistré avec succès !');
+          Toast.success(isAr ? 'تم حفظ بيانات الملف الشخصي بنجاح !' : 'Profil enseignant enregistré avec succès !');
           if (container.querySelector('#set-password')) container.querySelector('#set-password').value = '';
           if (container.querySelector('#set-password-confirm')) container.querySelector('#set-password-confirm').value = '';
         } catch (err) {
-          Toast.error(err.message || 'Erreur lors de la mise à jour du profil.');
+          Toast.error(err.message || (isAr ? 'خطأ أثناء تحديث الملف الشخصي.' : 'Erreur lors de la mise à jour du profil.'));
         } finally {
           if (saveBtn) {
             saveBtn.disabled = false;
-            saveBtn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> Enregistrer les Modifications';
+            saveBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i> ${isAr ? 'حفظ التعديلات' : 'Enregistrer les Modifications'}`;
             if (window.lucide) lucide.createIcons();
           }
         }
@@ -522,146 +469,9 @@ const SettingsView = {
     }
   },
 
-  async loadWhatsAppSettings(container) {
-    try {
-      const setting = await API.get('/api/whatsapp/settings');
-      
-      const phoneInput = container.querySelector('#wa-phone');
-      const timeInput = container.querySelector('#wa-time');
-      const providerSelect = container.querySelector('#wa-provider');
-      const instanceInput = container.querySelector('#wa-instance');
-      const tokenInput = container.querySelector('#wa-token');
-      const webhookInput = container.querySelector('#wa-webhook-url');
-
-      if (phoneInput) phoneInput.value = setting.whatsapp_phone || '+216 98 123 456';
-      if (timeInput) timeInput.value = setting.daily_schedule_time || '20:00';
-      if (providerSelect) providerSelect.value = setting.provider || 'simulation';
-      if (instanceInput) instanceInput.value = setting.ultramsg_instance_id || '';
-      if (tokenInput) tokenInput.value = setting.ultramsg_token || '';
-      if (webhookInput) webhookInput.value = setting.webhook_url || '';
-
-      const toggleProviderFields = () => {
-        const p = providerSelect ? providerSelect.value : 'simulation';
-        const ultraFields = container.querySelector('#wa-ultramsg-fields');
-        const webhookFields = container.querySelector('#wa-webhook-fields');
-        if (ultraFields) ultraFields.classList.toggle('hidden', p !== 'ultramsg');
-        if (webhookFields) webhookFields.classList.toggle('hidden', p !== 'webhook');
-      };
-
-      if (providerSelect) {
-        providerSelect.addEventListener('change', toggleProviderFields);
-        toggleProviderFields();
-      }
-
-      // WhatsApp Form Submit
-      const waForm = container.querySelector('#settings-whatsapp-form');
-      if (waForm) {
-        waForm.addEventListener('submit', async (e) => {
-          e.preventDefault();
-          const saveBtn = container.querySelector('#wa-save-btn');
-          if (saveBtn) saveBtn.disabled = true;
-
-          try {
-            const payload = {
-              whatsapp_phone: phoneInput.value.trim(),
-              daily_schedule_time: timeInput.value.trim(),
-              provider: providerSelect.value,
-              ultramsg_instance_id: instanceInput ? instanceInput.value.trim() : null,
-              ultramsg_token: tokenInput ? tokenInput.value.trim() : null,
-              webhook_url: webhookInput ? webhookInput.value.trim() : null
-            };
-
-            await API.put('/api/whatsapp/settings', payload);
-            Toast.success('Paramètres WhatsApp enregistrés avec succès !');
-          } catch (err) {
-            Toast.error(err.message || 'Erreur d\'enregistrement WhatsApp.');
-          } finally {
-            if (saveBtn) saveBtn.disabled = false;
-          }
-        });
-      }
-
-      // WhatsApp Test Button
-      const testBtn = container.querySelector('#wa-test-btn');
-      if (testBtn) {
-        testBtn.addEventListener('click', async () => {
-          testBtn.disabled = true;
-          testBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Envoi du test...';
-          if (window.lucide) lucide.createIcons();
-
-          try {
-            const phone = phoneInput ? phoneInput.value.trim() : null;
-            const res = await API.post('/api/whatsapp/test', { phone });
-            Toast.success(res.message || 'Test WhatsApp effectué avec succès !');
-            await this.loadWhatsAppLogs(container);
-          } catch (err) {
-            Toast.error(err.message || 'Échec du test WhatsApp.');
-          } finally {
-            testBtn.disabled = false;
-            testBtn.innerHTML = '<i data-lucide="play" class="w-3.5 h-3.5 text-brand-600"></i> Tester la connexion WhatsApp';
-            if (window.lucide) lucide.createIcons();
-          }
-        });
-      }
-
-      // Immediate Send Schedule Now
-      const sendNowBtn = container.querySelector('#send-schedule-now-btn');
-      if (sendNowBtn) {
-        sendNowBtn.addEventListener('click', async () => {
-          sendNowBtn.disabled = true;
-          sendNowBtn.innerHTML = '<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Envoi en cours...';
-          if (window.lucide) lucide.createIcons();
-
-          try {
-            const res = await API.post('/api/whatsapp/send-schedule-now', { force: true });
-            Toast.success(`Planning envoyé ! (${res.total_sessions || 0} séances)`);
-            await this.loadWhatsAppLogs(container);
-          } catch (err) {
-            Toast.error(err.message || 'Erreur lors de l\'envoi immédiat.');
-          } finally {
-            sendNowBtn.disabled = false;
-            sendNowBtn.innerHTML = '<i data-lucide="send" class="w-3.5 h-3.5"></i> Envoyer le planning de demain';
-            if (window.lucide) lucide.createIcons();
-          }
-        });
-      }
-
-    } catch (e) {
-      console.warn('Error loading WhatsApp settings:', e);
-    }
-  },
-
-  async loadWhatsAppLogs(container) {
-    const logsBox = container.querySelector('#wa-logs-container');
-    if (!logsBox) return;
-
-    try {
-      const logs = await API.get('/api/whatsapp/logs?limit=10');
-      if (!logs || logs.length === 0) {
-        logsBox.innerHTML = '<p class="text-xs text-slate-400 italic">Aucune notification envoyée pour le moment.</p>';
-        return;
-      }
-
-      logsBox.innerHTML = logs.map(l => `
-        <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl text-xs flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full ${l.status === 'sent' ? 'bg-emerald-500' : l.status === 'simulated' ? 'bg-blue-500' : 'bg-rose-500'}"></span>
-            <span class="font-bold text-slate-800">${l.type === 'daily_schedule' ? '📅 Planning Quotidien' : '🔔 Test'}</span>
-            <span class="text-slate-400">vers ${l.recipient}</span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded-md font-semibold text-[10px] ${l.status === 'sent' ? 'bg-emerald-100 text-emerald-700' : l.status === 'simulated' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}">${l.status.toUpperCase()}</span>
-            <span class="text-[10px] text-slate-400">${new Date(l.sent_at).toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'})}</span>
-          </div>
-        </div>
-      `).join('');
-
-    } catch (e) {
-      logsBox.innerHTML = '<p class="text-xs text-slate-400 italic">Impossible de charger le journal.</p>';
-    }
-  },
-
   bindBackupActions(container) {
+    const isAr = I18n.currentLang === 'ar';
+
     // 1. Export JSON
     const exportBtn = container.querySelector('#export-json-btn');
     if (exportBtn) {
@@ -673,9 +483,9 @@ const SettingsView = {
           dlAnchor.setAttribute("href", dataStr);
           dlAnchor.setAttribute("download", `etude_math_pro_backup_${new Date().toISOString().split('T')[0]}.json`);
           dlAnchor.click();
-          Toast.success('Sauvegarde complète exportée avec succès !');
+          Toast.success(isAr ? 'تم تحميل النسخة الاحتياطية بنجاح !' : 'Sauvegarde complète exportée avec succès !');
         } catch (err) {
-          Toast.error('Erreur lors de l\'exportation.');
+          Toast.error(isAr ? 'خطأ أثناء التصدير.' : 'Erreur lors de l\'exportation.');
         }
       });
     }
@@ -688,9 +498,9 @@ const SettingsView = {
         if (!file) return;
 
         Modal.confirm({
-          title: "Restaurer cette sauvegarde ?",
-          message: "L'importation remplacera les données actuelles par le contenu du fichier sélectionné. Voulez-vous continuer ?",
-          confirmText: "Oui, Restaurer",
+          title: isAr ? "استرجاع هذه النسخة الاحتياطية ؟" : "Restaurer cette sauvegarde ?",
+          message: isAr ? "سيتم استبدال البيانات الحالية بمحتوى الملف المختار. هل ترغب في المتابعة ؟" : "L'importation remplacera les données actuelles par le contenu du fichier sélectionné. Voulez-vous continuer ?",
+          confirmText: isAr ? "نعم، استرجاع" : "Oui, Restaurer",
           onConfirm: async () => {
             try {
               const reader = new FileReader();
@@ -698,56 +508,34 @@ const SettingsView = {
                 try {
                   const parsed = JSON.parse(re.target.result);
                   const res = await API.post('/api/settings/import', parsed);
-                  Toast.success(res.message || 'Sauvegarde restaurée !');
+                  Toast.success(res.message || (isAr ? 'تمت استعادة البيانات !' : 'Sauvegarde restaurée !'));
                   await State.loadInitialData();
                   app.navigate('#dashboard');
                 } catch (parseErr) {
-                  Toast.error('Fichier JSON invalide ou corrompu.');
+                  Toast.error(isAr ? 'ملف JSON غير صالح أو معطوب.' : 'Fichier JSON invalide ou corrompu.');
                 }
               };
               reader.readAsText(file);
             } catch (err) {
-              Toast.error(err.message || 'Erreur lors de la restauration.');
+              Toast.error(err.message || (isAr ? 'خطأ أثناء الاسترجاع.' : 'Erreur lors de la restauration.'));
             }
           }
         });
       });
     }
 
-    // 3. Reset Demo Data
-    const resetBtn = container.querySelector('#reset-demo-btn');
-    if (resetBtn) {
-      resetBtn.addEventListener('click', () => {
-        Modal.confirm({
-          title: "Charger les données de démonstration ?",
-          message: "Restaure 30 élèves, 5 groupes et cotisations de test pour explorer toutes les fonctionnalités.",
-          confirmText: "Oui, Charger Démo",
-          onConfirm: async () => {
-            try {
-              await API.post('/api/settings/reset-demo', {});
-              Toast.success('Données démo restaurées !');
-              await State.loadInitialData();
-              app.navigate('#dashboard');
-            } catch (err) {
-              Toast.error(err.message);
-            }
-          }
-        });
-      });
-    }
-
-    // 4. Clear Customer Data (Base Vierge)
+    // 3. Clear Customer Data (Base Vierge)
     const cleanBtn = container.querySelector('#clean-client-btn');
     if (cleanBtn) {
       cleanBtn.addEventListener('click', () => {
         Modal.confirm({
-          title: "Nettoyer pour Nouveau Client (Base Vierge) ?",
-          message: "⚠️ Attention : Toutes les données de démonstration (élèves, groupes, séances, paiements) seront définitivement effacées pour livrer une base 100% propre.",
-          confirmText: "Oui, Nettoyer la Base",
+          title: isAr ? "تفريغ قاعدة البيانات (0 تلاميذ) ؟" : "Nettoyer pour Nouveau Client (Base Vierge) ?",
+          message: isAr ? "⚠️ تنبيه : سيتم حذف كافة التلاميذ، الأفواج، الحصص والمدفوعات لتسليم قاعدة نظيفة تماماً." : "⚠️ Attention : Toutes les données actuelles (élèves, groupes, séances, paiements) seront définitivement effacées pour laisser une base 100% propre.",
+          confirmText: isAr ? "نعم، تفريغ القاعدة" : "Oui, Nettoyer la Base",
           onConfirm: async () => {
             try {
               await API.post('/api/settings/clear-data', {});
-              Toast.success('Base de données nettoyée avec succès (0 élèves) !');
+              Toast.success(isAr ? 'تم تفريغ قاعدة البيانات بنجاح (0 تلاميذ) !' : 'Base de données nettoyée avec succès (0 élèves) !');
               await State.loadInitialData();
               app.navigate('#dashboard');
             } catch (err) {

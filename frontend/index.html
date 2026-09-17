@@ -1,20 +1,20 @@
 <!DOCTYPE html>
-<html lang="fr" class="h-full bg-slate-50 antialiased">
+<html lang="fr" class="h-full bg-slate-50 antialiased" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>MathsProf — Gestion de Cours & Tuteur Indépendant</title>
+  <title>MathsProf — Plateforme Enseignant & Gestion de Cours</title>
   
-  <!-- Google Fonts: Plus Jakarta Sans & Handwriting Fonts -->
+  <!-- Google Fonts: Cairo (Arabic) & Plus Jakarta Sans (Latin) & Handwriting -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Gochi+Hand&family=Kalam:wght@300;400;700&family=Nanum+Pen+Script&family=Patrick+Hand&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=Caveat:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- KaTeX CSS & JS for Mathematical Formulas -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
   <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
 
-  <!-- HTML2Canvas for High-Res PNG Rendering -->
+  <!-- HTML2Canvas for High-Res Rendering -->
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   
   <!-- Tailwind CSS CDN -->
@@ -25,11 +25,9 @@
       theme: {
         extend: {
           fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            arabic: ['"Cairo"', '"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
             caveat: ['"Caveat"', 'cursive'],
-            kalam: ['"Kalam"', 'cursive'],
-            patrick: ['"Patrick Hand"', 'cursive'],
-            gochi: ['"Gochi Hand"', 'cursive'],
           },
           colors: {
             brand: {
@@ -67,25 +65,25 @@
   <div id="app" class="min-h-full flex flex-col hidden">
     
     <!-- Top Navbar -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-slate-200/80 transition-all duration-200">
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/80 transition-all duration-200 shadow-sm">
       <div class="px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         
         <!-- Left: Mobile Menu Button + Brand Logo -->
         <div class="flex items-center gap-3">
-          <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
+          <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500">
             <i data-lucide="menu" class="w-6 h-6"></i>
           </button>
           
           <a href="#dashboard" class="flex items-center gap-2.5 group">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white font-bold text-xl shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
+            <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-indigo-500 flex items-center justify-center text-white font-black text-xl shadow-md shadow-brand-500/20 group-hover:scale-105 transition-transform">
               <span class="tracking-tighter">∑</span>
             </div>
             <div>
-              <span class="text-lg font-bold tracking-tight text-slate-900 flex items-center gap-1.5">
+              <span class="text-lg font-black tracking-tight text-slate-900 flex items-center gap-1.5">
                 Maths<span class="text-brand-600">Prof</span>
-                <span class="text-[10px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 border border-brand-200/60 hidden sm:inline-block">Pro</span>
+                <span class="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-md bg-brand-50 text-brand-700 border border-brand-200/60 hidden sm:inline-block">2026</span>
               </span>
-              <p class="text-[11px] text-slate-500 hidden sm:block -mt-1">Gestion & Pédagogie</p>
+              <p id="nav-app-subtitle" class="text-[11px] text-slate-500 hidden sm:block -mt-1 font-medium">Gestion & Pédagogie</p>
             </div>
           </a>
         </div>
@@ -95,66 +93,78 @@
           <button id="global-search-trigger" class="w-full flex items-center justify-between px-3.5 py-2 text-sm text-slate-500 bg-slate-100/80 hover:bg-slate-100 border border-slate-200/80 rounded-xl transition-all shadow-inner focus:outline-none focus:ring-2 focus:ring-brand-500/50">
             <span class="flex items-center gap-2">
               <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-              <span class="text-slate-500">Rechercher élève, groupe, séance...</span>
+              <span id="nav-search-placeholder" class="text-slate-500 text-xs sm:text-sm">Rechercher élève, groupe, séance...</span>
             </span>
             <kbd class="px-2 py-0.5 text-[11px] font-semibold text-slate-400 bg-white border border-slate-200 rounded-md shadow-sm">Ctrl K</kbd>
           </button>
         </div>
 
-        <!-- Right: Next Session Pill + Quick Actions Dropdown + Profile -->
-        <div class="flex items-center gap-2.5 sm:gap-3">
+        <!-- Right: Language Switcher + Quick Actions + User Menu -->
+        <div class="flex items-center gap-2 sm:gap-3">
           
           <!-- Mobile search button -->
-          <button id="mobile-search-btn" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg">
+          <button id="mobile-search-btn" class="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-xl">
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
+          <!-- Bilingual Switcher Pills (FR / العربية) -->
+          <div class="flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/70">
+            <button id="lang-btn-fr" class="lang-btn px-2.5 py-1 text-xs font-bold rounded-lg transition-all" onclick="I18n.setLanguage('fr')" data-lang="fr">
+              🇫🇷 FR
+            </button>
+            <button id="lang-btn-ar" class="lang-btn px-2.5 py-1 text-xs font-bold rounded-lg transition-all" onclick="I18n.setLanguage('ar')" data-lang="ar">
+              🇹🇳 العربية
+            </button>
+          </div>
+
           <!-- Quick Action Button -->
           <div class="relative">
-            <button id="quick-action-btn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-semibold text-white bg-brand-600 hover:bg-brand-700 active:scale-95 rounded-xl shadow-sm shadow-brand-600/30 transition-all">
+            <button id="quick-action-btn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 active:scale-95 rounded-xl shadow-md shadow-brand-600/25 transition-all">
               <i data-lucide="plus" class="w-4 h-4"></i>
-              <span class="hidden sm:inline">Action Rapide</span>
+              <span id="nav-quick-action-text" class="hidden sm:inline">Action Rapide</span>
               <i data-lucide="chevron-down" class="w-3.5 h-3.5 opacity-80"></i>
             </button>
-            <div id="quick-action-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 transform origin-top-right transition-all">
+            <div id="quick-action-menu" class="hidden absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 transform origin-top-right transition-all">
               <a href="#students" onclick="app.openNewStudentModal();" class="flex items-center gap-2.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
                 <i data-lucide="user-plus" class="w-4 h-4 text-brand-600"></i>
-                + Ajouter un élève
+                <span class="i18n-text" data-key="add_student">+ Ajouter un élève</span>
               </a>
               <a href="#groups" onclick="app.openNewGroupModal();" class="flex items-center gap-2.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
                 <i data-lucide="users" class="w-4 h-4 text-indigo-600"></i>
-                + Créer un groupe
+                <span class="i18n-text" data-key="add_group">+ Créer un groupe</span>
               </a>
               <a href="#planning" onclick="app.openNewSessionModal();" class="flex items-center gap-2.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
                 <i data-lucide="calendar-plus" class="w-4 h-4 text-emerald-600"></i>
-                + Ajouter une séance
+                <span class="i18n-text" data-key="add_session">+ Ajouter une séance</span>
               </a>
               <a href="#payments" onclick="app.openNewPaymentModal();" class="flex items-center gap-2.5 px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors border-t border-slate-100 mt-1 pt-2">
                 <i data-lucide="credit-card" class="w-4 h-4 text-amber-600"></i>
-                + Enregistrer un paiement
+                <span class="i18n-text" data-key="add_payment">+ Enregistrer un paiement</span>
               </a>
             </div>
           </div>
 
           <!-- User Profile Menu -->
           <div class="relative">
-            <button id="user-menu-btn" class="flex items-center gap-2.5 p-1.5 pr-2.5 rounded-2xl hover:bg-slate-100/80 border border-transparent hover:border-slate-200/60 transition-all focus:outline-none">
+            <button id="user-menu-btn" class="flex items-center gap-2.5 p-1.5 pr-2.5 rtl:pr-1.5 rtl:pl-2.5 rounded-2xl hover:bg-slate-100/80 border border-transparent hover:border-slate-200/60 transition-all focus:outline-none">
               <div id="user-avatar-container" class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
-                <span id="user-initials">MB</span>
+                <span id="user-initials">P</span>
               </div>
-              <span id="user-display-name" class="text-xs font-bold text-slate-700 hidden lg:inline-block max-w-[130px] truncate">Prof. Mohamed</span>
+              <span id="user-display-name" class="text-xs font-bold text-slate-700 hidden lg:inline-block max-w-[130px] truncate">Enseignant</span>
               <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 hidden lg:inline-block"></i>
             </button>
-            <div id="user-menu-dropdown" class="hidden absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in">
+            <div id="user-menu-dropdown" class="hidden absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-fade-in">
               <div class="px-4 py-2.5 border-b border-slate-100">
-                <p id="user-menu-name" class="text-xs font-bold text-slate-900 truncate">Prof. Mohamed</p>
+                <p id="user-menu-name" class="text-xs font-bold text-slate-900 truncate">Enseignant</p>
                 <p id="user-menu-email" class="text-[11px] text-slate-500 truncate">admin@mathprof.tn</p>
               </div>
               <a href="#settings" class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i> Paramètres du Compte
+                <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
+                <span class="i18n-text" data-key="accountSettings">Paramètres du Compte</span>
               </a>
-              <button id="logout-btn" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-t border-slate-100 text-left transition-colors mt-1">
-                <i data-lucide="log-out" class="w-4 h-4 text-rose-500"></i> Déconnexion
+              <button id="logout-btn" class="w-full flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold text-rose-600 hover:bg-rose-50 border-t border-slate-100 text-left rtl:text-right transition-colors mt-1">
+                <i data-lucide="log-out" class="w-4 h-4 text-rose-500"></i>
+                <span class="i18n-text" data-key="logout">Déconnexion</span>
               </button>
             </div>
           </div>
@@ -167,37 +177,37 @@
     <div class="flex-1 flex overflow-hidden">
       
       <!-- Desktop Sidebar -->
-      <aside class="hidden lg:flex flex-col w-64 border-r border-slate-200/80 bg-white/80 backdrop-blur-md shrink-0 py-6 px-4 justify-between">
+      <aside class="hidden lg:flex flex-col w-64 border-r rtl:border-r-0 rtl:border-l border-slate-200/80 bg-white/80 backdrop-blur-md shrink-0 py-6 px-4 justify-between">
         
         <!-- Navigation Links -->
-        <nav class="space-y-1.5">
+        <nav class="space-y-1.5" id="sidebar-nav">
           <a href="#dashboard" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="dashboard">
             <span class="flex items-center gap-3">
               <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-              <span>Dashboard</span>
+              <span id="nav-label-dashboard">Dashboard</span>
             </span>
           </a>
 
           <a href="#students" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="students">
             <span class="flex items-center gap-3">
               <i data-lucide="graduation-cap" class="w-4 h-4"></i>
-              <span>Élèves</span>
+              <span id="nav-label-students">Élèves</span>
             </span>
-            <span id="sidebar-students-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">30</span>
+            <span id="sidebar-students-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">0</span>
           </a>
 
           <a href="#groups" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="groups">
             <span class="flex items-center gap-3">
               <i data-lucide="users" class="w-4 h-4"></i>
-              <span>Groupes</span>
+              <span id="nav-label-groups">Groupes</span>
             </span>
-            <span id="sidebar-groups-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">5</span>
+            <span id="sidebar-groups-count" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">0</span>
           </a>
 
           <a href="#repartition" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="repartition">
             <span class="flex items-center gap-3">
               <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
-              <span>Répartition Auto</span>
+              <span id="nav-label-repartition">Répartition Auto</span>
             </span>
             <span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-200/60">Smart</span>
           </a>
@@ -205,14 +215,14 @@
           <a href="#planning" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="planning">
             <span class="flex items-center gap-3">
               <i data-lucide="calendar" class="w-4 h-4"></i>
-              <span>Planning</span>
+              <span id="nav-label-planning">Planning</span>
             </span>
           </a>
 
           <a href="#attendance" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="attendance">
             <span class="flex items-center gap-3">
               <i data-lucide="check-circle-2" class="w-4 h-4"></i>
-              <span>Présences</span>
+              <span id="nav-label-attendance">Présences</span>
             </span>
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
           </a>
@@ -220,15 +230,15 @@
           <a href="#payments" class="nav-link flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="payments">
             <span class="flex items-center gap-3">
               <i data-lucide="wallet" class="w-4 h-4"></i>
-              <span>Paiements</span>
+              <span id="nav-label-payments">Paiements</span>
             </span>
-            <span id="sidebar-pending-payments-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200/50">12</span>
+            <span id="sidebar-pending-payments-badge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200/50 hidden">0</span>
           </a>
 
           <div class="pt-4 mt-2 border-t border-slate-200/60">
             <a href="#settings" class="nav-link flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all" data-route="settings">
               <i data-lucide="settings" class="w-4 h-4"></i>
-              <span>Paramètres</span>
+              <span id="nav-label-settings">Paramètres</span>
             </a>
           </div>
         </nav>
@@ -241,7 +251,7 @@
             </div>
             <div class="overflow-hidden">
               <p id="sidebar-school-year" class="text-xs font-bold text-slate-800 truncate">Année 2025-2026</p>
-              <p id="sidebar-currency-label" class="text-[11px] text-slate-500 truncate">Devise : Dinar Tunisien (DT)</p>
+              <p id="sidebar-currency-label" class="text-[11px] text-slate-500 truncate font-semibold">Devise : Dinar Tunisien (DT)</p>
             </div>
           </div>
         </div>
@@ -258,7 +268,7 @@
     <!-- Mobile Slide-over Drawer Menu -->
     <div id="mobile-drawer" class="fixed inset-0 z-50 lg:hidden hidden">
       <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
-      <div class="fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-2xl p-6 flex flex-col justify-between z-10 animate-slide-right">
+      <div class="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 max-w-xs w-full bg-white shadow-2xl p-6 flex flex-col justify-between z-10 animate-slide-right">
         <div>
           <div class="flex items-center justify-between pb-6 border-b border-slate-100">
             <div class="flex items-center gap-2.5">
@@ -267,7 +277,7 @@
               </div>
               <div>
                 <span class="text-base font-bold text-slate-900">Maths<span class="text-brand-600">Prof</span></span>
-                <p class="text-[11px] text-slate-500">Menu Principal</p>
+                <p id="mobile-menu-title" class="text-[11px] text-slate-500 font-medium">Menu Principal</p>
               </div>
             </div>
             <button id="close-mobile-drawer" class="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
@@ -275,39 +285,55 @@
             </button>
           </div>
 
-          <nav class="mt-6 space-y-1.5">
+          <!-- Mobile Language Switcher -->
+          <div class="mt-4 flex items-center justify-center gap-2 p-1 bg-slate-100 rounded-xl">
+            <button class="lang-btn flex-1 py-1.5 text-xs font-bold text-center justify-center" onclick="I18n.setLanguage('fr')" data-lang="fr">
+              🇫🇷 Français
+            </button>
+            <button class="lang-btn flex-1 py-1.5 text-xs font-bold text-center justify-center" onclick="I18n.setLanguage('ar')" data-lang="ar">
+              🇹🇳 العربية
+            </button>
+          </div>
+
+          <nav class="mt-5 space-y-1.5">
             <a href="#dashboard" class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium" data-route="dashboard">
-              <i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard
+              <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+              <span id="mobile-label-dashboard">Dashboard</span>
             </a>
             <a href="#students" class="mobile-nav-link flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium" data-route="students">
-              <span class="flex items-center gap-3"><i data-lucide="graduation-cap" class="w-5 h-5"></i> Élèves</span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100">30</span>
+              <span class="flex items-center gap-3"><i data-lucide="graduation-cap" class="w-5 h-5"></i> <span id="mobile-label-students">Élèves</span></span>
+              <span id="mobile-students-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100">0</span>
             </a>
             <a href="#groups" class="mobile-nav-link flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium" data-route="groups">
-              <span class="flex items-center gap-3"><i data-lucide="users" class="w-5 h-5"></i> Groupes</span>
-              <span class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100">5</span>
+              <span class="flex items-center gap-3"><i data-lucide="users" class="w-5 h-5"></i> <span id="mobile-label-groups">Groupes</span></span>
+              <span id="mobile-groups-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100">0</span>
             </a>
             <a href="#repartition" class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium" data-route="repartition">
-              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i> Répartition Auto
+              <i data-lucide="sparkles" class="w-4 h-4 text-amber-500"></i>
+              <span id="mobile-label-repartition">Répartition Auto</span>
             </a>
             <a href="#planning" class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium" data-route="planning">
-              <i data-lucide="calendar" class="w-5 h-5"></i> Planning
+              <i data-lucide="calendar" class="w-5 h-5"></i>
+              <span id="mobile-label-planning">Planning</span>
             </a>
             <a href="#attendance" class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium" data-route="attendance">
-              <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i> Présences
+              <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+              <span id="mobile-label-attendance">Présences</span>
             </a>
             <a href="#payments" class="mobile-nav-link flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium" data-route="payments">
-              <span class="flex items-center gap-3"><i data-lucide="wallet" class="w-5 h-5 text-indigo-600"></i> Paiements</span>
+              <span class="flex items-center gap-3"><i data-lucide="wallet" class="w-5 h-5 text-indigo-600"></i> <span id="mobile-label-payments">Paiements</span></span>
             </a>
             <a href="#settings" class="mobile-nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium" data-route="settings">
-              <i data-lucide="settings" class="w-5 h-5"></i> Paramètres
+              <i data-lucide="settings" class="w-5 h-5"></i>
+              <span id="mobile-label-settings">Paramètres</span>
             </a>
           </nav>
         </div>
 
         <div class="pt-6 border-t border-slate-100">
           <button id="mobile-logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 text-rose-600 font-semibold text-sm hover:bg-rose-100 transition-colors">
-            <i data-lucide="log-out" class="w-4 h-4"></i> Déconnexion
+            <i data-lucide="log-out" class="w-4 h-4"></i>
+            <span class="i18n-text" data-key="logout">Déconnexion</span>
           </button>
         </div>
       </div>
@@ -317,23 +343,23 @@
     <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-2 py-1.5 flex justify-around items-center z-30 shadow-lg">
       <a href="#dashboard" class="mobile-bottom-nav flex flex-col items-center py-1 px-3 text-xs font-medium rounded-xl" data-route="dashboard">
         <i data-lucide="layout-dashboard" class="w-5 h-5 mb-0.5"></i>
-        <span>Accueil</span>
+        <span id="bottom-label-dashboard">Accueil</span>
       </a>
       <a href="#students" class="mobile-bottom-nav flex flex-col items-center py-1 px-3 text-xs font-medium rounded-xl" data-route="students">
         <i data-lucide="graduation-cap" class="w-5 h-5 mb-0.5"></i>
-        <span>Élèves</span>
+        <span id="bottom-label-students">Élèves</span>
       </a>
       <a href="#groups" class="mobile-bottom-nav flex flex-col items-center py-1 px-3 text-xs font-medium rounded-xl" data-route="groups">
         <i data-lucide="users" class="w-5 h-5 mb-0.5"></i>
-        <span>Groupes</span>
+        <span id="bottom-label-groups">Groupes</span>
       </a>
       <a href="#planning" class="mobile-bottom-nav flex flex-col items-center py-1 px-3 text-xs font-medium rounded-xl" data-route="planning">
         <i data-lucide="calendar" class="w-5 h-5 mb-0.5"></i>
-        <span>Planning</span>
+        <span id="bottom-label-planning">Planning</span>
       </a>
       <a href="#payments" class="mobile-bottom-nav flex flex-col items-center py-1 px-3 text-xs font-medium rounded-xl" data-route="payments">
         <i data-lucide="wallet" class="w-5 h-5 mb-0.5"></i>
-        <span>Paiements</span>
+        <span id="bottom-label-payments">Paiements</span>
       </a>
     </nav>
 
@@ -348,7 +374,7 @@
   <div id="modal-container" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto p-4 sm:p-6 lg:p-8 flex min-h-full items-center justify-center">
-      <div id="modal-content" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-100">
+      <div id="modal-content" class="relative transform overflow-hidden rounded-2xl bg-white text-left rtl:text-right shadow-2xl transition-all w-full max-w-xl border border-slate-100">
         <!-- Injected dynamically by modal.js -->
       </div>
     </div>
@@ -372,9 +398,10 @@
   </div>
 
   <!-- Global Toast Notifications Container -->
-  <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-3 pointer-events-none max-w-sm w-full"></div>
+  <div id="toast-container" class="fixed top-4 right-4 rtl:right-auto rtl:left-4 z-50 space-y-3 pointer-events-none max-w-sm w-full"></div>
 
-  <!-- Application Services -->
+  <!-- Core I18n & API & State Scripts -->
+  <script src="/js/i18n.js"></script>
   <script src="/js/api.js"></script>
   <script src="/js/state.js"></script>
   <script src="/js/services/handwriting_renderer.js"></script>
@@ -389,9 +416,6 @@
   <!-- Views -->
   <script src="/js/views/login.js"></script>
   <script src="/js/views/dashboard.js"></script>
-  <script src="/js/views/corrections_dashboard.js"></script>
-  <script src="/js/views/correction_upload.js"></script>
-  <script src="/js/views/correction_editor.js"></script>
   <script src="/js/views/students.js"></script>
   <script src="/js/views/student_detail.js"></script>
   <script src="/js/views/groups.js"></script>

@@ -16,17 +16,89 @@ import threading
 from .seed_data import seed_database, init_virgin_database
 from .routers import (
     auth, dashboard, students, groups, sessions, attendance,
-    payments, repartition, reports, corrections, whatsapp
+    payments, repartition, reports, corrections
 )
 from .services.scheduler import start_scheduler, shutdown_scheduler
+
+def normalize_legacy_db_records(db: Session):
+    """Normalize any legacy levels and payment methods safely into strict Tunisian values."""
+    try:
+        level_map = {
+            "baccalaureat": "Bac",
+            "baccalauréat": "Bac",
+            "bac": "Bac",
+            "2eme": "2ème",
+            "2ème": "2ème",
+            "2eme sciences": "2ème",
+            "2ème sciences": "2ème",
+            "2eme economie": "2ème",
+            "2ème economie": "2ème",
+            "3eme": "3ème",
+            "3ème": "3ème",
+            "3eme annee": "3ème",
+            "3ème année": "3ème",
+            "3eme math": "3ème",
+            "3ème math": "3ème",
+            "3eme sciences": "3ème",
+            "3ème sciences": "3ème",
+            "9eme": "1ère",
+            "9ème": "1ère",
+            "9eme annee": "1ère",
+            "9ème année": "1ère",
+            "9eme base": "1ère",
+            "9ème base": "1ère",
+            "1ere": "1ère",
+            "1ère": "1ère",
+            "1ere annee": "1ère",
+            "1ère année": "1ère",
+        }
+
+        # Normalize students
+        students_list = db.query(Student).all()
+        for s in students_list:
+            curr_lvl = (s.level or "").strip().lower()
+            if curr_lvl in level_map:
+                s.level = level_map[curr_lvl]
+            elif s.level not in ["1ère", "2ème", "3ème", "Bac"]:
+                s.level = "Bac"
+
+        # Normalize groups
+        groups_list = db.query(Group).all()
+        for g in groups_list:
+            curr_lvl = (g.level or "").strip().lower()
+            if curr_lvl in level_map:
+                g.level = level_map[curr_lvl]
+            elif g.level not in ["1ère", "2ème", "3ème", "Bac"]:
+                g.level = "Bac"
+
+        # Normalize payments
+        payments_list = db.query(Payment).all()
+        for p in payments_list:
+            pm = (p.payment_method or "").strip().lower()
+            if "vir" in pm:
+                p.payment_method = "Virement bancaire"
+            else:
+                p.payment_method = "Espèces"
+
+        # Normalize users currency
+        users_list = db.query(User).all()
+        for u in users_list:
+            u.currency = "DT"
+
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        print(f"[MIGRATION NOTICE] Error normalizing legacy records: {e}")
 
 # Initialize database tables
 Base.metadata.create_all(bind=engine)
 
-# Seed virgin initial setup if database is completely new
+# Seed virgin initial setup if database is completely new & normalize legacy records
 with SessionLocal() as db_session:
     if db_session.query(User).count() == 0:
         init_virgin_database(db_session)
+    else:
+        normalize_legacy_db_records(db_session)
 
 app = FastAPI(
     title="Étude Math Pro API",
@@ -46,6 +118,11 @@ app.add_middleware(
 # Startup & Shutdown lifecycle
 @app.on_event("startup")
 def on_app_startup():
+    try:
+        with SessionLocal() as db:
+            normalize_legacy_db_records(db)
+    except Exception as e:
+        print(f"[STARTUP NOTICE] Normalization error: {e}")
     try:
         threading.Thread(target=start_scheduler, daemon=True, name="SchedulerStarter").start()
     except Exception as e:
@@ -69,7 +146,6 @@ app.include_router(payments.router)
 app.include_router(repartition.router)
 app.include_router(reports.router)
 app.include_router(corrections.router)
-app.include_router(whatsapp.router)
 
 
 from .routers.auth import get_current_user
@@ -296,6 +372,15 @@ def import_database(
             if user_data.get("school_year"): current_user.school_year = user_data["school_year"]
             if user_data.get("avatar"): current_user.avatar = user_data["avatar"]
 
+        # Helper to normalize incoming level strings
+        def clean_level(raw_lvl: str) -> str:
+            val = (raw_lvl or "").strip().lower()
+            if "bac" in val: return "Bac"
+            if "2" in val: return "2ème"
+            if "3" in val: return "3ème"
+            if "9" in val or "1" in val: return "1ère"
+            return "Bac"
+
         # 3. Restore groups (mapping old id to new id)
         group_id_map = {}
         for g_data in payload.get("groups", []):
@@ -303,7 +388,7 @@ def import_database(
             new_group = Group(
                 user_id=user_id,
                 name=g_data.get("name", "Groupe"),
-                level=g_data.get("level", "Baccalauréat"),
+                level=clean_level(g_data.get("level")),
                 capacity=g_data.get("capacity", 15),
                 schedule=g_data.get("schedule", ""),
                 color=g_data.get("color", "#7c3aed"),
@@ -326,7 +411,7 @@ def import_database(
                 student_code=s_data.get("code") or s_data.get("student_code") or f"ST-{datetime.datetime.utcnow().timestamp()}",
                 first_name=s_data.get("first_name") or s_data.get("name", "Élève").split(" ")[0],
                 last_name=s_data.get("last_name") or (" ".join(s_data.get("name", "").split(" ")[1:]) if " " in s_data.get("name", "") else ""),
-                level=s_data.get("level", "Baccalauréat"),
+                level=clean_level(s_data.get("level")),
                 student_phone=s_data.get("phone") or s_data.get("student_phone"),
                 father_phone=s_data.get("father_phone"),
                 mother_phone=s_data.get("mother_phone"),
@@ -375,13 +460,16 @@ def import_database(
                     except Exception:
                         pay_date_val = datetime.date.today()
 
+                raw_method = pay_data.get("method") or pay_data.get("payment_method") or "Espèces"
+                cleaned_method = "Virement bancaire" if "vir" in str(raw_method).lower() else "Espèces"
+
                 new_pay = Payment(
                     student_id=mapped_st_id,
                     month=pay_data.get("month", "Septembre 2025"),
                     amount=float(pay_data.get("amount", 70.0)),
                     status=pay_data.get("status", "paid"),
                     payment_date=pay_date_val or datetime.date.today(),
-                    payment_method=pay_data.get("method") or pay_data.get("payment_method") or "Espèces",
+                    payment_method=cleaned_method,
                     receipt_number=pay_data.get("receipt_number") or f"REC-{datetime.datetime.utcnow().strftime('%Y%m')}-001"
                 )
                 db.add(new_pay)

@@ -1,4 +1,4 @@
-// Navbar & Global Search Component
+// Navbar & Global Search Component with I18n
 const Navbar = {
   searchModal: null,
   searchInput: null,
@@ -68,7 +68,7 @@ const Navbar = {
         clearTimeout(debounceTimer);
         const q = e.target.value.trim();
         if (!q) {
-          this.searchResults.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Commencez à taper pour rechercher...</p>';
+          this.searchResults.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">${I18n.t('searchPlaceholder')}</p>`;
           return;
         }
         debounceTimer = setTimeout(() => this.performSearch(q), 200);
@@ -81,10 +81,11 @@ const Navbar = {
     this.searchModal.classList.remove('hidden');
     if (this.searchInput) {
       this.searchInput.value = '';
+      this.searchInput.placeholder = I18n.t('searchPlaceholder');
       this.searchInput.focus();
     }
     if (this.searchResults) {
-      this.searchResults.innerHTML = '<p class="text-xs text-slate-400 text-center py-6">Recherchez un élève, groupe, séance, numéro de téléphone...</p>';
+      this.searchResults.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">${I18n.t('searchPlaceholder')}</p>`;
     }
     if (window.lucide) lucide.createIcons();
   },
@@ -96,12 +97,12 @@ const Navbar = {
 
   async performSearch(q) {
     try {
-      this.searchResults.innerHTML = '<p class="text-xs text-slate-400 text-center py-6 animate-pulse">Recherche en cours...</p>';
+      this.searchResults.innerHTML = `<p class="text-xs text-slate-400 text-center py-6 animate-pulse">${I18n.t('loading')}</p>`;
       const res = await API.get(`/api/search?q=${encodeURIComponent(q)}`);
       
       const { students, groups, sessions, total_matches } = res.results;
       if (total_matches === 0) {
-        this.searchResults.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">Aucun résultat trouvé pour "${q}".</p>`;
+        this.searchResults.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">${I18n.currentLang === 'ar' ? 'لم يتم العثور على نتائج لـ' : 'Aucun résultat trouvé pour'} "${q}".</p>`;
         return;
       }
 
@@ -109,8 +110,9 @@ const Navbar = {
 
       // Students
       if (students.length > 0) {
-        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">Élèves (${students.length})</div>`;
+        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1">${I18n.t('navStudents')} (${students.length})</div>`;
         students.forEach(s => {
+          const badgeLvl = I18n.getLevelLabel(s.badge);
           html += `
             <a href="#students/${s.id}" onclick="Navbar.closeSearch()" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
               <div class="flex items-center gap-3">
@@ -122,7 +124,7 @@ const Navbar = {
                   <p class="text-xs text-slate-500">${s.subtitle}</p>
                 </div>
               </div>
-              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">${s.badge}</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">${badgeLvl}</span>
             </a>
           `;
         });
@@ -130,7 +132,7 @@ const Navbar = {
 
       // Groups
       if (groups.length > 0) {
-        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2">Groupes (${groups.length})</div>`;
+        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2">${I18n.t('navGroups')} (${groups.length})</div>`;
         groups.forEach(g => {
           html += `
             <a href="#groups" onclick="Navbar.closeSearch()" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">
@@ -151,7 +153,7 @@ const Navbar = {
 
       // Sessions
       if (sessions.length > 0) {
-        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2">Séances (${sessions.length})</div>`;
+        html += `<div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 py-1 mt-2">${I18n.t('navPlanning')} (${sessions.length})</div>`;
         sessions.forEach(sess => {
           html += `
             <a href="#planning" onclick="Navbar.closeSearch()" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-200 transition-all">

@@ -41,7 +41,7 @@ def test_multi_tenant_registration_and_data_isolation():
         "email": "teacher_b@mathprof.tn",
         "password": "passwordB123",
         "phone": "+216 20 333 444",
-        "currency": "€",
+        "currency": "DT",
         "school_year": "2025-2026"
     })
     assert res_b.status_code == 200
@@ -51,7 +51,7 @@ def test_multi_tenant_registration_and_data_isolation():
     # 3. Teacher A creates a group and a student
     grp_a = client.post("/api/groups", headers=headers_a, json={
         "name": "Groupe Alpha Teacher A",
-        "level": "Baccalauréat",
+        "level": "Bac",
         "capacity": 10
     })
     assert grp_a.status_code == 200
@@ -60,7 +60,7 @@ def test_multi_tenant_registration_and_data_isolation():
     st_a = client.post("/api/students", headers=headers_a, json={
         "first_name": "EleveA",
         "last_name": "DuProfA",
-        "level": "Baccalauréat",
+        "level": "Bac",
         "group_id": grp_a_id,
         "monthly_price": 95.0
     })
@@ -70,7 +70,7 @@ def test_multi_tenant_registration_and_data_isolation():
     # 4. Teacher B creates a group and a student
     grp_b = client.post("/api/groups", headers=headers_b, json={
         "name": "Groupe Beta Teacher B",
-        "level": "2ème Sciences",
+        "level": "2ème",
         "capacity": 8
     })
     assert grp_b.status_code == 200
@@ -79,7 +79,7 @@ def test_multi_tenant_registration_and_data_isolation():
     st_b = client.post("/api/students", headers=headers_b, json={
         "first_name": "EleveB",
         "last_name": "DuProfB",
-        "level": "2ème Sciences",
+        "level": "2ème",
         "group_id": grp_b_id,
         "monthly_price": 75.0
     })
@@ -112,6 +112,6 @@ def test_multi_tenant_registration_and_data_isolation():
     cross_edit = client.put(f"/api/students/{st_a_id}", headers=headers_b, json={
         "first_name": "HackedName",
         "last_name": "Hacked",
-        "level": "Baccalauréat"
+        "level": "Bac"
     })
     assert cross_edit.status_code in [404, 403]

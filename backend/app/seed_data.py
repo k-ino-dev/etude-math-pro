@@ -60,11 +60,11 @@ def seed_database(db: Session, reset: bool = False):
     db.commit()
     db.refresh(teacher)
 
-    # 2. Groups (5 groups across 3 levels)
+    # 2. Groups (5 groups across strict levels)
     groups_data = [
         {
             "name": "Bac Math A",
-            "level": "Baccalauréat",
+            "level": "Bac",
             "subject": "Mathématiques",
             "capacity": 15,
             "schedule": "Samedi 10:00 - 12:00",
@@ -76,7 +76,7 @@ def seed_database(db: Session, reset: bool = False):
         },
         {
             "name": "Bac Math B",
-            "level": "Baccalauréat",
+            "level": "Bac",
             "subject": "Mathématiques",
             "capacity": 15,
             "schedule": "Dimanche 10:00 - 12:00",
@@ -88,7 +88,7 @@ def seed_database(db: Session, reset: bool = False):
         },
         {
             "name": "2ème Sci A",
-            "level": "2ème Sciences",
+            "level": "2ème",
             "subject": "Mathématiques",
             "capacity": 12,
             "schedule": "Mercredi 15:30 - 17:30",
@@ -100,7 +100,7 @@ def seed_database(db: Session, reset: bool = False):
         },
         {
             "name": "2ème Sci B",
-            "level": "2ème Sciences",
+            "level": "2ème",
             "subject": "Mathématiques",
             "capacity": 12,
             "schedule": "Vendredi 17:00 - 19:00",
@@ -111,8 +111,8 @@ def seed_database(db: Session, reset: bool = False):
             "color": "#0d9488"
         },
         {
-            "name": "9ème Base A",
-            "level": "9ème Année",
+            "name": "1ère Base A",
+            "level": "1ère",
             "subject": "Mathématiques",
             "capacity": 10,
             "schedule": "Samedi 15:00 - 16:30",
@@ -136,44 +136,44 @@ def seed_database(db: Session, reset: bool = False):
     # 3. 30 Realistic Students
     students_data = [
         # Bac Math A (8 students)
-        ("Ahmed", "Ben Ali", "Baccalauréat", "+216 22 111 001", "+216 98 111 001", "+216 55 111 001", 90.0, created_groups[0].id, "Élève sérieux, bonne intuition mathématique"),
-        ("Mariem", "Trabelsi", "Baccalauréat", "+216 22 111 002", "+216 98 111 002", "+216 55 111 002", 90.0, created_groups[0].id, "Excellents résultats en analyse et complexes"),
-        ("Yassine", "Mansour", "Baccalauréat", "+216 22 111 003", "+216 98 111 003", "+216 55 111 003", 90.0, created_groups[0].id, "Doit faire plus d'exercices sur les probabilités"),
-        ("Nour", "Jaziri", "Baccalauréat", "+216 22 111 004", "+216 98 111 004", "+216 55 111 004", 90.0, created_groups[0].id, "Très attentive et appliquée"),
-        ("Khalil", "Dridi", "Baccalauréat", "+216 22 111 005", "+216 98 111 005", "+216 55 111 005", 90.0, created_groups[0].id, "Participe activement au cours"),
-        ("Aya", "Sassi", "Baccalauréat", "+216 22 111 006", "+216 98 111 006", "+216 55 111 006", 90.0, created_groups[0].id, "Niveau solide en géométrie spatiale"),
-        ("Aziz", "Gharbi", "Baccalauréat", "+216 22 111 007", "+216 98 111 007", "+216 55 111 007", 90.0, created_groups[0].id, "Bonne rigueur rédactionnelle"),
-        ("Salma", "Khemir", "Baccalauréat", "+216 22 111 008", "+216 98 111 008", "+216 55 111 008", 90.0, created_groups[0].id, "A besoin d'approfondir les limites et continuités"),
+        ("Ahmed", "Ben Ali", "Bac", "+216 22 111 001", "+216 98 111 001", "+216 55 111 001", 90.0, created_groups[0].id, "Élève sérieux, bonne intuition mathématique"),
+        ("Mariem", "Trabelsi", "Bac", "+216 22 111 002", "+216 98 111 002", "+216 55 111 002", 90.0, created_groups[0].id, "Excellents résultats en analyse et complexes"),
+        ("Yassine", "Mansour", "Bac", "+216 22 111 003", "+216 98 111 003", "+216 55 111 003", 90.0, created_groups[0].id, "Doit faire plus d'exercices sur les probabilités"),
+        ("Nour", "Jaziri", "Bac", "+216 22 111 004", "+216 98 111 004", "+216 55 111 004", 90.0, created_groups[0].id, "Très attentive et appliquée"),
+        ("Khalil", "Dridi", "Bac", "+216 22 111 005", "+216 98 111 005", "+216 55 111 005", 90.0, created_groups[0].id, "Participe activement au cours"),
+        ("Aya", "Sassi", "Bac", "+216 22 111 006", "+216 98 111 006", "+216 55 111 006", 90.0, created_groups[0].id, "Niveau solide en géométrie spatiale"),
+        ("Aziz", "Gharbi", "Bac", "+216 22 111 007", "+216 98 111 007", "+216 55 111 007", 90.0, created_groups[0].id, "Bonne rigueur rédactionnelle"),
+        ("Salma", "Khemir", "Bac", "+216 22 111 008", "+216 98 111 008", "+216 55 111 008", 90.0, created_groups[0].id, "A besoin d'approfondir les limites et continuités"),
         
         # Bac Math B (6 students)
-        ("Farouk", "Bouazizi", "Baccalauréat", "+216 22 111 009", "+216 98 111 009", "+216 55 111 009", 90.0, created_groups[1].id, "Progression constante sur les équations différentielles"),
-        ("Ines", "Chaabane", "Baccalauréat", "+216 22 111 010", "+216 98 111 010", "+216 55 111 010", 90.0, created_groups[1].id, "Très méthodique dans la résolution des problèmes"),
-        ("Omar", "Riahi", "Baccalauréat", "+216 22 111 011", "+216 98 111 011", "+216 55 111 011", 90.0, created_groups[1].id, "Doit être plus régulier dans ses devoirs"),
-        ("Rania", "Ayari", "Baccalauréat", "+216 22 111 012", "+216 98 111 012", "+216 55 111 012", 90.0, created_groups[1].id, "Excellente compréhension des fonctions réciproques"),
-        ("Mohamed Amine", "Toumi", "Baccalauréat", "+216 22 111 013", "+216 98 111 013", "+216 55 111 013", 90.0, created_groups[1].id, "Capacité de calcul mental remarquable"),
-        ("Syrine", "Belhadj", "Baccalauréat", "+216 22 111 014", "+216 98 111 014", "+216 55 111 014", 90.0, created_groups[1].id, "Progrès notables en arithmétique"),
+        ("Farouk", "Bouazizi", "Bac", "+216 22 111 009", "+216 98 111 009", "+216 55 111 009", 90.0, created_groups[1].id, "Progression constante sur les équations différentielles"),
+        ("Ines", "Chaabane", "Bac", "+216 22 111 010", "+216 98 111 010", "+216 55 111 010", 90.0, created_groups[1].id, "Très méthodique dans la résolution des problèmes"),
+        ("Omar", "Riahi", "Bac", "+216 22 111 011", "+216 98 111 011", "+216 55 111 011", 90.0, created_groups[1].id, "Doit être plus régulier dans ses devoirs"),
+        ("Rania", "Ayari", "Bac", "+216 22 111 012", "+216 98 111 012", "+216 55 111 012", 90.0, created_groups[1].id, "Excellente compréhension des fonctions réciproques"),
+        ("Mohamed Amine", "Toumi", "Bac", "+216 22 111 013", "+216 98 111 013", "+216 55 111 013", 90.0, created_groups[1].id, "Capacité de calcul mental remarquable"),
+        ("Syrine", "Belhadj", "Bac", "+216 22 111 014", "+216 98 111 014", "+216 55 111 014", 90.0, created_groups[1].id, "Progrès notables en arithmétique"),
 
         # 2ème Sci A (6 students)
-        ("Houssem", "Mathlouthi", "2ème Sciences", "+216 22 111 015", "+216 98 111 015", "+216 55 111 015", 80.0, created_groups[2].id, "Bonne base en polynômes"),
-        ("Chaima", "Hamdi", "2ème Sciences", "+216 22 111 016", "+216 98 111 016", "+216 55 111 016", 80.0, created_groups[2].id, "Très bon sens de l'observation géométrique"),
-        ("Rayen", "Zaidi", "2ème Sciences", "+216 22 111 017", "+216 98 111 017", "+216 55 111 017", 80.0, created_groups[2].id, "Doit réviser la trigonométrie"),
-        ("Eya", "Mejri", "2ème Sciences", "+216 22 111 018", "+216 98 111 018", "+216 55 111 018", 80.0, created_groups[2].id, "Travail soigné et régulier"),
-        ("Hamza", "Trabelsi", "2ème Sciences", "+216 22 111 019", "+216 98 111 019", "+216 55 111 019", 80.0, created_groups[2].id, "Dynamique et curieux"),
-        ("Mayssa", "Ben Salem", "2ème Sciences", "+216 22 111 020", "+216 98 111 020", "+216 55 111 020", 80.0, created_groups[2].id, "Bonne maîtrise des vecteurs"),
+        ("Houssem", "Mathlouthi", "2ème", "+216 22 111 015", "+216 98 111 015", "+216 55 111 015", 80.0, created_groups[2].id, "Bonne base en polynômes"),
+        ("Chaima", "Hamdi", "2ème", "+216 22 111 016", "+216 98 111 016", "+216 55 111 016", 80.0, created_groups[2].id, "Très bon sens de l'observation géométrique"),
+        ("Rayen", "Zaidi", "2ème", "+216 22 111 017", "+216 98 111 017", "+216 55 111 017", 80.0, created_groups[2].id, "Doit réviser la trigonométrie"),
+        ("Eya", "Mejri", "2ème", "+216 22 111 018", "+216 98 111 018", "+216 55 111 018", 80.0, created_groups[2].id, "Travail soigné et régulier"),
+        ("Hamza", "Trabelsi", "2ème", "+216 22 111 019", "+216 98 111 019", "+216 55 111 019", 80.0, created_groups[2].id, "Dynamique et curieux"),
+        ("Mayssa", "Ben Salem", "2ème", "+216 22 111 020", "+216 98 111 020", "+216 55 111 020", 80.0, created_groups[2].id, "Bonne maîtrise des vecteurs"),
 
         # 2ème Sci B (5 students)
-        ("Adem", "Guesmi", "2ème Sciences", "+216 22 111 021", "+216 98 111 021", "+216 55 111 021", 80.0, created_groups[3].id, "Besoin d'aide pour le calcul barycentrique"),
-        ("Emna", "Driss", "2ème Sciences", "+216 22 111 022", "+216 98 111 022", "+216 55 111 022", 80.0, created_groups[3].id, "Très motivée"),
-        ("Bilel", "Yahiaoui", "2ème Sciences", "+216 22 111 023", "+216 98 111 023", "+216 55 111 023", 80.0, created_groups[3].id, "À l'aise avec les systèmes d'équations"),
-        ("Molka", "Cherif", "2ème Sciences", "+216 22 111 024", "+216 98 111 024", "+216 55 111 024", 80.0, created_groups[3].id, "Devoirs toujours bien rédigés"),
-        ("Wassim", "Baccouche", "2ème Sciences", "+216 22 111 025", "+216 98 111 025", "+216 55 111 025", 80.0, created_groups[3].id, "Bon potentiel, manque un peu de concentration"),
+        ("Adem", "Guesmi", "2ème", "+216 22 111 021", "+216 98 111 021", "+216 55 111 021", 80.0, created_groups[3].id, "Besoin d'aide pour le calcul barycentrique"),
+        ("Emna", "Driss", "2ème", "+216 22 111 022", "+216 98 111 022", "+216 55 111 022", 80.0, created_groups[3].id, "Très motivée"),
+        ("Bilel", "Yahiaoui", "2ème", "+216 22 111 023", "+216 98 111 023", "+216 55 111 023", 80.0, created_groups[3].id, "À l'aise avec les systèmes d'équations"),
+        ("Molka", "Cherif", "2ème", "+216 22 111 024", "+216 98 111 024", "+216 55 111 024", 80.0, created_groups[3].id, "Devoirs toujours bien rédigés"),
+        ("Wassim", "Baccouche", "2ème", "+216 22 111 025", "+216 98 111 025", "+216 55 111 025", 80.0, created_groups[3].id, "Bon potentiel, manque un peu de concentration"),
 
-        # 9ème Base A (5 students)
-        ("Ons", "Jlassi", "9ème Année", "+216 22 111 026", "+216 98 111 026", "+216 55 111 026", 70.0, created_groups[4].id, "Excellents résultats sur le théorème de Thalès"),
-        ("Karim", "Zouari", "9ème Année", "+216 22 111 027", "+216 98 111 027", "+216 55 111 027", 70.0, created_groups[4].id, "Doit perfectionner le calcul littéral et factorisation"),
-        ("Hiba", "Fakhfakh", "9ème Année", "+216 22 111 028", "+216 98 111 028", "+216 55 111 028", 70.0, created_groups[4].id, "Très bon travail en géométrie"),
-        ("Mehdi", "Rebai", "9ème Année", "+216 22 111 029", "+216 98 111 029", "+216 55 111 029", 70.0, created_groups[4].id, "Participation active"),
-        ("Zeineb", "Mahjoub", "9ème Année", "+216 22 111 030", "+216 98 111 030", "+216 55 111 030", 70.0, created_groups[4].id, "Très sérieuse et régulière"),
+        # 1ère Base A (5 students)
+        ("Ons", "Jlassi", "1ère", "+216 22 111 026", "+216 98 111 026", "+216 55 111 026", 70.0, created_groups[4].id, "Excellents résultats sur le théorème de Thalès"),
+        ("Karim", "Zouari", "1ère", "+216 22 111 027", "+216 98 111 027", "+216 55 111 027", 70.0, created_groups[4].id, "Doit perfectionner le calcul littéral et factorisation"),
+        ("Hiba", "Fakhfakh", "1ère", "+216 22 111 028", "+216 98 111 028", "+216 55 111 028", 70.0, created_groups[4].id, "Très bon travail en géométrie"),
+        ("Mehdi", "Rebai", "1ère", "+216 22 111 029", "+216 98 111 029", "+216 55 111 029", 70.0, created_groups[4].id, "Participation active"),
+        ("Zeineb", "Mahjoub", "1ère", "+216 22 111 030", "+216 98 111 030", "+216 55 111 030", 70.0, created_groups[4].id, "Très sérieuse et régulière"),
     ]
 
     created_students = []

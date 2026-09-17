@@ -56,15 +56,15 @@ def test_list_and_search_students():
     assert "Ahmed" in results[0]["first_name"]
 
     # Filter by level
-    res_level = client.get("/api/students?level=Baccalauréat")
+    res_level = client.get("/api/students?level=Bac")
     assert res_level.status_code == 200
-    assert all(s["level"] == "Baccalauréat" for s in res_level.json())
+    assert all(s["level"] == "Bac" for s in res_level.json())
 
 def test_create_student_and_capacity_check():
     # First create a test small group with capacity 1
     grp_res = client.post("/api/groups", json={
         "name": "Test Group Cap 1",
-        "level": "Baccalauréat",
+        "level": "Bac",
         "capacity": 1
     })
     assert grp_res.status_code == 200
@@ -75,7 +75,7 @@ def test_create_student_and_capacity_check():
     st1 = client.post("/api/students", json={
         "first_name": "Test1",
         "last_name": "User",
-        "level": "Baccalauréat",
+        "level": "Bac",
         "group_id": grp_id,
         "monthly_price": 80.0
     })
@@ -85,7 +85,7 @@ def test_create_student_and_capacity_check():
     st2 = client.post("/api/students", json={
         "first_name": "Test2",
         "last_name": "User",
-        "level": "Baccalauréat",
+        "level": "Bac",
         "group_id": grp_id,
         "monthly_price": 80.0
     })
@@ -192,7 +192,7 @@ def test_payments_and_receipt():
     assert len(st_detail["payment_history"]) > 0
 
 def test_repartition_smart_balancing():
-    res = client.get("/api/repartition/preview?level=Baccalauréat&target_capacity=15")
+    res = client.get("/api/repartition/preview?level=Bac&target_capacity=15")
     assert res.status_code == 200
     data = res.json()
     assert data["total_students"] > 0
@@ -249,43 +249,6 @@ def test_user_profile_update_and_settings():
         "password": "password123"
     })
 
-def test_whatsapp_endpoints():
-    # 1. Get WhatsApp settings
-    res = client.get("/api/whatsapp/settings")
-    assert res.status_code == 200
-    data = res.json()
-    assert "whatsapp_phone" in data
-    assert "daily_schedule_time" in data
-
-    # 2. Update WhatsApp settings
-    up_res = client.put("/api/whatsapp/settings", json={
-        "whatsapp_phone": "+216 98 123 456",
-        "daily_schedule_time": "20:30",
-        "provider": "simulation"
-    })
-    assert up_res.status_code == 200
-    assert up_res.json()["daily_schedule_time"] == "20:30"
-
-    # 3. Test WhatsApp dispatch
-    test_res = client.post("/api/whatsapp/test", json={
-        "phone": "+216 98 123 456"
-    })
-    assert test_res.status_code == 200
-    assert test_res.json()["success"] is True
-
-    # 4. Immediate schedule send
-    now_res = client.post("/api/whatsapp/send-schedule-now", json={
-        "force": True
-    })
-    assert now_res.status_code == 200
-    assert now_res.json()["success"] is True
-
-    # 5. View Logs
-    logs_res = client.get("/api/whatsapp/logs")
-    assert logs_res.status_code == 200
-    logs = logs_res.json()
-    assert len(logs) >= 2
-
 def test_backup_and_restore_flow():
     # 1. Export database
     export_res = client.get("/api/settings/export")
@@ -302,4 +265,45 @@ def test_backup_and_restore_flow():
     st_res = client.get("/api/students")
     assert st_res.status_code == 200
     assert len(st_res.json()) > 0
+
+def test_strict_levels_and_payment_methods():
+    # 1. Test student creation with legacy level (should normalize to strict level)
+    st_res = client.post("/api/students", json={
+        "first_name": "Test",
+        "last_name": "Normalized",
+        "phone": "+216 22 111 222",
+        "parent_phone": "+216 98 111 222",
+        "level": "Baccalauréat",  # Legacy label
+        "monthly_price": 85.0
+    })
+    assert st_res.status_code == 200
+    st_data = st_res.json()
+    assert st_data["level"] == "Bac"  # Normalized to strict level
+
+    # 2. Test group creation with legacy level (should normalize to strict level)
+    grp_res = client.post("/api/groups", json={
+        "name": "Groupe Test Strict",
+        "level": "1ère Année",  # Legacy label
+        "max_capacity": 10,
+        "schedule_day": "Mardi",
+        "schedule_time": "18:00",
+        "color": "#4f46e5"
+    })
+    assert grp_res.status_code == 200
+    grp_data = grp_res.json()
+    assert grp_data["level"] == "1ère"  # Normalized to strict level
+
+    # 3. Test payment creation with strict payment method
+    pay_res = client.post("/api/payments", json={
+        "student_id": st_data["id"],
+        "month": "Novembre 2025",
+        "amount": 85.0,
+        "payment_method": "Espèces",
+        "payment_date": "2025-11-05"
+    })
+    assert pay_res.status_code == 200
+    pay_data = pay_res.json()
+    assert pay_data["payment_method"] == "Espèces"
+    assert pay_data["status"] == "paid"
+
 

@@ -1,11 +1,11 @@
-// Student Detail Profile View
+// Student Detail Profile View — 2026 Commercial Edition (Étude Math Pro)
 const StudentDetailView = {
   activeTab: 'payments', // 'payments', 'attendance', 'notes'
 
   async render(container, studentId) {
     container.innerHTML = `
       <div class="space-y-6 animate-fade-in" id="st-detail-wrapper">
-        <div class="p-12 text-center text-slate-400 text-sm">Chargement du profil élève...</div>
+        <div class="p-12 text-center text-slate-400 text-sm">${I18n.t('loading')}</div>
       </div>
     `;
 
@@ -16,14 +16,15 @@ const StudentDetailView = {
       container.innerHTML = `
         <div class="p-12 text-center bg-white rounded-3xl border border-slate-200">
           <p class="text-rose-500 font-bold text-base mb-2">Élève introuvable</p>
-          <a href="#students" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">Retour à la liste</a>
+          <a href="#students" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">${I18n.t('back')}</a>
         </div>
       `;
     }
   },
 
   renderProfile(container, s) {
-    const currency = State.currency || 'DT';
+    const currency = 'DT';
+    const levelLabel = I18n.getLevelLabel(s.level);
 
     container.innerHTML = `
       <div class="space-y-6">
@@ -31,17 +32,17 @@ const StudentDetailView = {
         <!-- Back navigation -->
         <div class="flex items-center justify-between">
           <a href="#students" class="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-brand-600 transition-colors">
-            <i data-lucide="arrow-left" class="w-4 h-4"></i> Retour à la liste des élèves
+            <i data-lucide="arrow-left" class="w-4 h-4 rtl:rotate-180"></i> ${I18n.t('back')}
           </a>
 
           <div class="flex items-center gap-2">
             <button onclick="StudentsView.openPaymentModal(${s.id})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <i data-lucide="credit-card" class="w-3.5 h-3.5"></i>
-              Enregistrer Paiement
+              ${I18n.t('recordPayment')}
             </button>
             <button onclick="StudentsView.openModal(${s.id})" class="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5">
               <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-              Modifier
+              ${I18n.t('edit')}
             </button>
           </div>
         </div>
@@ -59,75 +60,66 @@ const StudentDetailView = {
                 <div class="flex flex-wrap items-center gap-2">
                   <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">${s.first_name} ${s.last_name}</h1>
                   <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">${s.student_code}</span>
-                  <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-100">${s.level}</span>
+                  <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-brand-50 text-brand-700 border border-brand-100">${levelLabel}</span>
                 </div>
                 <p class="text-xs sm:text-sm text-slate-500">
-                  Groupe : <strong class="text-slate-800">${s.group_name || 'Non assigné'}</strong>
+                  ${I18n.t('group')} : <strong class="text-slate-800">${s.group_name || I18n.t('unassigned')}</strong>
                   ${s.group_info && s.group_info.schedule ? ` • 🕒 ${s.group_info.schedule}` : ''}
                 </p>
                 <div class="pt-2 flex flex-wrap items-center gap-2.5 text-xs text-slate-600">
                   <span class="flex items-center gap-1 font-semibold text-slate-900">
-                    💰 Tarif : ${s.monthly_price} ${currency}/mois
+                    💰 ${I18n.t('monthlyTariff')} : ${s.monthly_price} ${I18n.t('currency')}/mois
                   </span>
                   <span class="text-slate-300">•</span>
-                  <span>📅 Inscrit le ${s.registration_date}</span>
+                  <span>📅 ${I18n.t('registeredOn')} ${s.registration_date}</span>
                   <span class="text-slate-300">•</span>
                   ${
                     s.current_month_payment_status === 'paid' ?
-                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 À jour (${s.last_payment_month || s.active_month || 'Payé'})</span>` :
+                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 ${I18n.t('paid')} (${s.last_payment_month || s.active_month || ''})</span>` :
                     s.current_month_payment_status === 'partial' ?
-                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟠 Partiel (${s.last_payment_month || s.active_month || 'En cours'})</span>` :
-                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">🔴 En attente (${s.active_month || 'Non payé'})</span>`
+                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">🟠 ${I18n.t('partial')} (${s.last_payment_month || s.active_month || ''})</span>` :
+                      `<span class="inline-flex items-center gap-1 font-bold px-2.5 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200">🔴 ${I18n.t('pending')} (${s.active_month || ''})</span>`
                   }
                 </div>
               </div>
             </div>
 
-            <!-- Right Contacts Box with Direct WhatsApp / Call Links -->
+            <!-- Right Contacts Box (Clean standard tel links, NO WhatsApp) -->
             <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2.5 shrink-0 text-xs">
-              <p class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Contacts & WhatsApp</p>
+              <p class="font-bold text-slate-700 uppercase tracking-wider text-[10px]">${I18n.t('phone')}</p>
               
               <!-- Student Phone -->
               ${s.student_phone ? `
                 <div class="flex items-center justify-between gap-4">
-                  <span class="text-slate-500">Élève :</span>
-                  <div class="flex items-center gap-2">
-                    <a href="tel:${s.student_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600">${s.student_phone}</a>
-                    <a href="https://wa.me/${s.student_phone.replace(/[^0-9]/g, '')}" target="_blank" title="Contacter sur WhatsApp" class="text-emerald-600 hover:text-emerald-700 p-1 rounded hover:bg-emerald-50">
-                      <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                    </a>
-                  </div>
+                  <span class="text-slate-500">${I18n.t('phoneStudent')} :</span>
+                  <a href="tel:${s.student_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600 inline-flex items-center gap-1">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-600"></i> ${s.student_phone}
+                  </a>
                 </div>
               ` : ''}
 
               <!-- Father Phone -->
               ${s.father_phone ? `
                 <div class="flex items-center justify-between gap-4">
-                  <span class="text-slate-500">Père :</span>
-                  <div class="flex items-center gap-2">
-                    <a href="tel:${s.father_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600">${s.father_phone}</a>
-                    <a href="https://wa.me/${s.father_phone.replace(/[^0-9]/g, '')}" target="_blank" title="Contacter sur WhatsApp" class="text-emerald-600 hover:text-emerald-700 p-1 rounded hover:bg-emerald-50">
-                      <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                    </a>
-                  </div>
+                  <span class="text-slate-500">${I18n.t('phoneFather')} :</span>
+                  <a href="tel:${s.father_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600 inline-flex items-center gap-1">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-600"></i> ${s.father_phone}
+                  </a>
                 </div>
               ` : ''}
 
               <!-- Mother Phone -->
               ${s.mother_phone ? `
                 <div class="flex items-center justify-between gap-4">
-                  <span class="text-slate-500">Mère :</span>
-                  <div class="flex items-center gap-2">
-                    <a href="tel:${s.mother_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600">${s.mother_phone}</a>
-                    <a href="https://wa.me/${s.mother_phone.replace(/[^0-9]/g, '')}" target="_blank" title="Contacter sur WhatsApp" class="text-emerald-600 hover:text-emerald-700 p-1 rounded hover:bg-emerald-50">
-                      <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
-                    </a>
-                  </div>
+                  <span class="text-slate-500">${I18n.t('phoneMother')} :</span>
+                  <a href="tel:${s.mother_phone.replace(/\s+/g, '')}" class="font-bold text-slate-800 hover:text-brand-600 inline-flex items-center gap-1">
+                    <i data-lucide="phone" class="w-3.5 h-3.5 text-brand-600"></i> ${s.mother_phone}
+                  </a>
                 </div>
               ` : ''}
 
               ${!s.student_phone && !s.father_phone && !s.mother_phone ? `
-                <p class="text-slate-400 italic">Aucun numéro enregistré</p>
+                <p class="text-slate-400 italic">${I18n.t('noPhone')}</p>
               ` : ''}
             </div>
 
@@ -138,17 +130,17 @@ const StudentDetailView = {
         <div class="flex items-center gap-2 border-b border-slate-200 pb-2">
           <button onclick="StudentDetailView.switchTab('payments')" id="tab-btn-payments" class="px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${this.activeTab === 'payments' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}">
             <i data-lucide="credit-card" class="w-4 h-4"></i>
-            Historique des Paiements (${s.payment_history ? s.payment_history.length : 0})
+            ${I18n.t('paymentHistory')} (${s.payment_history ? s.payment_history.length : 0})
           </button>
 
           <button onclick="StudentDetailView.switchTab('attendance')" id="tab-btn-attendance" class="px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${this.activeTab === 'attendance' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}">
             <i data-lucide="check-circle" class="w-4 h-4"></i>
-            Présences (${s.attendance_count})
+            ${I18n.t('attendance')} (${s.attendance_count})
           </button>
 
           <button onclick="StudentDetailView.switchTab('notes')" id="tab-btn-notes" class="px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${this.activeTab === 'notes' ? 'bg-brand-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}">
             <i data-lucide="file-text" class="w-4 h-4"></i>
-            Remarques Pédagogiques (${s.observations ? s.observations.length : 0})
+            ${I18n.t('pedagogicalNotes')} (${s.observations ? s.observations.length : 0})
           </button>
         </div>
 
@@ -180,7 +172,7 @@ const StudentDetailView = {
     const content = document.getElementById('st-tab-content');
     if (!content || !this.currentStudent) return;
     const s = this.currentStudent;
-    const currency = State.currency || 'DT';
+    const currency = 'DT';
 
     if (this.activeTab === 'payments') {
       const payments = s.payment_history || [];
@@ -188,48 +180,48 @@ const StudentDetailView = {
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="text-base font-bold text-slate-900">Suivi des Règlements Mensuels</h3>
-              <p class="text-xs text-slate-500">Tarif mensuel de base : <strong>${s.monthly_price} ${currency}</strong></p>
+              <h3 class="text-base font-bold text-slate-900">${I18n.t('paymentHistory')}</h3>
+              <p class="text-xs text-slate-500">${I18n.t('monthlyTariff')} : <strong>${s.monthly_price} ${I18n.t('currency')}</strong></p>
             </div>
             <button onclick="StudentsView.openPaymentModal(${s.id})" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5">
-              <i data-lucide="plus" class="w-3.5 h-3.5"></i> Enregistrer un Paiement
+              <i data-lucide="plus" class="w-3.5 h-3.5"></i> ${I18n.t('recordPayment')}
             </button>
           </div>
 
           ${payments.length === 0 ? `
             <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-              <p class="text-xs text-slate-400">Aucun paiement enregistré pour le moment.</p>
+              <p class="text-xs text-slate-400">${I18n.t('noPaymentsFound')}</p>
             </div>
           ` : `
             <div class="overflow-x-auto">
-              <table class="w-full text-left text-xs sm:text-sm">
+              <table class="w-full text-left rtl:text-right text-xs sm:text-sm">
                 <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[11px]">
                   <tr>
-                    <th class="px-4 py-3">Mois</th>
-                    <th class="px-4 py-3">Montant Versé</th>
-                    <th class="px-4 py-3">Date</th>
-                    <th class="px-4 py-3">Mode</th>
-                    <th class="px-4 py-3">Statut</th>
-                    <th class="px-4 py-3 text-right">Reçu</th>
+                    <th class="px-4 py-3">${I18n.t('month')}</th>
+                    <th class="px-4 py-3">${I18n.t('amount')}</th>
+                    <th class="px-4 py-3">${I18n.t('date')}</th>
+                    <th class="px-4 py-3">${I18n.t('paymentMethod')}</th>
+                    <th class="px-4 py-3">${I18n.t('status')}</th>
+                    <th class="px-4 py-3 text-right rtl:text-left">${I18n.t('receipt')}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   ${payments.map(p => `
                     <tr>
                       <td class="px-4 py-3.5 font-bold text-slate-900">${p.month}</td>
-                      <td class="px-4 py-3.5 font-black text-slate-900">${p.amount} ${currency}</td>
+                      <td class="px-4 py-3.5 font-black text-slate-900">${p.amount} ${I18n.t('currency')}</td>
                       <td class="px-4 py-3.5 text-slate-500 text-xs">${p.payment_date}</td>
-                      <td class="px-4 py-3.5 text-slate-600">${p.payment_method}</td>
+                      <td class="px-4 py-3.5 text-slate-600">${I18n.getPaymentMethodLabel(p.payment_method)}</td>
                       <td class="px-4 py-3.5">
-                        ${p.status === 'paid' ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 Payé</span>' :
-                          p.status === 'partial' ? '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🟠 Partiel</span>' :
-                          '<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">🔴 Non payé</span>'
+                        ${p.status === 'paid' ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 ${I18n.t('paid')}</span>` :
+                          p.status === 'partial' ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🟠 ${I18n.t('partial')}</span>` :
+                          `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">🔴 ${I18n.t('pending')}</span>`
                         }
                       </td>
-                      <td class="px-4 py-3.5 text-right">
-                        <div class="flex items-center justify-end gap-1.5">
+                      <td class="px-4 py-3.5 text-right rtl:text-left">
+                        <div class="flex items-center justify-end rtl:justify-start gap-1.5">
                           <button onclick="PaymentsView.openReceiptModal(${p.id})" class="px-2 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors inline-flex items-center gap-1">
-                            <i data-lucide="receipt" class="w-3.5 h-3.5"></i> Reçu
+                            <i data-lucide="receipt" class="w-3.5 h-3.5"></i> ${I18n.t('receipt')}
                           </button>
                           <a href="/api/payments/${p.id}/pdf" target="_blank" class="px-2 py-1 text-xs font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors inline-flex items-center gap-1">
                             <i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF
@@ -250,18 +242,18 @@ const StudentDetailView = {
         <div class="space-y-6">
           <div class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
             <div>
-              <p class="text-xs text-slate-500 font-semibold uppercase">Taux Global d'Assiduité</p>
+              <p class="text-xs text-slate-500 font-semibold uppercase">${I18n.t('attendance')}</p>
               <p class="text-2xl font-black text-slate-900 mt-0.5">${s.attendance_rate}%</p>
             </div>
-            <div class="text-right">
-              <p class="text-xs text-slate-500 font-semibold uppercase">Séances Suivies</p>
+            <div class="text-right rtl:text-left">
+              <p class="text-xs text-slate-500 font-semibold uppercase">${I18n.t('sessionsToday')}</p>
               <p class="text-2xl font-black text-slate-900 mt-0.5">${s.attendance_count}</p>
             </div>
           </div>
 
           ${attendances.length === 0 ? `
             <div class="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-              <p class="text-xs text-slate-400">Aucune séance passée enregistrée pour cet élève.</p>
+              <p class="text-xs text-slate-400">${I18n.t('noSessionsToday')}</p>
             </div>
           ` : `
             <div class="space-y-2.5">
@@ -275,7 +267,7 @@ const StudentDetailView = {
                       <i data-lucide="${att.status === 'present' ? 'check' : att.status === 'absent' ? 'x' : 'clock'}" class="w-4 h-4"></i>
                     </div>
                     <div>
-                      <p class="text-sm font-bold text-slate-900">${att.topic || 'Séance de cours'}</p>
+                      <p class="text-sm font-bold text-slate-900">${att.topic || I18n.t('mathLesson')}</p>
                       <p class="text-xs text-slate-400">📅 ${att.date} • ${att.start_time} - ${att.end_time}</p>
                     </div>
                   </div>
@@ -283,7 +275,7 @@ const StudentDetailView = {
                     att.status === 'present' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                     att.status === 'absent' ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-amber-50 text-amber-700 border border-amber-200'
                   }">
-                    ${att.status === 'present' ? '✅ Présent' : att.status === 'absent' ? '❌ Absent' : '🟠 Retard'}
+                    ${att.status === 'present' ? `✅ ${I18n.t('present')}` : att.status === 'absent' ? `❌ ${I18n.t('absent')}` : `🟠 ${I18n.t('late')}`}
                   </span>
                 </div>
               `).join('')}
@@ -297,11 +289,11 @@ const StudentDetailView = {
         <div class="space-y-6">
           <!-- Add Note Form -->
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-3">
-            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Ajouter une observation pédagogique</h4>
+            <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">${I18n.t('pedagogicalNotes')}</h4>
             <div class="flex gap-2">
               <input id="new-note-input" type="text" placeholder="ex: Difficultés sur les intégrales, progrès sur les complexes..." class="flex-1 px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none bg-white">
               <button onclick="StudentDetailView.addNote(${s.id})" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all shrink-0">
-                Ajouter
+                ${I18n.t('save')}
               </button>
             </div>
           </div>
@@ -360,3 +352,4 @@ const StudentDetailView = {
     }
   }
 };
+

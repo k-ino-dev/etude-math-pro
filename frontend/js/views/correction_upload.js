@@ -102,12 +102,10 @@ window.CorrectionUploadView = {
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1">Niveau scolaire de l'élève</label>
                 <select id="upload-level" class="w-full text-xs font-medium px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
-                  <option value="Bac" selected>Baccalauréat</option>
-                  <option value="Lycée">Lycée (2ème & 3ème année)</option>
-                  <option value="Collège">Collège (9ème année)</option>
-                  <option value="Prépa">Classes Préparatoires (MPSI / PCSI)</option>
-                  <option value="Université">Université / Licence</option>
-                  <option value="Ingénieur">Cycle Ingénieur</option>
+                  <option value="Bac" selected>Bac</option>
+                  <option value="3ème">3ème</option>
+                  <option value="2ème">2ème</option>
+                  <option value="1ère">1ère</option>
                 </select>
               </div>
 

@@ -33,7 +33,7 @@ class Group(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, default=1)
     name = Column(String(100), nullable=False)  # ex: "Bac Math A"
-    level = Column(String(50), nullable=False)  # ex: "Baccalauréat", "9ème", "2ème Sciences"
+    level = Column(String(50), nullable=False, default="Bac")  # Strict levels: "1ère", "2ème", "3ème", "Bac"
     subject = Column(String(50), default="Mathématiques")
     capacity = Column(Integer, default=15)
     schedule = Column(String(100), nullable=True)  # ex: "Samedi 10:00 - 12:00"
@@ -56,7 +56,7 @@ class Student(Base):
     student_code = Column(String(50), index=True, nullable=False) # "2026-001"
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
-    level = Column(String(50), nullable=False)
+    level = Column(String(50), nullable=False, default="Bac")  # Strict levels: "1ère", "2ème", "3ème", "Bac"
     student_phone = Column(String(30), nullable=True)
     father_phone = Column(String(30), nullable=True)
     mother_phone = Column(String(30), nullable=True)
@@ -113,7 +113,7 @@ class Payment(Base):
     month = Column(String(30), nullable=False) # "Septembre 2025", "Octobre 2025", etc.
     amount = Column(Float, nullable=False)
     payment_date = Column(Date, default=datetime.date.today)
-    payment_method = Column(String(30), default="Espèces") # "Espèces", "Virement", "Chèque", "Autre"
+    payment_method = Column(String(30), default="Espèces") # "Espèces", "Virement bancaire"
     status = Column(String(20), default="paid") # "paid", "partial", "unpaid"
     receipt_number = Column(String(50), nullable=True)
     notes = Column(String(200), nullable=True)

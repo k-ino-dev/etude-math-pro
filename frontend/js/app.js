@@ -1,4 +1,4 @@
-// MathsProf SPA Router & Orchestrator
+// MathsProf SPA Router & Orchestrator — 2026 SaaS Commercial Edition
 const app = {
   mainContainer: null,
   appShell: null,
@@ -69,17 +69,6 @@ const app = {
     // Route dispatch
     if (hash === '#login') {
       this.showLogin();
-    } else if (hash === '#corrections') {
-      this.mainContainer.innerHTML = '<div id="corrections-view"></div>';
-      CorrectionsDashboardView.init();
-    } else if (hash === '#correction-upload') {
-      this.mainContainer.innerHTML = '<div id="correction-upload-view"></div>';
-      CorrectionUploadView.init();
-    } else if (hash.startsWith('#correction-editor')) {
-      const urlParams = new URLSearchParams(hash.split('?')[1] || '');
-      const projectId = urlParams.get('id') || 1;
-      this.mainContainer.innerHTML = '<div id="correction-editor-view"></div>';
-      CorrectionEditorView.init(projectId);
     } else if (hash === '#dashboard' || hash === '' || hash === '#') {
       DashboardView.render(this.mainContainer);
     } else if (hash.startsWith('#students/')) {
@@ -114,13 +103,6 @@ const app = {
     else Toast.info(message);
   },
 
-  regenerateQuestion(exIdx, qIdx) {
-    if (window.CorrectionEditorView && window.CorrectionEditorView.regenerateQuestion) {
-      window.CorrectionEditorView.regenerateQuestion(exIdx, qIdx);
-    }
-  },
-
-
   showLogin() {
     this.appShell.classList.add('hidden');
     this.loginContainer.classList.remove('hidden');
@@ -136,7 +118,7 @@ const app = {
     API.setToken(null);
     API.setUser(null);
     State.user = null;
-    Toast.info('Vous êtes déconnecté.');
+    Toast.info(I18n.currentLang === 'ar' ? 'تم تسجيل الخروج بنجاح.' : 'Vous êtes déconnecté.');
     window.location.hash = '#login';
   },
 
@@ -156,66 +138,70 @@ const app = {
   async openNewSessionModal(defaultDate = null) {
     const groups = State.groups || [];
     const dateVal = defaultDate || new Date().toISOString().split('T')[0];
+    const isAr = I18n.currentLang === 'ar';
 
     Modal.open({
-      title: '+ Planifier une Nouvelle Séance',
+      title: `+ ${I18n.t('add_session')}`,
       size: 'max-w-lg',
       html: `
         <form id="session-form" class="space-y-4">
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Groupe concerné *</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'الفوج المعني *' : 'Groupe concerné *'}</label>
             <select id="sess-group-id" required class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-semibold">
-              <option value="">-- Choisir un groupe --</option>
-              ${groups.map(g => `
-                <option value="${g.id}">
-                  ${g.name} (${g.level} • ${g.student_count} élèves)
-                </option>
-              `).join('')}
+              <option value="">-- ${isAr ? 'اختر الفوج' : 'Choisir un groupe'} --</option>
+              ${groups.map(g => {
+                const levelLabel = I18n.getLevelLabel(g.level);
+                return `
+                  <option value="${g.id}">
+                    ${g.name} (${levelLabel} • ${g.student_count || 0} ${I18n.t('students')})
+                  </option>
+                `;
+              }).join('')}
             </select>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Date de la séance *</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'تاريخ الحصة *' : 'Date de la séance *'}</label>
             <input id="sess-date" type="date" required value="${dateVal}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Heure de début *</label>
-              <input id="sess-start" type="time" required value="17:00" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'وقت البداية *' : 'Heure de début *'}</label>
+              <input id="sess-start" type="time" required value="17:00" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-bold">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Heure de fin *</label>
-              <input id="sess-end" type="time" required value="18:30" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'وقت النهاية *' : 'Heure de fin *'}</label>
+              <input id="sess-end" type="time" required value="18:30" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-bold">
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Sujet / Chapitre prévu</label>
-            <input id="sess-topic" type="text" placeholder="ex: Fonctions exponentielles, Théorème de Thalès..." class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'الموضوع / الدرس' : 'Sujet / Chapitre prévu'}</label>
+            <input id="sess-topic" type="text" placeholder="${isAr ? 'مثال: الدوال اللوغاريتمية، المتتاليات...' : 'ex: Fonctions exponentielles, Théorème de Thalès...'}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Lieu / Salle</label>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'المكان / القاعة' : 'Lieu / Salle'}</label>
               <input id="sess-location" type="text" value="Salle 1" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Statut</label>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'الحالة' : 'Statut'}</label>
               <select id="sess-status" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white">
-                <option value="scheduled" selected>Programmée</option>
-                <option value="completed">Terminée</option>
-                <option value="cancelled">Annulée</option>
+                <option value="scheduled" selected>${isAr ? 'مبرمجة' : 'Programmée'}</option>
+                <option value="completed">${isAr ? 'مكتملة' : 'Terminée'}</option>
+                <option value="cancelled">${isAr ? 'ملغاة' : 'Annulée'}</option>
               </select>
             </div>
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
             <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
-              Annuler
+              ${isAr ? 'إلغاء' : 'Annuler'}
             </button>
             <button type="submit" class="px-5 py-2.5 text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md shadow-brand-600/20">
-              Planifier la séance
+              ${isAr ? 'تأكيد البرمجة' : 'Planifier la séance'}
             </button>
           </div>
         </form>
@@ -237,7 +223,7 @@ const app = {
 
           try {
             await API.post('/api/sessions', payload);
-            Toast.success('Séance planifiée avec succès !');
+            Toast.success(isAr ? 'تمت برمجة الحصة بنجاح !' : 'Séance planifiée avec succès !');
             Modal.close();
             await State.loadInitialData();
             app.navigate('#planning');
@@ -245,15 +231,15 @@ const app = {
             // Check if conflict error
             if (err.message && err.message.toLowerCase().includes('conflit')) {
               Modal.confirm({
-                title: "Conflit d'horaire détecté",
-                message: `${err.message}. Souhaitez-vous quand même forcer la création de cette séance ?`,
-                confirmText: "Oui, forcer la séance",
-                cancelText: "Modifier les horaires",
+                title: isAr ? "تم اكتشاف تعارض في التوقيت" : "Conflit d'horaire détecté",
+                message: isAr ? `${err.message}. هل ترغب في فرض إضافة هذه الحصة رغم التعارض ؟` : `${err.message}. Souhaitez-vous quand même forcer la création de cette séance ?`,
+                confirmText: isAr ? "نعم، فرض الحصة" : "Oui, forcer la séance",
+                cancelText: isAr ? "تعديل التوقيت" : "Modifier les horaires",
                 onConfirm: async () => {
                   try {
                     payload.force = true;
                     await API.post('/api/sessions', payload);
-                    Toast.warning('Séance créée malgré le conflit d\'horaire.');
+                    Toast.warning(isAr ? 'تمت إضافة الحصة رغم التعارض.' : 'Séance créée malgré le conflit d\'horaire.');
                     Modal.close();
                     await State.loadInitialData();
                     app.navigate('#planning');

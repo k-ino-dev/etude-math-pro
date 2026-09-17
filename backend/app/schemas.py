@@ -1,6 +1,28 @@
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 import datetime
+
+def normalize_school_level(val: Optional[str]) -> Optional[str]:
+    if val is None:
+        return None
+    v = str(val).strip().lower()
+    if v in ["1ère", "1ere", "1ère année", "1ere annee", "1", "9ème", "9eme", "9ème année", "9eme annee", "collège", "college", "7ème", "8ème"]:
+        return "1ère"
+    if v in ["2ème", "2eme", "2ème année", "2eme annee", "2"]:
+        return "2ème"
+    if v in ["3ème", "3eme", "3ème année", "3eme annee", "3"]:
+        return "3ème"
+    if v in ["bac", "baccalauréat", "baccalaureat", "4ème", "4eme", "4"]:
+        return "Bac"
+    return str(val).strip()
+
+def normalize_payment_method(val: Optional[str]) -> str:
+    if not val:
+        return "Espèces"
+    v = str(val).strip().lower()
+    if "vir" in v or "bank" in v or "bancaire" in v or "transfer" in v:
+        return "Virement bancaire"
+    return "Espèces"
 
 # --- Auth & User ---
 class UserLogin(BaseModel):
@@ -44,7 +66,7 @@ class UserUpdate(BaseModel):
 # --- Groups ---
 class GroupBase(BaseModel):
     name: str
-    level: str
+    level: str = "Bac"  # "1ère", "2ème", "3ème", "Bac"
     subject: str = "Mathématiques"
     capacity: int = 15
     schedule: Optional[str] = None
@@ -53,6 +75,11 @@ class GroupBase(BaseModel):
     end_time: Optional[str] = None
     location: Optional[str] = "Salle 1"
     color: Optional[str] = "#4f46e5"
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def validate_level(cls, v):
+        return normalize_school_level(v) or "Bac"
 
 class GroupCreate(GroupBase):
     pass
@@ -69,6 +96,11 @@ class GroupUpdate(BaseModel):
     location: Optional[str] = None
     color: Optional[str] = None
 
+    @field_validator("level", mode="before")
+    @classmethod
+    def validate_level(cls, v):
+        return normalize_school_level(v)
+
 class GroupOut(GroupBase):
     id: int
     created_at: datetime.datetime
@@ -82,7 +114,7 @@ class GroupOut(GroupBase):
 class StudentBase(BaseModel):
     first_name: str
     last_name: str
-    level: str
+    level: str = "Bac"  # "1ère", "2ème", "3ème", "Bac"
     student_phone: Optional[str] = None
     father_phone: Optional[str] = None
     mother_phone: Optional[str] = None
@@ -91,6 +123,11 @@ class StudentBase(BaseModel):
     registration_date: Optional[datetime.date] = None
     notes: Optional[str] = None
     is_active: bool = True
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def validate_level(cls, v):
+        return normalize_school_level(v) or "Bac"
 
 class StudentCreate(StudentBase):
     student_code: Optional[str] = None # If not provided, auto-generated e.g. "2026-001"
@@ -107,6 +144,11 @@ class StudentUpdate(BaseModel):
     registration_date: Optional[datetime.date] = None
     notes: Optional[str] = None
     is_active: Optional[bool] = None
+
+    @field_validator("level", mode="before")
+    @classmethod
+    def validate_level(cls, v):
+        return normalize_school_level(v)
 
 class StudentOut(StudentBase):
     id: int
@@ -206,9 +248,14 @@ class PaymentBase(BaseModel):
     month: str # "Septembre 2025"
     amount: float
     payment_date: Optional[datetime.date] = None
-    payment_method: str = "Espèces" # "Espèces", "Virement", "Chèque", "Autre"
+    payment_method: str = "Espèces" # "Espèces", "Virement bancaire"
     status: str = "paid" # "paid", "partial", "unpaid"
     notes: Optional[str] = None
+
+    @field_validator("payment_method", mode="before")
+    @classmethod
+    def validate_method(cls, v):
+        return normalize_payment_method(v)
 
 class PaymentCreate(PaymentBase):
     receipt_number: Optional[str] = None
@@ -219,6 +266,11 @@ class PaymentUpdate(BaseModel):
     payment_method: Optional[str] = None
     status: Optional[str] = None
     notes: Optional[str] = None
+
+    @field_validator("payment_method", mode="before")
+    @classmethod
+    def validate_method(cls, v):
+        return normalize_payment_method(v)
 
 class PaymentOut(PaymentBase):
     id: int
