@@ -267,33 +267,44 @@ def test_backup_and_restore_flow():
     assert len(st_res.json()) > 0
 
 def test_strict_levels_and_payment_methods():
-    # 1. Test student creation with legacy level (should normalize to strict level)
+    # 1. Test student creation with legacy/stream level
     st_res = client.post("/api/students", json={
         "first_name": "Test",
         "last_name": "Normalized",
         "phone": "+216 22 111 222",
         "parent_phone": "+216 98 111 222",
-        "level": "Baccalauréat",  # Legacy label
+        "level": "Bac Sciences",  # Stream label
         "monthly_price": 85.0
     })
     assert st_res.status_code == 200
     st_data = st_res.json()
-    assert st_data["level"] == "Bac"  # Normalized to strict level
+    assert st_data["level"] == "Bac — Sciences"  # Normalized to canonical level
 
-    # 2. Test group creation with legacy level (should normalize to strict level)
+    # 2. Test group creation with 2ème Informatique
     grp_res = client.post("/api/groups", json={
-        "name": "Groupe Test Strict",
-        "level": "1ère Année",  # Legacy label
-        "max_capacity": 10,
-        "schedule_day": "Mardi",
-        "schedule_time": "18:00",
+        "name": "Groupe Test 2ème Info",
+        "level": "2ème Informatique",  # Stream label
+        "capacity": 10,
+        "schedule": "Mardi 18:00 - 19:30",
+        "day_of_week": 2,
+        "start_time": "18:00",
+        "end_time": "19:30",
         "color": "#4f46e5"
     })
     assert grp_res.status_code == 200
     grp_data = grp_res.json()
-    assert grp_data["level"] == "1ère"  # Normalized to strict level
+    assert grp_data["level"] == "2ème — Informatique"  # Normalized to canonical level
 
-    # 3. Test payment creation with strict payment method
+    # 3. Test group creation with 1ère
+    grp_res1 = client.post("/api/groups", json={
+        "name": "Groupe 1ère Test",
+        "level": "1ère Année",
+        "capacity": 10
+    })
+    assert grp_res1.status_code == 200
+    assert grp_res1.json()["level"] == "1ère"
+
+    # 4. Test payment creation with strict payment method
     pay_res = client.post("/api/payments", json={
         "student_id": st_data["id"],
         "month": "Novembre 2025",

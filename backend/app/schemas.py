@@ -5,16 +5,48 @@ import datetime
 def normalize_school_level(val: Optional[str]) -> Optional[str]:
     if val is None:
         return None
-    v = str(val).strip().lower()
-    if v in ["1ère", "1ere", "1ère année", "1ere annee", "1", "9ème", "9eme", "9ème année", "9eme annee", "collège", "college", "7ème", "8ème"]:
+    raw = str(val).strip()
+    if not raw:
+        return "Bac — Mathématiques"
+    
+    v = raw.lower()
+    
+    # 1ère
+    if v.startswith("1") or "1ère" in v or "1ere" in v or "9ème" in v or "9eme" in v or "collège" in v:
         return "1ère"
-    if v in ["2ème", "2eme", "2ème année", "2eme annee", "2"]:
-        return "2ème"
-    if v in ["3ème", "3eme", "3ème année", "3eme annee", "3"]:
-        return "3ème"
-    if v in ["bac", "baccalauréat", "baccalaureat", "4ème", "4eme", "4"]:
-        return "Bac"
-    return str(val).strip()
+        
+    # Grade determination
+    grade = "Bac"
+    if v.startswith("2") or "2ème" in v or "2eme" in v:
+        grade = "2ème"
+    elif v.startswith("3") or "3ème" in v or "3eme" in v:
+        grade = "3ème"
+    elif "bac" in v or "4ème" in v or "4eme" in v:
+        grade = "Bac"
+        
+    # Section determination
+    section = "Sciences"
+    if "info" in v:
+        section = "Informatique"
+    elif "éco" in v or "eco" in v:
+        section = "Économie"
+    elif "math" in v:
+        section = "Mathématiques"
+    elif "tech" in v:
+        section = "Technique"
+    elif "sc" in v:
+        section = "Sciences"
+    else:
+        if grade == "2ème":
+            section = "Sciences"
+        elif grade in ["3ème", "Bac"]:
+            section = "Mathématiques"
+            
+    # Validate section for 2ème
+    if grade == "2ème" and section not in ["Sciences", "Informatique", "Économie"]:
+        section = "Sciences"
+        
+    return f"{grade} — {section}"
 
 def normalize_payment_method(val: Optional[str]) -> str:
     if not val:

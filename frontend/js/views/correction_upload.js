@@ -77,18 +77,17 @@ window.CorrectionUploadView = {
                 Ou testez instantanément avec un sujet d'exemple :
               </h4>
               <div class="flex flex-wrap gap-2">
-                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Bac Math — Analyse & Intégrales', 'Bac')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
+                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Bac Math — Analyse & Intégrales', 'Bac — Mathématiques')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
                   📄 Sujet Bac Math (Analyse)
                 </button>
-                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Devoir de Synthèse — Complexes', 'Lycée')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
-                  📄 Complexes & Géométrie
+                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Devoir de Synthèse — Complexes', 'Bac — Sciences')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
+                  📄 Complexes & Géométrie (Bac Sc)
                 </button>
-                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Algèbre Linéaire & Matrices', 'Prépa')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
-                  📄 Concours Prépa (Matrices)
+                <button type="button" onclick="CorrectionUploadView.selectPresetSample('Devoir de Contrôle — Fonctions', '3ème — Mathématiques')" class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-brand-50 hover:text-brand-700 border border-slate-200 transition-colors">
+                  📄 Fonctions (3ème Math)
                 </button>
               </div>
             </div>
-
           </div>
 
           <!-- Right Col: Generation Settings -->
@@ -100,12 +99,30 @@ window.CorrectionUploadView = {
               </h3>
 
               <div>
-                <label class="block text-xs font-bold text-slate-700 mb-1">Niveau scolaire de l'élève</label>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Niveau & Section de l'élève</label>
                 <select id="upload-level" class="w-full text-xs font-medium px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
-                  <option value="Bac" selected>Bac</option>
-                  <option value="3ème">3ème</option>
-                  <option value="2ème">2ème</option>
-                  <option value="1ère">1ère</option>
+                  <optgroup label="Bac">
+                    <option value="Bac — Mathématiques" selected>Bac — Mathématiques</option>
+                    <option value="Bac — Sciences">Bac — Sciences</option>
+                    <option value="Bac — Informatique">Bac — Informatique</option>
+                    <option value="Bac — Économie">Bac — Économie</option>
+                    <option value="Bac — Technique">Bac — Technique</option>
+                  </optgroup>
+                  <optgroup label="3ème">
+                    <option value="3ème — Mathématiques">3ème — Mathématiques</option>
+                    <option value="3ème — Sciences">3ème — Sciences</option>
+                    <option value="3ème — Informatique">3ème — Informatique</option>
+                    <option value="3ème — Économie">3ème — Économie</option>
+                    <option value="3ème — Technique">3ème — Technique</option>
+                  </optgroup>
+                  <optgroup label="2ème">
+                    <option value="2ème — Sciences">2ème — Sciences</option>
+                    <option value="2ème — Informatique">2ème — Informatique</option>
+                    <option value="2ème — Économie">2ème — Économie</option>
+                  </optgroup>
+                  <optgroup label="1ère">
+                    <option value="1ère">1ère</option>
+                  </optgroup>
                 </select>
               </div>
 

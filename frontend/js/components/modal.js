@@ -25,14 +25,14 @@ const Modal = {
 
     const bodyHtml = html !== undefined ? html : (content !== undefined ? content : '');
 
-    this.content.className = `relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all w-full ${size} border border-slate-100 animate-fade-in`;
+    this.content.className = `relative transform overflow-hidden rounded-2xl bg-white text-left rtl:text-right shadow-2xl transition-all w-full ${size} border border-slate-200/60 animate-fade-in`;
 
     this.content.innerHTML = `
-      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <h3 class="text-base font-bold text-slate-900" id="modal-title">${title || ''}</h3>
         ${showClose ? `
-          <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
-            <i data-lucide="x" class="w-5 h-5"></i>
+          <button id="modal-close-btn" class="text-slate-400 hover:text-slate-600 p-2 rounded-xl hover:bg-slate-100 transition-colors flex-shrink-0">
+            <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         ` : ''}
       </div>
@@ -66,12 +66,12 @@ const Modal = {
       size: 'max-w-md',
       html: `
         <div class="space-y-4">
-          <p class="text-sm text-slate-600">${message}</p>
-          <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-            <button id="modal-cancel-btn" class="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
+          <p class="text-sm text-slate-600 leading-relaxed">${message}</p>
+          <div class="flex items-center justify-end gap-2.5 pt-2">
+            <button id="modal-cancel-btn" class="px-4 py-2.5 text-sm font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors">
               ${cancelText}
             </button>
-            <button id="modal-confirm-btn" class="px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-sm transition-colors">
+            <button id="modal-confirm-btn" class="px-4 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 rounded-xl shadow-sm shadow-rose-600/25 transition-all">
               ${confirmText}
             </button>
           </div>

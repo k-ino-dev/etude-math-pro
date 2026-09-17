@@ -1,194 +1,271 @@
-/* ==========================================================================
-   MathsProf — 2026 SaaS Design System & Stylesheet
-   Tunisian Mathematics Teacher Edition (Français & العربية RTL)
+﻿/* ==========================================================================
+   Étude Math Pro — Premium Design System 2026
+   Mathematics Teacher SaaS Platform (Français & العربية RTL)
    ========================================================================== */
 
-/* 1. Global Reset & Base Typography */
-* {
-  -webkit-tap-highlight-color: transparent;
-  box-sizing: border-box;
+/* ============================================================
+   1. DESIGN TOKENS
+   ============================================================ */
+:root {
+  --clr-primary: #4f46e5;
+  --clr-primary-light: #6366f1;
+  --clr-primary-lighter: #818cf8;
+  --clr-primary-dark: #4338ca;
+  --clr-primary-darker: #3730a3;
+
+  --sidebar-bg: #0c1220;
+  --sidebar-border: rgba(255, 255, 255, 0.05);
+  --sidebar-text: rgba(148, 163, 184, 1);
+  --sidebar-text-hover: rgba(226, 232, 240, 1);
+  --sidebar-text-active: #ffffff;
+  --sidebar-icon-active: #818cf8;
+  --sidebar-hover-bg: rgba(255, 255, 255, 0.04);
+  --sidebar-active-bg: rgba(99, 102, 241, 0.14);
+  --sidebar-section-label: rgba(255, 255, 255, 0.22);
+
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 6px 20px rgba(0,0,0,0.05);
+  --shadow-card-hover: 0 4px 8px rgba(0,0,0,0.04), 0 20px 40px rgba(79,70,229,0.10);
+  --shadow-modal: 0 30px 80px rgba(0,0,0,0.28), 0 8px 20px rgba(0,0,0,0.08);
+  --shadow-brand: 0 4px 16px rgba(79,70,229,0.28);
+  --shadow-toast: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06);
+
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-2xl: 22px;
+  --radius-3xl: 28px;
+  --radius-full: 9999px;
+
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-fast: 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-base: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --trans-slow: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ============================================================
+   2. RESET & BASE
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html { scroll-behavior: smooth; }
 
 body {
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  letter-spacing: -0.011em;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: -0.012em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Arabic Mode Typography */
 html[dir="rtl"] body,
 body.font-arabic {
   font-family: 'Cairo', 'Plus Jakarta Sans', system-ui, sans-serif !important;
   letter-spacing: normal;
 }
 
-/* Custom Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
+/* ============================================================
+   3. SCROLLBAR
+   ============================================================ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-/* 2. Desktop & Mobile Navigation */
+/* ============================================================
+   4. SIDEBAR — DARK PREMIUM NAVIGATION
+   ============================================================ */
 .nav-link {
-  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  color: var(--sidebar-text);
+  font-size: 0.8125rem;
   font-weight: 600;
+  transition: all var(--trans-fast);
   position: relative;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.nav-link:hover {
-  background-color: #f1f5f9;
-  color: #0f172a;
-  transform: translateX(2px);
-}
-html[dir="rtl"] .nav-link:hover {
-  transform: translateX(-2px);
-}
-.nav-link:hover i {
-  color: #4f46e5;
-}
-.nav-link.active {
-  background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
-  color: #4338ca;
-  font-weight: 700;
-  border-left: 3px solid #4f46e5;
-  box-shadow: 0 1px 3px 0 rgba(79, 70, 229, 0.08);
-}
-html[dir="rtl"] .nav-link.active {
-  background: linear-gradient(270deg, #eef2ff 0%, #f8fafc 100%);
-  border-left: none;
-  border-right: 3px solid #4f46e5;
-}
-.nav-link.active i {
-  color: #4f46e5;
+  cursor: pointer;
+  text-decoration: none;
 }
 
-/* Mobile Drawer Links */
+.nav-link:hover {
+  background: var(--sidebar-hover-bg);
+  color: var(--sidebar-text-hover);
+}
+
+.nav-link.active {
+  background: var(--sidebar-active-bg);
+  color: var(--sidebar-text-active);
+  font-weight: 700;
+}
+
+.nav-link.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 3px;
+  background: linear-gradient(to bottom, #818cf8, #4f46e5);
+  border-radius: 0 3px 3px 0;
+}
+
+html[dir="rtl"] .nav-link.active::before {
+  left: auto;
+  right: 0;
+  border-radius: 3px 0 0 3px;
+}
+
+.nav-link.active i { color: var(--sidebar-icon-active); }
+
 .mobile-nav-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
   color: #475569;
   font-weight: 600;
-  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  transition: all var(--trans-fast);
+  text-decoration: none;
 }
-.mobile-nav-link:hover, .mobile-nav-link.active {
+
+.mobile-nav-link:hover { background: #eef2ff; color: #4338ca; }
+
+.mobile-nav-link.active {
   background: linear-gradient(90deg, #eef2ff 0%, #f8fafc 100%);
   color: #4338ca;
   font-weight: 700;
   border-left: 3px solid #4f46e5;
 }
-html[dir="rtl"] .mobile-nav-link:hover,
+
 html[dir="rtl"] .mobile-nav-link.active {
-  background: linear-gradient(270deg, #eef2ff 0%, #f8fafc 100%);
   border-left: none;
   border-right: 3px solid #4f46e5;
-}
-.mobile-nav-link.active i {
-  color: #4f46e5;
+  background: linear-gradient(270deg, #eef2ff 0%, #f8fafc 100%);
 }
 
-/* Mobile Bottom Nav */
+.mobile-nav-link.active i { color: #4f46e5; }
+
 .mobile-bottom-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
   color: #64748b;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.mobile-bottom-nav:hover {
-  color: #334155;
-}
-.mobile-bottom-nav.active {
-  color: #4f46e5;
-  font-weight: 800;
-  transform: translateY(-2px);
-}
-.mobile-bottom-nav.active i {
-  color: #4f46e5;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  transition: all var(--trans-fast);
+  text-decoration: none;
 }
 
-/* 3. Language Selector Toggle Pills */
+.mobile-bottom-nav.active { color: #4f46e5; font-weight: 800; }
+.mobile-bottom-nav.active i { color: #4f46e5; }
+
+/* ============================================================
+   5. LANGUAGE SELECTOR
+   ============================================================ */
 .lang-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 700;
-  border-radius: 10px;
+  border-radius: 8px;
   color: #64748b;
-  transition: all 0.15s ease;
-}
-.lang-btn:hover {
-  color: #0f172a;
-  background-color: #f1f5f9;
-}
-.lang-btn.active-lang {
-  background-color: #4f46e5;
-  color: #ffffff;
-  box-shadow: 0 1px 3px rgba(79, 70, 229, 0.3);
+  transition: all var(--trans-fast);
+  cursor: pointer;
 }
 
-/* 4. Elevated SaaS Component Cards */
+.lang-btn:hover { color: #0f172a; background: #f1f5f9; }
+
+.lang-btn.active-lang {
+  background: #4f46e5;
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(79,70,229,0.3);
+}
+
+/* ============================================================
+   6. CARD SYSTEM
+   ============================================================ */
 .saas-card {
-  background-color: #ffffff;
+  background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.8);
   border-radius: 1.25rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: var(--shadow-card);
+  transition: all var(--trans-base);
 }
 .saas-card:hover {
   border-color: rgba(199, 210, 254, 0.8);
-  box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.06), 0 8px 10px -6px rgba(79, 70, 229, 0.04);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
-.saas-kpi-card {
-  position: relative;
-  overflow: hidden;
-}
+.saas-kpi-card { position: relative; overflow: hidden; }
 .saas-kpi-card::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  top: 0; left: 0; right: 0;
   height: 3px;
   background: linear-gradient(90deg, #4f46e5, #818cf8);
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: opacity var(--trans-base);
 }
-.saas-kpi-card:hover::before {
-  opacity: 1;
-}
+.saas-kpi-card:hover::before { opacity: 1; }
 
-/* 5. Matrix Table for Payments */
-.matrix-cell {
-  transition: all 0.15s ease;
-}
-.matrix-cell:hover {
-  transform: scale(1.06);
-  z-index: 10;
-}
-
-/* 6. Touch Attendance Pills */
+/* ============================================================
+   7. ATTENDANCE PILLS
+   ============================================================ */
 .att-pill {
-  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.15s cubic-bezier(0.16,1,0.3,1);
+  cursor: pointer;
+  user-select: none;
 }
-.att-pill:active {
-  transform: scale(0.94);
+.att-pill:hover { transform: translateY(-1px); }
+.att-pill:active { transform: scale(0.94); }
+
+/* ============================================================
+   8. MATRIX TABLE
+   ============================================================ */
+.matrix-cell { transition: all var(--trans-fast); cursor: pointer; }
+.matrix-cell:hover { transform: scale(1.08); z-index: 10; position: relative; }
+
+/* ============================================================
+   9. SKELETON LOADING
+   ============================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* 7. Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
+.skeleton {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e8edf2 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   10. ANIMATIONS
+   ============================================================ */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes slideRight {
@@ -201,62 +278,167 @@ html[dir="rtl"] .mobile-nav-link.active {
   to { transform: translateX(0); }
 }
 
-.animate-slide-right {
-  animation: slideRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-html[dir="rtl"] .animate-slide-right {
-  animation: slideLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes toastProgress {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
-/* 8. Print Styles for Receipts & Reports */
+.animate-fade-in { animation: fadeInUp 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-scale-in { animation: scaleIn 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-slide-right { animation: slideRight 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+.animate-slide-down { animation: slideDown 0.2s cubic-bezier(0.16,1,0.3,1) both; }
+
+html[dir="rtl"] .animate-slide-right { animation: slideLeft 0.25s cubic-bezier(0.16,1,0.3,1) both; }
+
+/* Stagger entry */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 50ms; }
+.stagger > *:nth-child(3) { animation-delay: 100ms; }
+.stagger > *:nth-child(4) { animation-delay: 150ms; }
+.stagger > *:nth-child(5) { animation-delay: 200ms; }
+.stagger > *:nth-child(6) { animation-delay: 250ms; }
+.stagger > *:nth-child(7) { animation-delay: 300ms; }
+.stagger > *:nth-child(8) { animation-delay: 350ms; }
+
+/* ============================================================
+   11. MATHEMATICAL BACKGROUNDS
+   ============================================================ */
+.math-grid-light {
+  background-image:
+    linear-gradient(rgba(99,102,241,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99,102,241,0.03) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+.math-grid-dark {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ============================================================
+   12. TOAST SYSTEM — PREMIUM
+   ============================================================ */
+.toast-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem 0.875rem 0.875rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow-toast);
+  border: 1px solid rgba(226,232,240,0.8);
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  pointer-events: auto;
+  transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+  position: relative;
+  overflow: hidden;
+  min-width: 280px;
+  max-width: 360px;
+}
+
+.toast-item.toast-exiting {
+  opacity: 0;
+  transform: translateX(16px) scale(0.97);
+}
+html[dir="rtl"] .toast-item.toast-exiting { transform: translateX(-16px) scale(0.97); }
+
+.toast-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12%; bottom: 12%;
+  width: 3.5px;
+  border-radius: 0 3px 3px 0;
+}
+html[dir="rtl"] .toast-item::before { left: auto; right: 0; border-radius: 3px 0 0 3px; }
+
+.toast-success::before { background: linear-gradient(to bottom, #34d399, #10b981); }
+.toast-error::before { background: linear-gradient(to bottom, #f87171, #ef4444); }
+.toast-warning::before { background: linear-gradient(to bottom, #fbbf24, #f59e0b); }
+.toast-info::before { background: linear-gradient(to bottom, #818cf8, #4f46e5); }
+
+.toast-icon-circle {
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.toast-success .toast-icon-circle { background: #d1fae5; }
+.toast-error .toast-icon-circle { background: #fee2e2; }
+.toast-warning .toast-icon-circle { background: #fef3c7; }
+.toast-info .toast-icon-circle { background: #e0e7ff; }
+
+.toast-progress {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  transform-origin: left;
+}
+html[dir="rtl"] .toast-progress { transform-origin: right; }
+.toast-progress-success { background: #10b981; animation: toastProgress 3.5s linear forwards; }
+.toast-progress-error { background: #ef4444; animation: toastProgress 5s linear forwards; }
+.toast-progress-warning { background: #f59e0b; animation: toastProgress 3.5s linear forwards; }
+.toast-progress-info { background: #6366f1; animation: toastProgress 3.5s linear forwards; }
+
+/* ============================================================
+   13. MISCELLANEOUS
+   ============================================================ */
+.text-gradient {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.glass {
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.7);
+}
+
+.glass-dark {
+  background: rgba(15,23,42,0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+.progress-bar {
+  height: 6px;
+  border-radius: 9999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+::selection {
+  background: rgba(99,102,241,0.2);
+  color: inherit;
+}
+
+/* ============================================================
+   14. PRINT STYLES
+   ============================================================ */
 @media print {
-  @page {
-    margin: 8mm;
-    size: auto;
-  }
-  html, body {
-    overflow: visible !important;
-    height: auto !important;
-    background: #ffffff !important;
-  }
-  #app-root, #modal-backdrop, .no-print, header, aside, nav, button, #toast-container, #quick-action-menu {
-    display: none !important;
-  }
-  #modal-container {
-    display: block !important;
-    position: static !important;
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    overflow: visible !important;
-  }
-  #modal-content {
-    display: block !important;
-    position: static !important;
-    max-height: none !important;
-    overflow: visible !important;
-    transform: none !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    background: transparent !important;
-  }
-  #printable-receipt {
-    display: block !important;
-    position: static !important;
-    width: 100% !important;
-    max-width: 190mm !important;
-    margin: 0 auto !important;
-    padding: 8mm !important;
-    background: #ffffff !important;
-    border: 1px solid #cbd5e1 !important;
-    box-shadow: none !important;
-    visibility: visible !important;
-  }
-  #printable-receipt * {
-    visibility: visible !important;
-  }
+  @page { margin: 8mm; size: auto; }
+  html, body { overflow: visible !important; height: auto !important; background: #ffffff !important; }
+  #app-root, #modal-backdrop, .no-print, header, aside, nav, button, #toast-container, #quick-action-menu { display: none !important; }
+  #modal-container { display: block !important; position: static !important; background: transparent !important; padding: 0 !important; margin: 0 !important; overflow: visible !important; }
+  #modal-content { display: block !important; position: static !important; max-height: none !important; overflow: visible !important; transform: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; background: transparent !important; }
+  #printable-receipt { display: block !important; position: static !important; width: 100% !important; max-width: 190mm !important; margin: 0 auto !important; padding: 8mm !important; background: #ffffff !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; visibility: visible !important; }
+  #printable-receipt * { visibility: visible !important; }
 }

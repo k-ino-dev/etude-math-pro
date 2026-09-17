@@ -21,55 +21,19 @@ from .routers import (
 from .services.scheduler import start_scheduler, shutdown_scheduler
 
 def normalize_legacy_db_records(db: Session):
-    """Normalize any legacy levels and payment methods safely into strict Tunisian values."""
+    """Normalize any legacy levels and payment methods safely into structured Tunisian values."""
     try:
-        level_map = {
-            "baccalaureat": "Bac",
-            "baccalauréat": "Bac",
-            "bac": "Bac",
-            "2eme": "2ème",
-            "2ème": "2ème",
-            "2eme sciences": "2ème",
-            "2ème sciences": "2ème",
-            "2eme economie": "2ème",
-            "2ème economie": "2ème",
-            "3eme": "3ème",
-            "3ème": "3ème",
-            "3eme annee": "3ème",
-            "3ème année": "3ème",
-            "3eme math": "3ème",
-            "3ème math": "3ème",
-            "3eme sciences": "3ème",
-            "3ème sciences": "3ème",
-            "9eme": "1ère",
-            "9ème": "1ère",
-            "9eme annee": "1ère",
-            "9ème année": "1ère",
-            "9eme base": "1ère",
-            "9ème base": "1ère",
-            "1ere": "1ère",
-            "1ère": "1ère",
-            "1ere annee": "1ère",
-            "1ère année": "1ère",
-        }
+        from .schemas import normalize_school_level, normalize_payment_method
 
         # Normalize students
         students_list = db.query(Student).all()
         for s in students_list:
-            curr_lvl = (s.level or "").strip().lower()
-            if curr_lvl in level_map:
-                s.level = level_map[curr_lvl]
-            elif s.level not in ["1ère", "2ème", "3ème", "Bac"]:
-                s.level = "Bac"
+            s.level = normalize_school_level(s.level)
 
         # Normalize groups
         groups_list = db.query(Group).all()
         for g in groups_list:
-            curr_lvl = (g.level or "").strip().lower()
-            if curr_lvl in level_map:
-                g.level = level_map[curr_lvl]
-            elif g.level not in ["1ère", "2ème", "3ème", "Bac"]:
-                g.level = "Bac"
+            g.level = normalize_school_level(g.level)
 
         # Normalize payments
         payments_list = db.query(Payment).all()

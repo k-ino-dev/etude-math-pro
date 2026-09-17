@@ -233,7 +233,7 @@ const SettingsView = {
               </div>
               <ul class="list-disc list-inside space-y-1 text-slate-500">
                 <li>${isAr ? 'العملة الرسمية المعتمدة : الدينار التونسي (DT / د.ت).' : 'Devise unique et stricte : Dinar Tunisien (DT).'}</li>
-                <li>${isAr ? 'المستويات الدراسية المعتمدة : 1ère، 2ème، 3ème، Bac.' : 'Niveaux scolaires stricts : 1ère, 2ème, 3ème, Bac.'}</li>
+                <li>${isAr ? 'المستويات والشعب الدراسية : 1ère، 2ème (علوم، إعلامية، اقتصاد)، 3ème و Bac (علوم، إعلامية، اقتصاد، رياضيات، تقنية).' : 'Niveaux et sections secondaires tunisiens : 1ère, 2ème (Sciences, Informatique, Économie), 3ème & Bac (Sciences, Informatique, Économie, Mathématiques, Technique).'}</li>
                 <li>${isAr ? 'طرق الاستخلاص المعتمدة : نقداً (Espèces) وتحويل بنكي (Virement bancaire).' : 'Modes de règlement stricts : Espèces et Virement bancaire.'}</li>
               </ul>
             </div>

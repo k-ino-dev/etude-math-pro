@@ -1,4 +1,4 @@
-// Payments Management View — 2026 SaaS Commercial Edition (Étude Math Pro)
+﻿// Payments Management View — 2026 SaaS Commercial Edition (Étude Math Pro)
 const PaymentsView = {
   activeTab: 'transactions', // 'transactions', 'matrix'
   payments: [],
@@ -178,24 +178,53 @@ const PaymentsView = {
       // Render KPIs
       const kpiGrid = container.querySelector('#pay-kpi-grid');
       if (kpiGrid) {
+        const remainingDue = Math.max(0, (stats.total_expected_this_month || 0) - (stats.total_collected_this_month || 0));
         kpiGrid.innerHTML = `
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-            <p class="text-[11px] font-bold text-slate-500 uppercase">${I18n.t('total_collected')}</p>
-            <p class="text-xl sm:text-2xl font-black text-emerald-600 mt-1">${stats.total_collected_this_month || 0} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+          <!-- Total Collecte -->
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center mb-3">
+              <i data-lucide="coins" class="w-5 h-5 text-emerald-600"></i>
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${I18n.t('total_collected')}</p>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-600 tabular-nums">${stats.total_collected_this_month || 0} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+            <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-            <p class="text-[11px] font-bold text-slate-500 uppercase">${I18n.t('expected_revenue')}</p>
-            <p class="text-xl sm:text-2xl font-black text-slate-900 mt-1">${stats.total_expected_this_month || 0} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+
+          <!-- Expected -->
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-indigo-500 to-violet-500"></div>
+            <div class="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center mb-3">
+              <i data-lucide="trending-up" class="w-5 h-5 text-indigo-600"></i>
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${I18n.t('expected_revenue')}</p>
+            <p class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">${stats.total_expected_this_month || 0} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+            <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-            <p class="text-[11px] font-bold text-slate-500 uppercase">${I18n.t('remaining_due')}</p>
-            <p class="text-xl sm:text-2xl font-black text-rose-600 mt-1">${Math.max(0, (stats.total_expected_this_month || 0) - (stats.total_collected_this_month || 0))} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+
+          <!-- Remaining Due -->
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-rose-500 to-pink-500"></div>
+            <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center mb-3">
+              <i data-lucide="alert-circle" class="w-5 h-5 text-rose-600"></i>
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${I18n.t('remaining_due')}</p>
+            <p class="text-2xl sm:text-3xl font-black text-rose-600 tabular-nums">${remainingDue} <span class="text-xs text-slate-400 font-bold">${currency}</span></p>
+            <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-rose-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
-          <div class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm">
-            <p class="text-[11px] font-bold text-slate-500 uppercase">${I18n.t('unpaid_students')}</p>
-            <p class="text-xl sm:text-2xl font-black text-amber-600 mt-1">${stats.pending_payments_count || 0} <span class="text-xs text-slate-400 font-normal">${I18n.t('students')}</span></p>
+
+          <!-- Pending Count -->
+          <div class="bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 p-5 relative overflow-hidden group">
+            <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-amber-500 to-orange-500"></div>
+            <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center mb-3">
+              <i data-lucide="clock" class="w-5 h-5 text-amber-600"></i>
+            </div>
+            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">${I18n.t('unpaid_students')}</p>
+            <p class="text-2xl sm:text-3xl font-black text-amber-600 tabular-nums">${stats.pending_payments_count || 0} <span class="text-xs text-slate-400 font-normal">${I18n.t('students')}</span></p>
+            <div class="absolute -bottom-3 -right-3 w-14 h-14 rounded-full bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </div>
         `;
+        if (window.lucide) lucide.createIcons();
       }
 
       this.renderContent(container);
@@ -603,3 +632,4 @@ const PaymentsView = {
     });
   }
 };
+

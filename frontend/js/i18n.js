@@ -1,7 +1,51 @@
 // Internationalization & RTL Engine for Étude Math Pro (MathsProf)
+// 2026 Commercial Edition — Tunisian Academic Curriculum System
+
 const I18n = {
   currentLang: localStorage.getItem('mathsprof_lang') || 'fr',
   listeners: [],
+
+  // Canonical Tunisian Secondary School Levels & Sections Structure
+  GRADES: ['1ère', '2ème', '3ème', 'Bac'],
+  
+  SECTIONS_BY_GRADE: {
+    '1ère': [],
+    '2ème': ['Sciences', 'Informatique', 'Économie'],
+    '3ème': ['Sciences', 'Informatique', 'Économie', 'Mathématiques', 'Technique'],
+    'Bac': ['Sciences', 'Informatique', 'Économie', 'Mathématiques', 'Technique']
+  },
+
+  GRADES_DICT: {
+    fr: {
+      '1ère': '1ère',
+      '2ème': '2ème',
+      '3ème': '3ème',
+      'Bac': 'Bac'
+    },
+    ar: {
+      '1ère': 'الأولى ثانوي',
+      '2ème': 'الثانية ثانوي',
+      '3ème': 'الثالثة ثانوي',
+      'Bac': 'البكالوريا'
+    }
+  },
+
+  SECTIONS_DICT: {
+    fr: {
+      'Sciences': 'Sciences',
+      'Informatique': 'Informatique',
+      'Économie': 'Économie',
+      'Mathématiques': 'Mathématiques',
+      'Technique': 'Technique'
+    },
+    ar: {
+      'Sciences': 'علوم',
+      'Informatique': 'إعلامية',
+      'Économie': 'اقتصاد وتصرف',
+      'Mathématiques': 'رياضيات',
+      'Technique': 'علوم تقنية'
+    }
+  },
 
   translations: {
     fr: {
@@ -36,6 +80,14 @@ const I18n = {
       filterByMonth: "Filtrer par mois",
       noData: "Aucune donnée disponible pour le moment.",
 
+      // Academic Levels & Sections
+      academic_level: "Niveau scolaire",
+      academic_section: "Section / Filière",
+      all_levels: "Tous les niveaux",
+      all_sections: "Toutes les sections",
+      no_section_needed: "Tronc commun (Sans section)",
+      select_grade_first: "Sélectionnez d'abord un niveau",
+
       // Navigation
       navDashboard: "Tableau de bord",
       navStudents: "Élèves",
@@ -45,12 +97,6 @@ const I18n = {
       navAttendance: "Présences",
       navPayments: "Paiements",
       navSettings: "Paramètres",
-
-      // Levels
-      level_1ere: "1ère",
-      level_2eme: "2ème",
-      level_3eme: "3ème",
-      level_Bac: "Bac",
 
       // Payment Methods
       method_cash: "Espèces",
@@ -83,7 +129,7 @@ const I18n = {
       kpi_pending_payments: "Paiements en Attente",
       dash_today_schedule: "Séances d'Aujourd'hui",
       dash_no_sessions_today: "Aucune séance programmée aujourd'hui. Profitez de votre journée !",
-      dash_level_repartition: "Répartition par Niveau",
+      dash_level_repartition: "Répartition par Niveau & Section",
       dash_revenue_overview: "Aperçu Financier",
       dash_alerts_title: "Alertes & Notifications Internes",
       dash_quick_add_student: "Ajouter Élève",
@@ -99,141 +145,129 @@ const I18n = {
       student_code: "Code Élève",
       student_firstName: "Prénom",
       student_lastName: "Nom",
-      student_level: "Niveau Scolaire",
-      student_group: "Groupe Assigné",
-      student_noGroup: "Sans groupe",
       student_phone: "Téléphone Élève",
-      student_fatherPhone: "Téléphone Père",
-      student_motherPhone: "Téléphone Mère",
-      student_monthlyPrice: "Tarif Mensuel (DT)",
-      student_registrationDate: "Date d'Inscription",
-      student_attendanceRate: "Taux Présence",
-      student_paymentStatus: "Statut Mois",
-      student_call: "Appeler",
-      student_viewDetail: "Fiche Complète",
-      student_delete_confirm: "Êtes-vous sûr de vouloir supprimer cet élève ? Toutes ses présences et paiements seront effacés.",
-
-      // Student Detail
-      detail_back: "Retour à la liste des élèves",
-      detail_overview: "Fiche Élève & Historique Pédagogique",
-      detail_attendance_tab: "Historique des Présences",
-      detail_payments_tab: "Historique des Règlements",
-      detail_pedagogical_notes: "Observations & Remarques du Professeur",
-      detail_add_note: "Ajouter une observation",
-      detail_note_placeholder: "Notez les points forts, lacunes, devoirs non faits, notes de contrôle...",
-      detail_total_paid: "Total cotisations versées",
+      parent_phone: "Téléphone Parent",
+      monthly_price: "Tarif Mensuel",
+      assigned_group: "Groupe Assigné",
+      no_group: "Sans groupe",
+      attendance_rate: "Taux de présence",
+      payment_status: "Statut de paiement",
+      students: "Élèves",
+      all_students: "Tous les élèves",
 
       // Groups
-      groups_title: "Groupes & Horaires",
-      groups_subtitle: "Organisation des classes, salles et créneaux horaires",
+      groups_title: "Gestion des Groupes & Classes",
+      groups_subtitle: "Organisation des effectifs, plannings et capacités",
       add_group: "Créer un Groupe",
       edit_group: "Modifier le Groupe",
       group_name: "Nom du Groupe",
-      group_capacity: "Capacité Maximale",
-      group_schedule: "Horaire Hebdomadaire",
-      group_location: "Salle / Emplacement",
+      group_level: "Niveau & Section",
+      max_capacity: "Capacité Maximale",
+      schedule_day: "Jour de séance",
+      schedule_time: "Heure de séance",
+      group_color: "Couleur distinctive",
       group_students_count: "Effectif",
-      group_full_badge: "Complet",
-      group_day_of_week: "Jour de la semaine",
-      group_start_time: "Heure de Début",
-      group_end_time: "Heure de Fin",
-      group_color: "Couleur d'identification",
-      group_delete_confirm: "Êtes-vous sûr de vouloir supprimer ce groupe ? Les élèves seront désassignés mais conservés.",
+      group_full: "Complet",
+      group_available_seats: "places disponibles",
 
-      // Repartition
-      repart_title: "Répartition Intelligente des Élèves",
-      repart_subtitle: "Équilibrage automatique des effectifs par niveau et capacité de groupe",
-      repart_select_level: "Choisir le niveau à équilibrer",
-      repart_target_capacity: "Capacité cible par groupe",
-      repart_run_btn: "Calculer la répartition optimale",
-      repart_apply_btn: "Appliquer la répartition aux élèves",
-      repart_drag_instruction: "Vous pouvez glisser-déposer ou réassigner les élèves entre les groupes avant d'appliquer.",
-      repart_success: "Répartition appliquée avec succès !",
+      // Smart Repartition
+      repartition_title: "Répartition Automatique Intelligente",
+      repartition_subtitle: "Optimisation de la taille des groupes par niveau et filière",
+      run_repartition: "Lancer la Répartition Intelligente",
+      apply_repartition: "Appliquer la Répartition",
+      repartition_success: "Répartition appliquée avec succès !",
+      unassigned_students: "Élèves non assignés",
 
-      // Planning
-      planning_title: "Planning & Calendrier des Séances",
-      planning_subtitle: "Gestion de l'agenda avec détection automatique des conflits d'horaires",
+      // Planning & Sessions
+      planning_title: "Planning & Emploi du Temps",
+      planning_subtitle: "Organisation hebdomadaire des séances et détection des conflits",
       add_session: "Ajouter une Séance",
       edit_session: "Modifier la Séance",
-      session_topic: "Thème / Chapitre du cours",
-      session_conflict_warning: "Attention : Ce créneau chevauche une autre séance existante sur la même salle !",
-      session_force_conflict: "Forcer la création malgré le chevauchement",
-      planning_export_pdf: "Exporter PDF du Planning",
-      planning_today_btn: "Aujourd'hui",
+      session_date: "Date",
+      session_time: "Horaire",
+      session_group: "Groupe",
+      session_topic: "Sujet / Chapitre",
+      session_location: "Salle / Lieu",
+      today: "Aujourd'hui",
+      day_view: "Jour",
+      week_view: "Semaine",
+      month_view: "Mois",
+      list_view: "Liste",
+      conflict_detected: "Conflit d'horaire détecté",
+      conflict_warning: "Deux séances se chevauchent sur ce créneau.",
 
       // Attendance
-      att_title: "Feuille de Présences",
-      att_subtitle: "Pointage rapide des présences pour chaque séance de cours",
-      att_select_session: "Sélectionnez une séance :",
-      att_mark_all_present: "Tous Présents (1 Clic)",
-      att_save_success: "Présences enregistrées avec succès !",
-      att_no_students: "Aucun élève dans ce groupe pour cette séance.",
+      attendance: "Présences",
+      mark_all_present: "Tout le monde présent",
+      present: "Présent",
+      absent: "Absent",
+      late: "Retard",
+      session: "Séance",
+      topic: "Sujet abordé",
+      save_attendance: "Enregistrer les Présences",
+      choose_session: "Choisir une séance à pointer",
+      all_present_success: "Tous les élèves ont été marqués présents !",
+      attendance_saved: "Feuille de présence enregistrée avec succès !",
 
       // Payments
-      pay_title: "Gestion des Paiements & Cotisations",
-      pay_subtitle: "Suivi des encaissements, matrice annuelle et génération de reçus officiels",
+      payments: "Paiements & Finances",
       add_payment: "Enregistrer un Paiement",
-      pay_matrix_tab: "Matrice Annuelle (Vue Globale)",
-      pay_list_tab: "Journal des Transactions",
-      pay_receipt: "Reçu de Paiement",
-      pay_receipt_number: "Reçu N°",
-      pay_amount: "Montant Versé (DT)",
-      pay_method: "Mode de Paiement",
-      pay_month: "Mois Concerné",
-      pay_generate_receipt: "Générer Reçu PDF",
-      pay_remaining_due: "Reste dû",
+      paid: "Réglé",
+      partial: "Partiel",
+      unpaid: "Impayé",
+      especes: "Espèces (Cash)",
+      virement: "Virement bancaire",
+      all_months: "Tous les mois",
+      all_statuses: "Tous les statuts",
+      receipt: "Reçu de Paiement",
+      receipt_number: "N° Reçu",
+      pdf_report: "Rapport PDF Mensuel",
+      total_collected: "Encaissé ce mois",
+      expected_revenue: "Revenu Attendu",
+      remaining_due: "Reste à Recouvrer",
+      unpaid_students: "Paiements en Retard",
 
       // Settings
-      settings_title: "Paramètres & Sécurité",
-      settings_subtitle: "Configuration de votre profil enseignant, devise DT et sauvegardes",
-      settings_profile_tab: "Profil Enseignant",
-      settings_backup_tab: "Sauvegardes & Restauration",
-      settings_teacher_name: "Nom complet du Professeur",
-      settings_teacher_email: "Adresse Email",
-      settings_teacher_phone: "Numéro de Téléphone (Appels)",
-      settings_teacher_avatar: "Avatar / Photo de Profil",
-      settings_school_year: "Année Scolaire en cours",
-      settings_save_profile: "Mettre à jour le profil",
-      settings_export_btn: "Télécharger Sauvegarde Complète (JSON)",
-      settings_import_btn: "Restaurer depuis une sauvegarde (JSON)",
-      settings_clear_data_btn: "Réinitialiser les données (Remise à zéro)",
-      settings_clear_confirm: "ATTENTION : Voulez-vous vraiment effacer tous les élèves, groupes, séances et paiements ? Cette action est irréversible !",
-      settings_language_label: "Langue de l'interface",
+      profile: "Profil Enseignant",
+      settings_display: "Langue & Affichage",
+      settings_backup: "Sauvegardes",
+      export_backup: "Télécharger ma sauvegarde (JSON)",
+      import_backup: "Restaurer une sauvegarde (JSON)",
+      clean_database: "Nettoyer la base (Base Vierge)",
 
-      // Auth / Login
-      login_title: "Connexion Enseignant",
-      login_subtitle: "Plateforme de gestion pour tuteurs de mathématiques en Tunisie",
-      login_email: "Email Professionnel",
-      login_password: "Mot de passe",
-      login_remember: "Se souvenir de moi",
-      login_submit: "Se connecter",
+      // Login
+      login_title: "Espace Enseignant",
+      login_subtitle: "Connectez-vous à votre plateforme de gestion des cours",
+      login_email: "Adresse Email",
+      login_password: "Mot de Passe",
+      login_submit: "Se Connecter",
       login_tab_login: "Connexion",
-      login_tab_register: "Créer un compte",
-      reg_submit: "Créer mon compte Enseignant",
-      reg_title: "Création de compte Enseignant",
+      login_tab_register: "Nouveau Compte",
+      reg_submit: "Créer mon Compte Enseignant",
+      reg_title: "Créer un nouveau compte enseignant"
     },
 
     ar: {
       // Branding & Common
       appName: "MathsProf",
-      appSubtitle: "إدارة ومتابعة دروس الرياضيات الخصوصية",
+      appSubtitle: "إدارة الدروس الخصوصية والعمل البيداغوجي",
       academicYear: "السنة الدراسية",
-      currency: "د.ت",
-      currencyFullName: "الدينار التونسي (د.ت)",
+      currency: "DT",
+      currencyFullName: "دينار تونسي (د.ت)",
       save: "حفظ",
       cancel: "إلغاء",
       delete: "حذف",
       edit: "تعديل",
       confirm: "تأكيد",
       loading: "جاري التحميل...",
-      searchPlaceholder: "ابحث عن طالب، فوج، حصة، هاتف...",
+      searchPlaceholder: "بحث عن تلميذ، فوج، حصة، رقم هاتف...",
       quickAction: "إجراء سريع",
       logout: "تسجيل الخروج",
       accountSettings: "إعدادات الحساب",
       all: "الكل",
-      actions: "العمليات",
+      actions: "إجراءات",
       status: "الحالة",
-      notes: "ملاحظات ومتابعة",
+      notes: "ملاحظات وتوجيهات",
       date: "التاريخ",
       details: "التفاصيل",
       close: "إغلاق",
@@ -243,31 +277,33 @@ const I18n = {
       filterByGroup: "تصفية حسب الفوج",
       filterByStatus: "تصفية حسب الحالة",
       filterByMonth: "تصفية حسب الشهر",
-      noData: "لا توجد بيانات متاحة حالياً.",
+      noData: "لا توجد بيانات متوفرة حالياً.",
+
+      // Academic Levels & Sections
+      academic_level: "المستوى الدراسي",
+      academic_section: "الشعبة / التخصص",
+      all_levels: "جميع المستويات",
+      all_sections: "جميع الشعب",
+      no_section_needed: "جذع مشترك (بدون شعبة)",
+      select_grade_first: "اختر المستوى أولاً",
 
       // Navigation
-      navDashboard: "لوحة التحكم",
-      navStudents: "الطلاب",
+      navDashboard: "لوحة القيادة",
+      navStudents: "التلاميذ",
       navGroups: "الأفواج",
-      navRepartition: "التوزيع الذكي",
-      navPlanning: "الجدول الزمني",
+      navRepartition: "توزيع ذكي",
+      navPlanning: "جدول الأوقات",
       navAttendance: "تسجيل الحضور",
-      navPayments: "الاستخلاص والمدفوعات",
+      navPayments: "المدفوعات",
       navSettings: "الإعدادات",
 
-      // Levels
-      level_1ere: "الأولى ثانوي",
-      level_2eme: "الثانية ثانوي",
-      level_3eme: "الثالثة ثانوي",
-      level_Bac: "الباكالوريا",
-
       // Payment Methods
-      method_cash: "نقداً",
+      method_cash: "نقداً (كاش)",
       method_transfer: "تحويل بنكي",
 
       // Payment Statuses
-      status_paid: "خالص (مدفوع)",
-      status_partial: "دفع جزئي",
+      status_paid: "خالص",
+      status_partial: "خالص جزئياً",
       status_unpaid: "غير خالص",
 
       // Attendance Statuses
@@ -277,149 +313,137 @@ const I18n = {
 
       // Session Statuses
       sess_scheduled: "مبرمجة",
-      sess_completed: "منجزة",
+      sess_completed: "مكتملة",
       sess_cancelled: "ملغاة",
 
       // Dashboard
-      dash_welcome: "لوحة تحكم الأستاذ",
-      dash_subtitle: "نظرة شاملة على أفواج الدروس الخصوصية والأداء العام",
-      kpi_total_students: "إجمالي الطلاب",
+      dash_welcome: "لوحة القيادة للأستاذ",
+      dash_subtitle: "نظرة شاملة ومفصلة على الدروس الخصوصية والمداخيل",
+      kpi_total_students: "مجموع التلاميذ",
       kpi_total_groups: "الأفواج النشطة",
-      kpi_present_today: "الحضور اليوم",
+      kpi_present_today: "الحاضرون اليوم",
       kpi_sessions_today: "حصص اليوم",
       kpi_collected_month: "المستخلص هذا الشهر",
       kpi_expected_month: "المتوقع هذا الشهر",
-      kpi_pending_payments: "المستحقات غير المدفوعة",
-      dash_today_schedule: "حصص هذا اليوم",
-      dash_no_sessions_today: "لا توجد حصص مبرمجة لليوم. يوم عطلة موفق !",
-      dash_level_repartition: "توزيع الطلاب حسب المستوى",
+      kpi_pending_payments: "المتخلدات بالذمة",
+      dash_today_schedule: "حصص اليوم",
+      dash_no_sessions_today: "لا توجد حصص مبرمجة لليوم. نتمنى لك يوماً طيباً !",
+      dash_level_repartition: "التوزيع حسب المستوى والشعبة",
       dash_revenue_overview: "المؤشرات المالية",
-      dash_alerts_title: "تنبيهات وملاحظات هامة",
-      dash_quick_add_student: "إضافة طالب",
+      dash_alerts_title: "التنبيهات والملاحظات",
+      dash_quick_add_student: "إضافة تلميذ",
       dash_quick_add_group: "إنشاء فوج",
       dash_quick_add_session: "برمجة حصة",
-      dash_quick_add_payment: "تسجيل دفع",
+      dash_quick_add_payment: "تسجيل خلاص",
 
       // Students
-      students_title: "إدارة الطلاب",
-      students_subtitle: "قائمة الطلاب المسجلين والمتابعة البيداغوجية الفردية",
-      add_student: "إضافة طالب جديد",
-      edit_student: "تعديل بيانات الطالب",
-      student_code: "رمز الطالب",
+      students_title: "قائمة التلاميذ",
+      students_subtitle: "متابعة شاملة لملفات التلاميذ والاشتراكات الشهرية",
+      add_student: "إضافة تلميذ جديد",
+      edit_student: "تعديل بيانات التلميذ",
+      student_code: "رمز التلميذ",
       student_firstName: "الاسم",
       student_lastName: "اللقب",
-      student_level: "المستوى الدراسي",
-      student_group: "الفوج",
-      student_noGroup: "بدون فوج",
-      student_phone: "هاتف الطالب",
-      student_fatherPhone: "هاتف الولي (الأب)",
-      student_motherPhone: "هاتف الولي (الأم)",
-      student_monthlyPrice: "المعلوم الشهري (د.ت)",
-      student_registrationDate: "تاريخ التسجيل",
-      student_attendanceRate: "نسبة الحضور",
-      student_paymentStatus: "حالة الشهر",
-      student_call: "اتصال",
-      student_viewDetail: "الملف الكامل",
-      student_delete_confirm: "هل أنت متأكد من حذف هذا الطالب ؟ سيتم حذف جميع سجلات حضوره ومدفوعاته.",
-
-      // Student Detail
-      detail_back: "العودة إلى قائمة الطلاب",
-      detail_overview: "الملف البيداغوجي والمتابعة الفردية",
-      detail_attendance_tab: "سجل الحضور والغيابات",
-      detail_payments_tab: "سجل الخلاص والاشتراكات",
-      detail_pedagogical_notes: "ملاحظات وتقييمات الأستاذ",
-      detail_add_note: "إضافة ملاحظة جديدة",
-      detail_note_placeholder: "اكتب ملاحظات حول المستوى، النقائص، الفروض، الواجبات المنزلية...",
-      detail_total_paid: "إجمالي المبالغ المدفوعة",
+      student_phone: "هاتف التلميذ",
+      parent_phone: "هاتف الولي",
+      monthly_price: "المعلوم الشهري",
+      assigned_group: "الفوج المنتمي إليه",
+      no_group: "بدون فوج",
+      attendance_rate: "نسبة الحضور",
+      payment_status: "حالة الخلاص",
+      students: "تلاميذ",
+      all_students: "جميع التلاميذ",
 
       // Groups
-      groups_title: "الأفواج والتوقيت",
-      groups_subtitle: "تنظيم الأفواج، القاعات والمواعيد الأسبوعية",
+      groups_title: "إدارة الأفواج والصفوف",
+      groups_subtitle: "تنظيم الطاقة الاستيعابية ومواعيد الحصص الأسبوعية",
       add_group: "إنشاء فوج جديد",
-      edit_group: "تعديل بيانات الفوج",
+      edit_group: "تعديل الفوج",
       group_name: "اسم الفوج",
-      group_capacity: "طاقة الاستيعاب القصوى",
-      group_schedule: "التوقيت الأسبوعي",
-      group_location: "القاعة / المقر",
-      group_students_count: "العدد الحالي",
-      group_full_badge: "مكتمل",
-      group_day_of_week: "يوم الأسبوع",
-      group_start_time: "وقت البداية",
-      group_end_time: "وقت النهاية",
-      group_color: "لون التمييز",
-      group_delete_confirm: "هل أنت متأكد من حذف هذا الفوج ؟ سيبقى الطلاب مسجلين بدون فوج.",
+      group_level: "المستوى والشعبة",
+      max_capacity: "طاقة الاستيعاب القصوى",
+      schedule_day: "يوم الحصة",
+      schedule_time: "توقيت الحصة",
+      group_color: "لون الفوج",
+      group_students_count: "عدد التلاميذ",
+      group_full: "مكتمل",
+      group_available_seats: "أماكن شاغرة",
 
-      // Repartition
-      repart_title: "التوزيع الذكي للطلاب",
-      repart_subtitle: "موازنة وتوزيع الطلاب آلياً حسب المستوى وطاقة استيعاب الأفواج",
-      repart_select_level: "اختر المستوى المراد توزيعه",
-      repart_target_capacity: "العدد المستهدف في كل فوج",
-      repart_run_btn: "احتساب التوزيع الأمثل",
-      repart_apply_btn: "اعتماد التوزيع ونقل الطلاب",
-      repart_drag_instruction: "يمكنك سحب الطلاب وتعديل توزيعهم يدوياً قبل الاعتماد النهائي.",
-      repart_success: "تم تطبيق التوزيع بنجاح !",
+      // Smart Repartition
+      repartition_title: "التوزيع الآلي الذكي للتلاميذ",
+      repartition_subtitle: "موازنة وتوزيع التلاميذ في الأفواج حسب المستوى والشعبة",
+      run_repartition: "تشغيل خوارزمية التوزيع",
+      apply_repartition: "تطبيق التوزيع على الأفواج",
+      repartition_success: "تم تطبيق التوزيع بنجاح على قاعدة البيانات !",
+      unassigned_students: "تلاميذ غير مخصصين",
 
-      // Planning
-      planning_title: "الجدول الزمني والحصص",
-      planning_subtitle: "إدارة المواعيد مع الكشف الآلي عن تداخل الأوقات",
-      add_session: "إضافة حصة",
+      // Planning & Sessions
+      planning_title: "جدول الأوقات والحصص",
+      planning_subtitle: "برمجة الحصص الأسبوعية ومتابعة قاعات التدريس",
+      add_session: "برمجة حصة جديدة",
       edit_session: "تعديل الحصة",
-      session_topic: "موضوع الحصة / الدرس",
-      session_conflict_warning: "تنبيه : هذا التوقيت يتعارض مع حصة أخرى في نفس القاعة !",
-      session_force_conflict: "تأكيد الإضافة رغم التعارض",
-      planning_export_pdf: "استخراج جدول الحصص PDF",
-      planning_today_btn: "اليوم",
+      session_date: "التاريخ",
+      session_time: "التوقيت",
+      session_group: "الفوج",
+      session_topic: "الموضوع / الدرس",
+      session_location: "القاعة",
+      today: "اليوم",
+      day_view: "يوم",
+      week_view: "أسبوع",
+      month_view: "شهر",
+      list_view: "قائمة",
+      conflict_detected: "تعارض في التوقيت",
+      conflict_warning: "يوجد تداخل بين حصتين في نفس التوقيت والقاعة.",
 
       // Attendance
-      att_title: "سجل حضور الحصص",
-      att_subtitle: "تسجيل فوري وسريع لحضور الطلاب في كل حصة",
-      att_select_session: "اختر الحصة المبرمجة :",
-      att_mark_all_present: "الجميع حاضرون (ضغطة واحدة)",
-      att_save_success: "تم حفظ سجل الحضور بنجاح !",
-      att_no_students: "لا يوجد طلاب مسجلون في هذا الفوج.",
+      attendance: "تسجيل الحضور",
+      mark_all_present: "الجميع حاضرون",
+      present: "حاضر",
+      absent: "غائب",
+      late: "متأخر",
+      session: "الحصة",
+      topic: "الموضوع المنجز",
+      save_attendance: "حفظ ورقة الحضور",
+      choose_session: "اختر الحصة للتسجيل",
+      all_present_success: "تم تسجيل جميع التلاميذ كحاضرين !",
+      attendance_saved: "تم حفظ ورقة الحضور بنجاح في المنظومة !",
 
       // Payments
-      pay_title: "استخلاص الاشتراكات والمدفوعات",
-      pay_subtitle: "متابعة المداخيل، الجدول السنوي الشامل وطباعة وصولات الخلاص",
-      add_payment: "تسجيل عملية دفع",
-      pay_matrix_tab: "الجدول السنوي الشامل",
-      pay_list_tab: "سجل المعاملات",
-      pay_receipt: "وصل خلاص",
-      pay_receipt_number: "وصل رقم",
-      pay_amount: "المبلغ المدفوع (د.ت)",
-      pay_method: "طريقة الخلاص",
-      pay_month: "الشهر المعني",
-      pay_generate_receipt: "استخراج وصل خلاص PDF",
-      pay_remaining_due: "المتبقي",
+      payments: "المستحقات والمدفوعات",
+      add_payment: "تسجيل دفعة جديدة",
+      paid: "خالص",
+      partial: "خالص جزئياً",
+      unpaid: "غير خالص",
+      especes: "نقداً (كاش)",
+      virement: "تحويل بنكي",
+      all_months: "كل الأشهر",
+      all_statuses: "كل الحالات",
+      receipt: "وصل خلاص",
+      receipt_number: "رقم الوصل",
+      pdf_report: "تقرير مالي PDF",
+      total_collected: "المدخول هذا الشهر",
+      expected_revenue: "المدخول المتوقع",
+      remaining_due: "المتبقي للاستخلاص",
+      unpaid_students: "مدفوعات متأخرة",
 
       // Settings
-      settings_title: "الإعدادات والأمان",
-      settings_subtitle: "بيانات حساب الأستاذ، العملة التونسية والنسخ الاحتياطي",
-      settings_profile_tab: "بيانات الأستاذ",
-      settings_backup_tab: "النسخ الاحتياطي والاستعادة",
-      settings_teacher_name: "اسم ولقب الأستاذ",
-      settings_teacher_email: "البريد الإلكتروني",
-      settings_teacher_phone: "رقم الهاتف للاتصال",
-      settings_teacher_avatar: "الصورة الرمزية",
-      settings_school_year: "السنة الدراسية الحالية",
-      settings_save_profile: "تحديث البيانات",
-      settings_export_btn: "تحميل نسخة احتياطية كاملة (JSON)",
-      settings_import_btn: "استعادة البيانات من ملف (JSON)",
-      settings_clear_data_btn: "تفريغ قاعدة البيانات (تصفير شامل)",
-      settings_clear_confirm: "تحذير شديد : هل أنت متأكد من مسح جميع الطلاب والأفواج والحصص ؟ لا يمكن التراجع عن هذا الإجراء !",
-      settings_language_label: "لغة الواجهة",
+      profile: "الملف الشخصي للأستاذ",
+      settings_display: "اللغة والعرض",
+      settings_backup: "النسخ الاحتياطي",
+      export_backup: "تصدير نسخة احتياطية (JSON)",
+      import_backup: "استرجاع نسخة احتياطية (JSON)",
+      clean_database: "قاعدة بيانات فارغة (0 تلاميذ)",
 
-      // Auth / Login
-      login_title: "دخول فضاء الأستاذ",
-      login_subtitle: "المنظومة الاحترافية لإدارة دروس الرياضيات في تونس",
+      // Login
+      login_title: "فضاء الأستاذ",
+      login_subtitle: "تسجيل الدخول إلى منظومة إدارة الدروس والدروس الخصوصية",
       login_email: "البريد الإلكتروني",
       login_password: "كلمة المرور",
-      login_remember: "تذكرني على هذا الجهاز",
-      login_submit: "دخول",
+      login_submit: "تسجيل الدخول",
       login_tab_login: "تسجيل الدخول",
       login_tab_register: "حساب جديد",
       reg_submit: "إنشاء حساب أستاذ",
-      reg_title: "إنشاء حساب أستاذ جديد",
+      reg_title: "إنشاء حساب أستاذ جديد"
     }
   },
 
@@ -432,14 +456,231 @@ const I18n = {
     return langDict[key] || this.translations.fr[key] || fallback || key;
   },
 
-  getLevelLabel(levelValue) {
-    if (!levelValue) return this.t('level_Bac');
-    const clean = levelValue.trim();
-    if (clean === '1ère' || clean === '9ème' || clean === '1ere') return this.currentLang === 'ar' ? 'الأولى ثانوي' : '1ère';
-    if (clean === '2ème' || clean === '2eme') return this.currentLang === 'ar' ? 'الثانية ثانوي' : '2ème';
-    if (clean === '3ème' || clean === '3eme') return this.currentLang === 'ar' ? 'الثالثة ثانوي' : '3ème';
-    if (clean === 'Bac') return this.currentLang === 'ar' ? 'الباكالوريا' : 'Bac';
-    return clean;
+  // --- Academic Levels & Sections Helpers ---
+
+  /**
+   * Parse any level string into canonical { grade, section, full }
+   * Examples:
+   * "2ème — Informatique" -> { grade: "2ème", section: "Informatique", full: "2ème — Informatique" }
+   * "Bac Sciences" -> { grade: "Bac", section: "Sciences", full: "Bac — Sciences" }
+   * "1ère" -> { grade: "1ère", section: null, full: "1ère" }
+   */
+  parseLevel(rawLevel) {
+    if (!rawLevel) return { grade: 'Bac', section: 'Mathématiques', full: 'Bac — Mathématiques' };
+    let s = String(rawLevel).trim();
+
+    // Check for 1ère
+    if (s.startsWith('1') || s.toLowerCase().includes('1ère') || s.toLowerCase().includes('1ere') || s.toLowerCase().includes('9ème')) {
+      return { grade: '1ère', section: null, full: '1ère' };
+    }
+
+    // Determine grade
+    let grade = 'Bac';
+    if (s.startsWith('2') || s.toLowerCase().includes('2ème') || s.toLowerCase().includes('2eme')) {
+      grade = '2ème';
+    } else if (s.startsWith('3') || s.toLowerCase().includes('3ème') || s.toLowerCase().includes('3eme')) {
+      grade = '3ème';
+    } else if (s.toLowerCase().includes('bac')) {
+      grade = 'Bac';
+    }
+
+    // Determine section
+    const sLower = s.toLowerCase();
+    let section = 'Sciences';
+    if (sLower.includes('info')) {
+      section = 'Informatique';
+    } else if (sLower.includes('éco') || sLower.includes('eco')) {
+      section = 'Économie';
+    } else if (sLower.includes('math')) {
+      section = 'Mathématiques';
+    } else if (sLower.includes('tech')) {
+      section = 'Technique';
+    } else if (sLower.includes('sc')) {
+      section = 'Sciences';
+    } else {
+      // Default available section for that grade
+      const allowed = this.SECTIONS_BY_GRADE[grade] || [];
+      section = allowed.length > 0 ? allowed[0] : null;
+    }
+
+    // Ensure section is valid for this grade
+    const allowedSections = this.SECTIONS_BY_GRADE[grade] || [];
+    if (allowedSections.length > 0 && !allowedSections.includes(section)) {
+      section = allowedSections[0];
+    }
+
+    const full = section ? `${grade} — ${section}` : grade;
+    return { grade, section, full };
+  },
+
+  /**
+   * Format Grade and Section into standard canonical string
+   */
+  formatLevel(grade, section) {
+    if (!grade || grade === '1ère') return '1ère';
+    if (!section) {
+      const def = (this.SECTIONS_BY_GRADE[grade] || [])[0];
+      return def ? `${grade} — ${def}` : grade;
+    }
+    return `${grade} — ${section}`;
+  },
+
+  /**
+   * Return fully translated label in current language
+   * e.g. "الثانية ثانوي — إعلامية" or "2ème — Informatique"
+   */
+  getLevelLabel(rawLevel) {
+    const { grade, section } = this.parseLevel(rawLevel);
+    const lang = this.currentLang === 'ar' ? 'ar' : 'fr';
+    const gradeText = this.GRADES_DICT[lang][grade] || grade;
+
+    if (grade === '1ère' || !section) {
+      return gradeText;
+    }
+
+    const sectionText = this.SECTIONS_DICT[lang][section] || section;
+    return `${gradeText} — ${sectionText}`;
+  },
+
+  getGradeLabel(grade) {
+    const lang = this.currentLang === 'ar' ? 'ar' : 'fr';
+    return this.GRADES_DICT[lang][grade] || grade;
+  },
+
+  getSectionLabel(section) {
+    const lang = this.currentLang === 'ar' ? 'ar' : 'fr';
+    return this.SECTIONS_DICT[lang][section] || section;
+  },
+
+  /**
+   * Generates HTML for the 2-step dependent Level & Section selectors
+   */
+  renderLevelSelectorsHTML(options = {}) {
+    const {
+      gradeId = 'form-grade-select',
+      sectionId = 'form-section-select',
+      sectionWrapperId = 'form-section-wrapper',
+      initialLevel = 'Bac — Mathématiques',
+      isCompact = false
+    } = options;
+
+    const { grade, section } = this.parseLevel(initialLevel);
+    const isAr = this.currentLang === 'ar';
+
+    return `
+      <div class="grid grid-cols-1 ${isCompact ? 'sm:grid-cols-2' : 'sm:grid-cols-2'} gap-3" id="level-selectors-container">
+        <!-- Step 1: Grade Select -->
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+            <i data-lucide="graduation-cap" class="w-3.5 h-3.5 text-brand-600"></i>
+            <span>${this.t('academic_level')} *</span>
+          </label>
+          <select id="${gradeId}" required class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-bold text-slate-800 shadow-xs">
+            ${this.GRADES.map(g => `
+              <option value="${g}" ${g === grade ? 'selected' : ''}>
+                ${this.getGradeLabel(g)}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <!-- Step 2: Dependent Section Select -->
+        <div id="${sectionWrapperId}" class="${grade === '1ère' ? 'opacity-50 pointer-events-none' : ''}">
+          <label class="block text-xs font-bold text-slate-700 uppercase mb-1 flex items-center gap-1">
+            <i data-lucide="git-branch" class="w-3.5 h-3.5 text-indigo-600"></i>
+            <span>${this.t('academic_section')} *</span>
+          </label>
+          <select id="${sectionId}" class="w-full px-3.5 py-2.5 text-xs sm:text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 bg-white font-bold text-indigo-900 shadow-xs">
+            <!-- Dynamically populated -->
+          </select>
+          <p id="${sectionWrapperId}-hint" class="text-[10px] text-slate-400 mt-1 ${grade === '1ère' ? '' : 'hidden'}">
+            ${this.t('no_section_needed')}
+          </p>
+        </div>
+      </div>
+    `;
+  },
+
+  /**
+   * Binds change events for the 2-step dependent dropdowns
+   */
+  bindLevelSelectors(options = {}) {
+    const {
+      container,
+      gradeId = 'form-grade-select',
+      sectionId = 'form-section-select',
+      sectionWrapperId = 'form-section-wrapper',
+      initialLevel = 'Bac — Mathématiques',
+      onChange = null
+    } = options;
+
+    if (!container) return;
+
+    const gradeSelect = container.querySelector(`#${gradeId}`);
+    const sectionSelect = container.querySelector(`#${sectionId}`);
+    const sectionWrapper = container.querySelector(`#${sectionWrapperId}`);
+    const sectionHint = container.querySelector(`#${sectionWrapperId}-hint`);
+
+    if (!gradeSelect || !sectionSelect) return;
+
+    const parsed = this.parseLevel(initialLevel);
+    gradeSelect.value = parsed.grade;
+
+    const updateSectionsDropdown = (selectedGrade, desiredSection = null) => {
+      const sections = this.SECTIONS_BY_GRADE[selectedGrade] || [];
+      
+      if (selectedGrade === '1ère' || sections.length === 0) {
+        sectionSelect.innerHTML = `<option value="">${this.t('no_section_needed')}</option>`;
+        if (sectionWrapper) {
+          sectionWrapper.classList.add('opacity-50', 'pointer-events-none');
+        }
+        if (sectionHint) sectionHint.classList.remove('hidden');
+      } else {
+        if (sectionWrapper) {
+          sectionWrapper.classList.remove('opacity-50', 'pointer-events-none');
+        }
+        if (sectionHint) sectionHint.classList.add('hidden');
+
+        sectionSelect.innerHTML = sections.map(sec => `
+          <option value="${sec}" ${desiredSection === sec ? 'selected' : ''}>
+            ${this.getSectionLabel(sec)}
+          </option>
+        `).join('');
+
+        if (desiredSection && sections.includes(desiredSection)) {
+          sectionSelect.value = desiredSection;
+        } else {
+          sectionSelect.value = sections[0];
+        }
+      }
+
+      if (onChange) {
+        onChange(this.formatLevel(selectedGrade, sectionSelect.value));
+      }
+    };
+
+    // Initial populate
+    updateSectionsDropdown(parsed.grade, parsed.section);
+
+    // On Grade change
+    gradeSelect.addEventListener('change', (e) => {
+      updateSectionsDropdown(e.target.value);
+    });
+
+    // On Section change
+    sectionSelect.addEventListener('change', () => {
+      if (onChange) {
+        onChange(this.formatLevel(gradeSelect.value, sectionSelect.value));
+      }
+    });
+
+    return {
+      getSelectedLevel: () => this.formatLevel(gradeSelect.value, sectionSelect.value),
+      setGradeAndSection: (g, s) => {
+        gradeSelect.value = g;
+        updateSectionsDropdown(g, s);
+      }
+    };
   },
 
   getPaymentMethodLabel(method) {

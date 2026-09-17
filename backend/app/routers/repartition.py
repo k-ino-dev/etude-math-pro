@@ -16,11 +16,16 @@ def preview_repartition(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    students = db.query(Student).filter(
+    query = db.query(Student).filter(
         Student.user_id == current_user.id,
-        Student.level == level,
         Student.is_active == True
-    ).order_by(Student.last_name.asc(), Student.first_name.asc()).all()
+    )
+    if "—" in level:
+        query = query.filter(Student.level == level)
+    else:
+        query = query.filter(Student.level.like(f"{level}%"))
+        
+    students = query.order_by(Student.last_name.asc(), Student.first_name.asc()).all()
     
     total = len(students)
     if total == 0:

@@ -70,7 +70,7 @@ class CorrectionOCRService:
             {
                 "id": "bac_math_analyse",
                 "title": "Baccalauréat Mathématiques — Analyse & Intégrales",
-                "level": "Bac",
+                "level": "Bac — Mathématiques",
                 "chapter": "Fonctions exponentielles, Intégrales & Suites",
                 "detail_level": 4,
                 "language": "fr",
@@ -113,7 +113,7 @@ class CorrectionOCRService:
             {
                 "id": "complexes_geometrie",
                 "title": "Devoir de Synthèse — Nombres Complexes & Géométrie",
-                "level": "Lycée / Bac",
+                "level": "Bac — Sciences",
                 "chapter": "Plan complexe, Forme trigonométrique & Lieux géométriques",
                 "detail_level": 4,
                 "language": "fr",
@@ -143,21 +143,21 @@ class CorrectionOCRService:
             },
             {
                 "id": "algebre_lineaire_prepa",
-                "title": "Concours Prépa / Université — Algèbre Linéaire & Matrices",
-                "level": "Prépa",
-                "chapter": "Espaces vectoriels, Déterminants & Inversion matricielle",
-                "detail_level": 5,
+                "title": "Devoir de Contrôle — Algèbre & Fonctions",
+                "level": "3ème — Mathématiques",
+                "chapter": "Polynômes, Systèmes linéaires & Déterminants",
+                "detail_level": 4,
                 "language": "fr",
                 "exercises": [
                     {
                         "exercise_number": 1,
-                        "title": "Exercice 1 : Inversion matricielle et déterminant",
+                        "title": "Exercice 1 : Systèmes et déterminant",
                         "points": "10 points",
-                        "topic": "Algèbre Linéaire",
+                        "topic": "Algèbre & Systèmes",
                         "statement": "Soit la matrice $M = \\begin{pmatrix} 3 & 1 \\\\ 2 & 4 \\end{pmatrix}$.",
                         "questions": [
-                            MathSolver.solve_question("Calculer le déterminant det(M) et justifier que M est inversible.", "1.", "Prépa", 5),
-                            MathSolver.solve_question("Déterminer l'expression de la matrice inverse M^(-1).", "2.", "Prépa", 5)
+                            MathSolver.solve_question("Calculer le déterminant det(M) et justifier que M est inversible.", "1.", "3ème", 4),
+                            MathSolver.solve_question("Déterminer l'expression de la matrice inverse M^(-1).", "2.", "3ème", 4)
                         ]
                     },
                     {
@@ -167,7 +167,7 @@ class CorrectionOCRService:
                         "topic": "Probabilités & Loi Binomiale",
                         "statement": "Soit X une variable aléatoire suivant la loi binomiale B(n=5, p=0.2).",
                         "questions": [
-                            MathSolver.solve_question("Calculer la probabilité d'obtenir exactement 2 succès P(X=2) ainsi que l'espérance E(X).", "1.", "Prépa", 4)
+                            MathSolver.solve_question("Calculer la probabilité d'obtenir exactement 2 succès P(X=2) ainsi que l'espérance E(X).", "1.", "3ème", 4)
                         ]
                     }
                 ]
