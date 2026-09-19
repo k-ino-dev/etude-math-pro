@@ -14,6 +14,10 @@ const DashboardView = {
     const currentMonthName = isAr ? monthsAr[now.getMonth()] : monthsFr[now.getMonth()];
     const currentYear = now.getFullYear();
 
+    const user = State.user || API.getUser();
+    const teacherName = (user && user.name) ? user.name : (isAr ? 'أستاذ' : 'Professeur');
+    const avatarHtml = this.getAvatarHtml(user);
+
     container.innerHTML = `
       <div class="space-y-6 sm:space-y-7 animate-fade-in max-w-7xl mx-auto">
 
@@ -21,15 +25,15 @@ const DashboardView = {
         <div class="hero-welcome-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <!-- Left: Avatar + Greeting -->
           <div class="flex items-center gap-4 sm:gap-5 relative z-10">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/90 shadow-md bg-white overflow-hidden flex items-center justify-center shrink-0">
-              <img id="dash-teacher-avatar" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" alt="Professeur" class="w-full h-full object-cover" onerror="this.src='/img/avatar.png';">
+            <div id="dash-teacher-avatar-box" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-2 border-white/90 shadow-md bg-white overflow-hidden flex items-center justify-center shrink-0">
+              ${avatarHtml}
             </div>
             <div>
               <p class="text-sm sm:text-base text-slate-700 font-semibold tracking-wide">
                 ${isAr ? 'مرحباً أستاذ،' : 'Bienvenue Professeur,'}
               </p>
               <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mt-0.5" id="dash-teacher-name">
-                Sofien Lefi
+                ${teacherName}
               </h1>
             </div>
           </div>
@@ -181,6 +185,21 @@ const DashboardView = {
     await this.loadData(container);
   },
 
+  getAvatarHtml(user) {
+    if (!user) {
+      return `<div class="w-full h-full bg-gradient-to-tr from-[#c5a059] to-[#dfc288] text-white font-black flex items-center justify-center text-xl sm:text-2xl shadow-inner">P</div>`;
+    }
+    if (user.avatar && (user.avatar.startsWith('data:image') || user.avatar.startsWith('http') || user.avatar.startsWith('/'))) {
+      return `<img src="${user.avatar}" class="w-full h-full object-cover" alt="${user.name || 'Professeur'}" onerror="this.parentElement.innerHTML='<div class=\\'w-full h-full bg-gradient-to-tr from-[#c5a059] to-[#dfc288] text-white font-black flex items-center justify-center text-xl sm:text-2xl\\'>P</div>';">`;
+    }
+    if (user.avatar && user.avatar.length <= 4) {
+      return `<div class="w-full h-full bg-[#f4eee2] text-slate-800 flex items-center justify-center text-2xl sm:text-3xl font-bold">${user.avatar}</div>`;
+    }
+    const parts = (user.name || 'Professeur').trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+    return `<div class="w-full h-full bg-gradient-to-tr from-[#c5a059] to-[#dfc288] text-white font-black flex items-center justify-center text-xl sm:text-2xl shadow-inner">${initials}</div>`;
+  },
+
   async loadData(container) {
     try {
       const stats = await API.get('/api/dashboard/stats');
@@ -188,9 +207,15 @@ const DashboardView = {
       State.updateBadges();
 
       const user = State.user || API.getUser();
-      const teacherNameEl = container.querySelector('#dash-teacher-name');
-      if (teacherNameEl && user) {
-        teacherNameEl.innerText = user.name || (I18n.currentLang === 'ar' ? 'أستاذ' : 'Professeur');
+      if (user) {
+        const teacherNameEl = container.querySelector('#dash-teacher-name');
+        if (teacherNameEl) {
+          teacherNameEl.innerText = user.name || (I18n.currentLang === 'ar' ? 'أستاذ' : 'Professeur');
+        }
+        const teacherAvatarBox = container.querySelector('#dash-teacher-avatar-box');
+        if (teacherAvatarBox) {
+          teacherAvatarBox.innerHTML = this.getAvatarHtml(user);
+        }
       }
 
       const isAr = I18n.currentLang === 'ar';

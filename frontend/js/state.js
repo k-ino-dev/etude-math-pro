@@ -84,6 +84,22 @@ const State = {
       const userMenuEmail = document.getElementById('user-menu-email');
       if (userMenuEmail) userMenuEmail.innerText = this.user.email || '';
 
+      // Synchronize Dashboard Teacher Avatar & Name
+      const dashTeacherNameEl = document.getElementById('dash-teacher-name');
+      if (dashTeacherNameEl) dashTeacherNameEl.innerText = this.user.name || defaultName;
+      const dashAvatarBox = document.getElementById('dash-teacher-avatar-box');
+      if (dashAvatarBox) {
+        if (this.user.avatar && (this.user.avatar.startsWith('data:image') || this.user.avatar.startsWith('http') || this.user.avatar.startsWith('/'))) {
+          dashAvatarBox.innerHTML = `<img src="${this.user.avatar}" class="w-full h-full object-cover" alt="${this.user.name || 'Professeur'}">`;
+        } else if (this.user.avatar && this.user.avatar.length <= 4) {
+          dashAvatarBox.innerHTML = `<div class="w-full h-full bg-[#f4eee2] text-slate-800 flex items-center justify-center text-2xl sm:text-3xl font-bold">${this.user.avatar}</div>`;
+        } else {
+          const parts = (this.user.name || 'Professeur').trim().split(/\s+/);
+          const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+          dashAvatarBox.innerHTML = `<div class="w-full h-full bg-gradient-to-tr from-[#c5a059] to-[#dfc288] text-white font-black flex items-center justify-center text-xl sm:text-2xl shadow-inner">${initials}</div>`;
+        }
+      }
+
       const schoolYearEl = document.getElementById('sidebar-school-year');
       if (schoolYearEl) {
         schoolYearEl.innerText = isAr ? `السنة ${this.user.school_year || '2025-2026'}` : `Année ${this.user.school_year || '2025-2026'}`;
