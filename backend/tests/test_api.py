@@ -178,6 +178,9 @@ def test_payments_and_receipt():
     receipt = rec_res.json()
     assert receipt["student_name"] is not None
     assert receipt["amount_paid"] == 90.0
+    assert receipt["status_display"] == "RÉGLÉ"
+    assert receipt["is_fully_paid"] == True
+    assert "student_code" not in receipt
     assert receipt["receipt_number"] == payment["receipt_number"]
 
     # 2. Download receipt PDF

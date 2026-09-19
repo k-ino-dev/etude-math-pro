@@ -219,6 +219,11 @@ def get_payment_receipt(
     student = db.query(Student).filter(Student.id == payment.student_id).first()
     group = db.query(Group).filter(Group.id == student.group_id).first() if student and student.group_id else None
     
+    monthly_price = student.monthly_price if student else payment.amount
+    is_fully_paid = (payment.status == "paid") or (payment.amount >= monthly_price and payment.amount > 0)
+    remaining_due = max(0.0, monthly_price - payment.amount) if not is_fully_paid else 0.0
+    status_display = "RÉGLÉ" if is_fully_paid else ("PARTIEL" if payment.status == "partial" else "EN ATTENTE")
+    
     return {
         "receipt_number": payment.receipt_number,
         "date": payment.payment_date,
@@ -226,12 +231,14 @@ def get_payment_receipt(
         "teacher_phone": current_user.phone or "",
         "school_year": current_user.school_year or "2025-2026",
         "student_name": f"{student.first_name} {student.last_name}" if student else "",
-        "student_code": student.student_code if student else "",
         "level": student.level if student else "",
         "group_name": group.name if group else "",
         "month": payment.month,
         "amount_paid": payment.amount,
-        "monthly_price": student.monthly_price if student else payment.amount,
+        "monthly_price": monthly_price,
+        "remaining_due": remaining_due,
+        "is_fully_paid": is_fully_paid,
+        "status_display": status_display,
         "payment_method": payment.payment_method,
         "status": payment.status,
         "currency": current_user.currency or "DT",

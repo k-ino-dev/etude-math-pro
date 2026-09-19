@@ -376,7 +376,7 @@ def generate_monthly_pdf_report(report_data: Dict[str, Any], output_path: Option
 
 def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Optional[str] = None) -> bytes:
     """
-    Generate an official, high-resolution payment receipt PDF using ReportLab.
+    Generate an official, high-resolution payment receipt PDF using ReportLab for ÉtudeMath Pro.
     Saves to output_path or returns PDF bytes.
     """
     buffer = io.BytesIO() if output_path is None else open(output_path, "wb")
@@ -392,13 +392,16 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
 
     styles = getSampleStyleSheet()
 
-    c_primary = colors.HexColor("#4f46e5") # Indigo 600
+    c_primary = colors.HexColor("#c5a059") # Warm Gold Brand Accent
+    c_indigo = colors.HexColor("#4f46e5")
     c_dark = colors.HexColor("#0f172a")    # Slate 900
     c_slate = colors.HexColor("#475569")   # Slate 600
-    c_light_bg = colors.HexColor("#f8fafc")
+    c_light_bg = colors.HexColor("#fdfbf7")
     c_emerald = colors.HexColor("#059669")
     c_emerald_bg = colors.HexColor("#ecfdf5")
-    c_border = colors.HexColor("#e2e8f0")
+    c_amber = colors.HexColor("#d97706")
+    c_amber_bg = colors.HexColor("#fffbeb")
+    c_border = colors.HexColor("#ede7db")
 
     cell_style = ParagraphStyle('RCellText', fontName='Helvetica', fontSize=9, leading=13, textColor=c_dark)
     cell_bold = ParagraphStyle('RCellBold', fontName='Helvetica-Bold', fontSize=9, leading=13, textColor=c_dark)
@@ -412,7 +415,6 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
     receipt_number = receipt_data.get("receipt_number", "REC-0001")
     payment_date = str(receipt_data.get("date", datetime.date.today()))
     student_name = receipt_data.get("student_name", "Élève")
-    student_code = receipt_data.get("student_code", "")
     level = receipt_data.get("level", "---")
     group_name = receipt_data.get("group_name", "---")
     month = receipt_data.get("month", "---")
@@ -420,14 +422,17 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
     monthly_price = float(receipt_data.get("monthly_price", amount_paid))
     payment_method = receipt_data.get("payment_method", "Espèces")
     currency = receipt_data.get("currency", "DT")
-    status = receipt_data.get("status", "paid")
+    raw_status = receipt_data.get("status", "paid")
     notes = receipt_data.get("notes", "")
+
+    is_fully_paid = (raw_status == "paid") or (amount_paid >= monthly_price and amount_paid > 0)
+    remaining_due = max(0.0, monthly_price - amount_paid) if not is_fully_paid else 0.0
 
     # 1. Top Header Banner
     header_table_data = [
         [
-            Paragraph("<b>Maths<font color='#4f46e5'>Prof</font></b><br/><font size=9 color='#64748b'>Cours Particuliers & Suivi Pédagogique</font>", ParagraphStyle('RLogo', fontName='Helvetica-Bold', fontSize=22, textColor=c_dark)),
-            Paragraph(f"<b>REÇU DE PAIEMENT</b><br/><font size=11 color='#4f46e5'><b>N° {receipt_number}</b></font><br/><font size=8 color='#64748b'>Date : {payment_date}</font>", ParagraphStyle('RTopRight', fontName='Helvetica', fontSize=10, alignment=2, textColor=c_dark))
+            Paragraph("<b><font color='#c5a059'>∑</font> Étude<font color='#c5a059'>Math</font> Pro</b><br/><font size=9 color='#64748b'>Plateforme Enseignant & Cours Particuliers</font>", ParagraphStyle('RLogo', fontName='Helvetica-Bold', fontSize=20, textColor=c_dark)),
+            Paragraph(f"<b>REÇU DE PAIEMENT</b><br/><font size=11 color='#a27e38'><b>N° {receipt_number}</b></font><br/><font size=8 color='#64748b'>Date d'émission : {payment_date}</font>", ParagraphStyle('RTopRight', fontName='Helvetica', fontSize=10, alignment=2, textColor=c_dark))
         ]
     ]
     header_table = Table(header_table_data, colWidths=[280, 235])
@@ -438,15 +443,15 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
     story.append(header_table)
     story.append(HRFlowable(width="100%", thickness=2, color=c_primary, spaceAfter=15))
 
-    # 2. Teacher & Student Info 2-Column Box
+    # 2. Teacher & Student Info 2-Column Box (NO STUDENT ID EXPOSED)
     info_table_data = [
         [
-            Paragraph("<b>ÉMIS PAR :</b>", ParagraphStyle('SubH1', fontName='Helvetica-Bold', fontSize=8, textColor=c_primary)),
-            Paragraph("<b>DESTINATAIRE / ÉLÈVE :</b>", ParagraphStyle('SubH2', fontName='Helvetica-Bold', fontSize=8, textColor=c_primary))
+            Paragraph("<b>ÉMIS PAR :</b>", ParagraphStyle('SubH1', fontName='Helvetica-Bold', fontSize=8, textColor=colors.HexColor("#a27e38"))),
+            Paragraph("<b>ÉLÈVE CONCERNÉ(E) :</b>", ParagraphStyle('SubH2', fontName='Helvetica-Bold', fontSize=8, textColor=colors.HexColor("#a27e38")))
         ],
         [
             Paragraph(f"<b>{teacher_name}</b><br/><font size=9 color='#475569'>Enseignant de Mathématiques<br/>📞 {teacher_phone}<br/>Année Scolaire : {school_year}</font>", cell_style),
-            Paragraph(f"<b>{student_name}</b> <font color='#64748b'>({student_code})</font><br/><font size=9 color='#475569'>Niveau : <b>{level}</b><br/>Groupe : <b>{group_name}</b></font>", cell_style)
+            Paragraph(f"<b>{student_name}</b><br/><font size=9 color='#475569'>Niveau : <b>{level}</b><br/>Groupe : <b>{group_name}</b></font>", cell_style)
         ]
     ]
     info_table = Table(info_table_data, colWidths=[250, 265])
@@ -461,35 +466,43 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
     story.append(Spacer(1, 15))
 
     # 3. Payment Details Table
-    status_label = "🟢 Payé Intégralement" if status == "paid" else ("🟠 Partiel" if status == "partial" else "🔴 En attente")
-    details_data = [
-        [
-            Paragraph("Désignation & Mois Concerné", header_cell),
-            Paragraph("Tarif Mensuel", header_cell),
-            Paragraph("Mode", header_cell),
-            Paragraph("Statut", header_cell),
-            Paragraph("Montant Versé", header_cell)
-        ],
-        [
-            Paragraph(f"<b>Cotisation de cours — {month}</b><br/><font size=8 color='#64748b'>{student_name} • {level}</font>", cell_style),
-            Paragraph(f"{monthly_price:,.2f} {currency}", cell_style),
-            Paragraph(payment_method, cell_style),
-            Paragraph(f"<b>{status_label}</b>", cell_style),
-            Paragraph(f"<b><font size=10 color='#059669'>{amount_paid:,.2f} {currency}</font></b>", cell_bold)
-        ]
+    status_label = "🟢 RÉGLÉ" if is_fully_paid else ("🟠 PARTIEL" if raw_status == "partial" else "🔴 EN ATTENTE")
+    
+    details_header = [
+        Paragraph("Désignation / Période", header_cell),
+        Paragraph("Montant Total", header_cell),
+        Paragraph("Montant Réglé", header_cell),
+        Paragraph("Statut", header_cell)
     ]
+    
+    details_row = [
+        Paragraph(f"<b>Cotisation de cours — {month}</b><br/><font size=8 color='#64748b'>{student_name} ({level})</font>", cell_style),
+        Paragraph(f"<b>{monthly_price:,.2f} {currency}</b>", cell_style),
+        Paragraph(f"<b><font size=10 color='#059669'>{amount_paid:,.2f} {currency}</font></b>", cell_bold),
+        Paragraph(f"<b>{status_label}</b>", cell_style)
+    ]
+    
+    details_data = [details_header, details_row]
+
+    if not is_fully_paid and remaining_due > 0:
+        details_data.append([
+            Paragraph("<i>Reste à payer :</i>", cell_style),
+            Paragraph("", cell_style),
+            Paragraph(f"<b><font color='#d97706'>{remaining_due:,.2f} {currency}</font></b>", cell_style),
+            Paragraph("<font size=8 color='#d97706'>Solde restant</font>", cell_style)
+        ])
+
     if notes:
         details_data.append([
             Paragraph(f"<font size=8 color='#64748b'><i>Note : {notes}</i></font>", cell_style),
             Paragraph("", cell_style),
             Paragraph("", cell_style),
-            Paragraph("", cell_style),
             Paragraph("", cell_style)
         ])
 
-    details_table = Table(details_data, colWidths=[180, 85, 80, 95, 75])
+    details_table = Table(details_data, colWidths=[210, 100, 110, 95])
     details_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), c_primary),
+        ('BACKGROUND', (0,0), (-1,0), colors.HexColor("#0f172a")),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('TOPPADDING', (0,0), (-1,-1), 7),
         ('BOTTOMPADDING', (0,0), (-1,-1), 7),
@@ -500,19 +513,32 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
     story.append(details_table)
     story.append(Spacer(1, 15))
 
-    # 4. Big Total Box
-    total_box_data = [
-        [
-            Paragraph("<b>MONTANT TOTAL ENCAISSÉ</b><br/><font size=8 color='#065f46'>Paiement certifié & validé</font>", ParagraphStyle('TotLbl', fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor("#065f46"))),
-            Paragraph(f"<b>{amount_paid:,.2f} {currency}</b>", ParagraphStyle('TotVal', fontName='Helvetica-Bold', fontSize=18, alignment=2, textColor=c_emerald))
+    # 4. Big Total Box (RÉGLÉ or ACOMPTE)
+    if is_fully_paid:
+        total_box_data = [
+            [
+                Paragraph("<b>MONTANT TOTAL RÉGLÉ</b><br/><font size=8 color='#065f46'>Paiement validé & certifié</font>", ParagraphStyle('TotLbl', fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor("#065f46"))),
+                Paragraph(f"<b>{amount_paid:,.2f} {currency}</b>", ParagraphStyle('TotVal', fontName='Helvetica-Bold', fontSize=18, alignment=2, textColor=c_emerald))
+            ]
         ]
-    ]
+        box_bg = c_emerald_bg
+        box_border = colors.HexColor("#a7f3d0")
+    else:
+        total_box_data = [
+            [
+                Paragraph(f"<b>MONTANT ENCAISSÉ (ACOMPTE)</b><br/><font size=8 color='#b45309'>Reste à régler : <b>{remaining_due:,.2f} {currency}</b></font>", ParagraphStyle('TotLbl', fontName='Helvetica-Bold', fontSize=10, textColor=colors.HexColor("#92400e"))),
+                Paragraph(f"<b>{amount_paid:,.2f} {currency}</b>", ParagraphStyle('TotVal', fontName='Helvetica-Bold', fontSize=18, alignment=2, textColor=c_amber))
+            ]
+        ]
+        box_bg = c_amber_bg
+        box_border = colors.HexColor("#fde68a")
+
     total_table = Table(total_box_data, colWidths=[315, 200])
     total_table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,-1), c_emerald_bg),
+        ('BACKGROUND', (0,0), (-1,-1), box_bg),
         ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
         ('PADDING', (0,0), (-1,-1), 12),
-        ('BOX', (0,0), (-1,-1), 1.5, colors.HexColor("#a7f3d0")),
+        ('BOX', (0,0), (-1,-1), 1.5, box_border),
     ]))
     story.append(total_table)
     story.append(Spacer(1, 25))
@@ -534,7 +560,7 @@ def generate_payment_receipt_pdf(receipt_data: Dict[str, Any], output_path: Opti
 
     # 6. Legal / App Footer
     story.append(HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#cbd5e1"), spaceAfter=6))
-    footer_text = f"Reçu électronique émis par MathsProf le {payment_date}. Ce document tient lieu de justificatif de règlement."
+    footer_text = f"Reçu électronique émis par ÉtudeMath Pro le {payment_date}. Ce document certifie le règlement de la cotisation."
     story.append(Paragraph(footer_text, ParagraphStyle('RFooter', fontName='Helvetica-Oblique', fontSize=8, alignment=1, textColor=c_slate)))
 
     doc.build(story)

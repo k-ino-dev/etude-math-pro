@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr" class="h-full antialiased" dir="ltr">
 <head>
   <meta charset="UTF-8">
@@ -31,6 +31,19 @@
           },
           colors: {
             brand: {
+              50: '#fcfaf6',
+              100: '#f7f2ea',
+              200: '#ede4d3',
+              300: '#dfd0b5',
+              400: '#c5a059',
+              500: '#b89146',
+              600: '#a27e38',
+              700: '#856428',
+              800: '#6d5023',
+              900: '#5c431f',
+              950: '#34230e',
+            },
+            primary: {
               50: '#eef2ff',
               100: '#e0e7ff',
               200: '#c7d2fe',
@@ -41,7 +54,6 @@
               700: '#4338ca',
               800: '#3730a3',
               900: '#312e81',
-              950: '#1e1b4b',
             }
           }
         }
@@ -57,114 +69,86 @@
   <!-- Custom Design System -->
   <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body class="h-full flex flex-col font-sans text-slate-800 bg-slate-50 selection:bg-brand-500/20 selection:text-brand-700">
+<body class="h-full flex flex-col font-sans text-slate-800 bg-[#f8f6f0] selection:bg-[#c5a059]/25 selection:text-[#5c431f]">
 
   <!-- Application Shell (shown when authenticated) -->
   <div id="app" class="min-h-full flex flex-col hidden">
     
-    <!-- Top Navbar -->
-    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200/70 shadow-[0_1px_0_rgba(0,0,0,0.04),0_2px_12px_rgba(0,0,0,0.04)]">
-      <div class="px-4 sm:px-6 flex items-center justify-between h-14">
+    <!-- Top Navbar — Premium Warm Ivory & Gold Reference Style -->
+    <header class="sticky top-0 z-30 bg-[#fdfcf9]/95 backdrop-blur-md border-b border-[#ebd9b5]/60 shadow-[0_1px_3px_rgba(45,35,20,0.03)]">
+      <div class="px-4 sm:px-6 flex items-center justify-between h-16">
         
-        <!-- Left: Mobile Menu Button + Brand -->
+        <!-- Left: Mobile Menu Button + Brand Logo -->
         <div class="flex items-center gap-3">
-          <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-brand-500/40 transition-colors">
+          <button id="mobile-menu-btn" class="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-[#ede5d8] focus:outline-none transition-colors">
             <i data-lucide="menu" class="w-5 h-5"></i>
           </button>
           
           <a href="#dashboard" class="flex items-center gap-2.5 group">
-            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-brand-500 to-violet-500 flex items-center justify-center text-white font-black text-base shadow-md shadow-indigo-600/25 group-hover:scale-105 transition-transform">
+            <div class="w-9 h-9 rounded-2xl bg-gradient-to-tr from-[#c5a059] to-[#dfc288] flex items-center justify-center text-white font-black text-xl shadow-md shadow-[#c5a059]/25 group-hover:scale-105 transition-transform">
               <span class="tracking-tighter">∑</span>
             </div>
-            <div class="hidden sm:block">
-              <span class="text-sm font-black tracking-tight text-slate-900">Étude<span class="text-brand-600">Math</span></span>
-              <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 block -mt-0.5">Pro 2026</span>
+            <div>
+              <span class="text-base font-black tracking-tight text-slate-900">Étude<span class="text-[#c5a059]">Math</span></span>
+              <span class="text-[10px] uppercase tracking-widest font-bold text-slate-400 block -mt-1">Pro</span>
             </div>
           </a>
+
+          <!-- Top Navigation Quick Links (from reference image) -->
+          <div class="hidden md:flex items-center gap-6 ml-8 rtl:ml-0 rtl:mr-8 text-xs font-bold text-slate-600">
+            <a href="#planning" class="hover:text-slate-900 transition-colors">Ressources</a>
+            <a href="#settings" class="hover:text-slate-900 transition-colors">Support</a>
+          </div>
         </div>
 
         <!-- Center: Global Search -->
         <div class="flex-1 max-w-xs mx-4 hidden md:block">
-          <button id="global-search-trigger" class="w-full flex items-center justify-between px-3.5 py-2 text-sm text-slate-400 bg-slate-100/80 hover:bg-slate-100 border border-slate-200/80 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-brand-500/40">
+          <button id="global-search-trigger" class="w-full flex items-center justify-between px-3.5 py-2 text-sm text-slate-400 bg-white/80 hover:bg-white border border-[#e2dacb] rounded-2xl shadow-xs transition-all focus:outline-none focus:ring-2 focus:ring-[#c5a059]/30">
             <span class="flex items-center gap-2">
               <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-              <span id="nav-search-placeholder" class="text-xs text-slate-400">Rechercher...</span>
+              <span id="nav-search-placeholder" class="text-xs text-slate-500 font-medium">Rechercher...</span>
             </span>
-            <kbd class="px-1.5 py-0.5 text-[10px] font-bold text-slate-400 bg-white border border-slate-200 rounded-md shadow-sm">⌘K</kbd>
+            <kbd class="px-1.5 py-0.5 text-[10px] font-bold text-slate-500 bg-[#f4eee3] border border-[#e2dacb] rounded-md shadow-xs">⌘K</kbd>
           </button>
         </div>
 
-        <!-- Right: Actions -->
-        <div class="flex items-center gap-1.5 sm:gap-2">
+        <!-- Right: Language & Account Dropdown -->
+        <div class="flex items-center gap-2 sm:gap-3">
           
           <!-- Mobile search -->
-          <button id="mobile-search-btn" class="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-colors">
+          <button id="mobile-search-btn" class="md:hidden p-2 text-slate-600 hover:bg-[#ede5d8] rounded-xl transition-colors">
             <i data-lucide="search" class="w-5 h-5"></i>
           </button>
 
-          <!-- Language Toggle -->
-          <div class="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200/60 gap-0.5">
-            <button id="lang-btn-fr" class="lang-btn" onclick="I18n.setLanguage('fr')" data-lang="fr">
-              🇫🇷 FR
+          <!-- Language Selector Pill (FR / TN / AR) -->
+          <div class="flex items-center bg-[#eee7db] p-0.5 rounded-xl border border-[#ded5c5] text-xs font-bold text-slate-700">
+            <button id="lang-btn-fr" class="lang-btn px-2.5 py-1 rounded-lg" onclick="I18n.setLanguage('fr')" data-lang="fr">
+              FR
             </button>
-            <button id="lang-btn-ar" class="lang-btn" onclick="I18n.setLanguage('ar')" data-lang="ar">
-              🇹🇳 AR
+            <button id="lang-btn-ar" class="lang-btn px-2.5 py-1 rounded-lg" onclick="I18n.setLanguage('ar')" data-lang="ar">
+              AR
             </button>
           </div>
 
-          <!-- Quick Action -->
+          <!-- User Account Dropdown (Matching Reference "Compte v") -->
           <div class="relative">
-            <button id="quick-action-btn" class="flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 active:scale-95 rounded-xl shadow-md shadow-brand-600/25 transition-all">
-              <i data-lucide="plus" class="w-4 h-4"></i>
-              <span id="nav-quick-action-text" class="hidden sm:inline">Nouveau</span>
-              <i data-lucide="chevron-down" class="w-3 h-3 opacity-70"></i>
-            </button>
-            <div id="quick-action-menu" class="hidden absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-slide-down">
-              <a href="#students" onclick="app.openNewStudentModal();" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
-                  <i data-lucide="user-plus" class="w-3.5 h-3.5 text-indigo-600"></i>
-                </div>
-                <span class="i18n-text" data-key="add_student">+ Ajouter un élève</span>
-              </a>
-              <a href="#groups" onclick="app.openNewGroupModal();" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                <div class="w-7 h-7 rounded-lg bg-violet-50 flex items-center justify-center">
-                  <i data-lucide="users" class="w-3.5 h-3.5 text-violet-600"></i>
-                </div>
-                <span class="i18n-text" data-key="add_group">+ Créer un groupe</span>
-              </a>
-              <a href="#planning" onclick="app.openNewSessionModal();" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
-                  <i data-lucide="calendar-plus" class="w-3.5 h-3.5 text-emerald-600"></i>
-                </div>
-                <span class="i18n-text" data-key="add_session">+ Ajouter une séance</span>
-              </a>
-              <div class="mx-3 my-1 border-t border-slate-100"></div>
-              <a href="#payments" onclick="app.openNewPaymentModal();" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
-                  <i data-lucide="credit-card" class="w-3.5 h-3.5 text-amber-600"></i>
-                </div>
-                <span class="i18n-text" data-key="add_payment">+ Enregistrer un paiement</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- User Menu -->
-          <div class="relative">
-            <button id="user-menu-btn" class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-100 border border-transparent hover:border-slate-200/60 transition-all">
-              <div id="user-avatar-container" class="w-7 h-7 rounded-lg bg-gradient-to-tr from-brand-600 to-indigo-500 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
+            <button id="user-menu-btn" class="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-white hover:bg-[#fbf9f4] border border-[#e2dacb] shadow-xs hover:border-[#c5a059]/60 transition-all">
+              <div id="user-avatar-container" class="w-7 h-7 rounded-xl bg-gradient-to-tr from-[#c5a059] to-[#4f46e5] text-white font-bold flex items-center justify-center text-xs shadow-xs shrink-0">
                 <span id="user-initials">P</span>
               </div>
-              <span id="user-display-name" class="text-xs font-bold text-slate-700 hidden lg:inline-block max-w-[110px] truncate">Enseignant</span>
-              <i data-lucide="chevron-down" class="w-3 h-3 text-slate-400 hidden lg:inline-block"></i>
+              <span class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                <span id="user-display-name" class="max-w-[100px] truncate">Compte</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+              </span>
             </button>
-            <div id="user-menu-dropdown" class="hidden absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-slide-down">
+            <div id="user-menu-dropdown" class="hidden absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-60 bg-white rounded-2xl shadow-xl border border-[#ede7db] py-2 z-50 animate-scale-in">
               <div class="px-4 py-3 border-b border-slate-100">
                 <p id="user-menu-name" class="text-xs font-bold text-slate-900 truncate">Enseignant</p>
                 <p id="user-menu-email" class="text-[11px] text-slate-500 truncate mt-0.5">admin@mathprof.tn</p>
               </div>
-              <a href="#settings" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-brand-600 transition-colors">
+              <a href="#settings" class="flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-[#faf6ee] hover:text-[#a27e38] transition-colors">
                 <i data-lucide="settings" class="w-4 h-4 text-slate-400"></i>
-                <span class="i18n-text" data-key="accountSettings">Paramètres</span>
+                <span class="i18n-text" data-key="accountSettings">Paramètres du compte</span>
               </a>
               <button id="logout-btn" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition-colors text-left rtl:text-right border-t border-slate-100 mt-1">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
@@ -177,70 +161,45 @@
       </div>
     </header>
 
-    <!-- App Body: Sidebar + Content -->
+    <!-- App Body: Warm Sidebar + Canvas Content -->
     <div class="flex-1 flex overflow-hidden">
       
-      <!-- Desktop Sidebar — Dark Premium -->
-      <aside class="hidden lg:flex flex-col w-64 bg-[#0c1220] shrink-0 border-r rtl:border-r-0 rtl:border-l border-white/[0.05] math-grid-dark relative">
-        
-        <!-- Brand Logo Area -->
-        <div class="px-4 pt-5 pb-4 border-b border-white/[0.06]">
-          <a href="#dashboard" class="flex items-center gap-3 group">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-brand-500 to-violet-500 flex items-center justify-center text-white font-black text-xl shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition-transform shrink-0">
-              <span class="tracking-tighter">∑</span>
-            </div>
-            <div>
-              <p class="text-sm font-black text-white tracking-tight">Étude Math <span class="text-indigo-400">Pro</span></p>
-              <p class="text-[10px] text-white/35 font-semibold mt-0.5">Plateforme Enseignant</p>
-            </div>
-          </a>
-        </div>
+      <!-- Desktop Sidebar — Warm Tone Framing (Reference Style) -->
+      <aside class="hidden lg:flex flex-col w-64 sidebar-panel shrink-0 relative">
         
         <!-- Navigation -->
-        <nav class="flex-1 overflow-y-auto px-3 py-4 space-y-0.5" id="sidebar-nav">
+        <nav class="flex-1 overflow-y-auto px-3.5 py-5 space-y-1" id="sidebar-nav">
           
-          <!-- Group: Accueil -->
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/25 px-3 pb-1.5 pt-1">Tableau de bord</p>
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 pb-1">Menu Principal</p>
+
           <a href="#dashboard" class="nav-link" data-route="dashboard">
             <span class="flex items-center gap-3">
               <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
-              <span id="nav-label-dashboard">Dashboard</span>
+              <span id="nav-label-dashboard">Tableau de bord</span>
             </span>
           </a>
 
-          <!-- Group: Gestion -->
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/25 px-3 pb-1.5 pt-4">Gestion</p>
           <a href="#students" class="nav-link" data-route="students">
             <span class="flex items-center gap-3">
               <i data-lucide="graduation-cap" class="w-4 h-4"></i>
               <span id="nav-label-students">Élèves</span>
             </span>
-            <span id="sidebar-students-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/50 min-w-[20px] text-center">0</span>
+            <span id="sidebar-students-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/80 text-slate-600 border border-[#e2dacb] min-w-[20px] text-center">0</span>
           </a>
 
-          <a href="#groups" class="nav-link" data-route="groups">
-            <span class="flex items-center gap-3">
-              <i data-lucide="users" class="w-4 h-4"></i>
-              <span id="nav-label-groups">Groupes</span>
-            </span>
-            <span id="sidebar-groups-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/50 min-w-[20px] text-center">0</span>
-          </a>
-
-          <a href="#repartition" class="nav-link" data-route="repartition">
-            <span class="flex items-center gap-3">
-              <i data-lucide="sparkles" class="w-4 h-4 text-amber-400"></i>
-              <span id="nav-label-repartition">Répartition IA</span>
-            </span>
-            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 tracking-wide">IA</span>
-          </a>
-
-          <!-- Group: Cours -->
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/25 px-3 pb-1.5 pt-4">Cours</p>
           <a href="#planning" class="nav-link" data-route="planning">
             <span class="flex items-center gap-3">
               <i data-lucide="calendar" class="w-4 h-4"></i>
-              <span id="nav-label-planning">Planning</span>
+              <span id="nav-label-planning">Séances</span>
             </span>
+          </a>
+
+          <a href="#payments" class="nav-link" data-route="payments">
+            <span class="flex items-center gap-3">
+              <i data-lucide="wallet" class="w-4 h-4"></i>
+              <span id="nav-label-payments">Comptabilité</span>
+            </span>
+            <span id="sidebar-pending-payments-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 hidden min-w-[20px] text-center">0</span>
           </a>
 
           <a href="#attendance" class="nav-link" data-route="attendance">
@@ -248,21 +207,28 @@
               <i data-lucide="check-circle-2" class="w-4 h-4"></i>
               <span id="nav-label-attendance">Présences</span>
             </span>
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
           </a>
 
-          <!-- Group: Finance -->
-          <p class="text-[10px] font-bold uppercase tracking-widest text-white/25 px-3 pb-1.5 pt-4">Finance</p>
-          <a href="#payments" class="nav-link" data-route="payments">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-3 pb-1 pt-4">Outils Pédagogiques</p>
+
+          <a href="#groups" class="nav-link" data-route="groups">
             <span class="flex items-center gap-3">
-              <i data-lucide="wallet" class="w-4 h-4"></i>
-              <span id="nav-label-payments">Paiements</span>
+              <i data-lucide="users" class="w-4 h-4"></i>
+              <span id="nav-label-groups">Groupes</span>
             </span>
-            <span id="sidebar-pending-payments-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 hidden min-w-[20px] text-center">0</span>
+            <span id="sidebar-groups-count" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/80 text-slate-600 border border-[#e2dacb] min-w-[20px] text-center">0</span>
           </a>
 
-          <!-- Divider + Settings -->
-          <div class="pt-3 mt-2 border-t border-white/[0.06]">
+          <a href="#repartition" class="nav-link" data-route="repartition">
+            <span class="flex items-center gap-3">
+              <i data-lucide="sparkles" class="w-4 h-4 text-[#c5a059]"></i>
+              <span id="nav-label-repartition">Répartition IA</span>
+            </span>
+            <span class="text-[9px] font-black uppercase px-2 py-0.5 rounded-md bg-[#c5a059]/20 text-[#856428] border border-[#c5a059]/40 tracking-wide">IA</span>
+          </a>
+
+          <div class="pt-4 mt-2 border-t border-[#e6dfd3]">
             <a href="#settings" class="nav-link" data-route="settings">
               <span class="flex items-center gap-3">
                 <i data-lucide="settings" class="w-4 h-4"></i>
@@ -273,21 +239,21 @@
         </nav>
 
         <!-- Sidebar Footer: School Year Info -->
-        <div class="px-3 pb-4 pt-3 border-t border-white/[0.06]">
-          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-            <div class="w-7 h-7 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
-              <i data-lucide="book-open" class="w-3.5 h-3.5 text-indigo-400"></i>
+        <div class="px-3.5 pb-5 pt-3 border-t border-[#e6dfd3]">
+          <div class="flex items-center gap-2.5 px-3 py-2.5 rounded-2xl bg-white/70 border border-[#e2dacb]">
+            <div class="w-7 h-7 rounded-xl bg-[#c5a059]/15 flex items-center justify-center shrink-0">
+              <i data-lucide="book-open" class="w-3.5 h-3.5 text-[#a27e38]"></i>
             </div>
             <div class="overflow-hidden">
-              <p id="sidebar-school-year" class="text-xs font-bold text-white/75 truncate">Année 2025-2026</p>
-              <p id="sidebar-currency-label" class="text-[10px] text-white/30 truncate">Dinar Tunisien · DT</p>
+              <p id="sidebar-school-year" class="text-xs font-bold text-slate-800 truncate">Année 2025-2026</p>
+              <p id="sidebar-currency-label" class="text-[10px] text-slate-500 font-medium truncate">Dinar Tunisien · DT</p>
             </div>
           </div>
         </div>
       </aside>
 
-      <!-- Main Content -->
-      <main id="main-view" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 bg-slate-50">
+      <!-- Main Content Canvas -->
+      <main id="main-view" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8 bg-math-canvas">
         <!-- Rendered dynamically by views -->
       </main>
 
@@ -296,51 +262,51 @@
     <!-- Mobile Slide-over Drawer -->
     <div id="mobile-drawer" class="fixed inset-0 z-50 lg:hidden hidden">
       <div id="mobile-drawer-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
-      <div class="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 max-w-xs w-full bg-white shadow-2xl p-5 flex flex-col justify-between z-10 animate-slide-right">
+      <div class="fixed inset-y-0 left-0 rtl:left-auto rtl:right-0 max-w-xs w-full bg-[#fbf9f5] shadow-2xl p-5 flex flex-col justify-between z-10 animate-slide-right border-r border-[#ebd9b5]">
         
         <div>
-          <div class="flex items-center justify-between pb-5 border-b border-slate-100">
+          <div class="flex items-center justify-between pb-5 border-b border-[#ebd9b5]/70">
             <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-500 text-white font-black flex items-center justify-center text-lg shadow">∑</div>
+              <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#c5a059] to-[#dfc288] text-white font-black flex items-center justify-center text-lg shadow">∑</div>
               <div>
-                <span class="text-sm font-black text-slate-900">Étude<span class="text-brand-600">Math</span> Pro</span>
-                <p id="mobile-menu-title" class="text-[10px] text-slate-400 font-medium">Menu Principal</p>
+                <span class="text-sm font-black text-slate-900">Étude<span class="text-[#c5a059]">Math</span> Pro</span>
+                <p id="mobile-menu-title" class="text-[10px] text-slate-500 font-medium">Menu Principal</p>
               </div>
             </div>
-            <button id="close-mobile-drawer" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
+            <button id="close-mobile-drawer" class="p-2 text-slate-400 hover:text-slate-600 hover:bg-[#ede5d8] rounded-xl transition-colors">
               <i data-lucide="x" class="w-5 h-5"></i>
             </button>
           </div>
 
           <!-- Mobile Language Toggle -->
-          <div class="mt-4 flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+          <div class="mt-4 flex items-center gap-1 p-1 bg-[#eee7db] rounded-xl border border-[#ded5c5]">
             <button class="lang-btn flex-1 py-1.5 text-center" onclick="I18n.setLanguage('fr')" data-lang="fr">🇫🇷 Français</button>
             <button class="lang-btn flex-1 py-1.5 text-center" onclick="I18n.setLanguage('ar')" data-lang="ar">🇹🇳 العربية</button>
           </div>
 
-          <nav class="mt-4 space-y-0.5">
+          <nav class="mt-4 space-y-1">
             <a href="#dashboard" class="mobile-nav-link" data-route="dashboard">
-              <span class="flex items-center gap-3"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span id="mobile-label-dashboard">Dashboard</span></span>
+              <span class="flex items-center gap-3"><i data-lucide="layout-dashboard" class="w-5 h-5"></i><span id="mobile-label-dashboard">Tableau de bord</span></span>
             </a>
             <a href="#students" class="mobile-nav-link" data-route="students">
               <span class="flex items-center gap-3"><i data-lucide="graduation-cap" class="w-5 h-5"></i><span id="mobile-label-students">Élèves</span></span>
-              <span id="mobile-students-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">0</span>
+              <span id="mobile-students-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white text-slate-700">0</span>
+            </a>
+            <a href="#planning" class="mobile-nav-link" data-route="planning">
+              <span class="flex items-center gap-3"><i data-lucide="calendar" class="w-5 h-5"></i><span id="mobile-label-planning">Séances</span></span>
+            </a>
+            <a href="#payments" class="mobile-nav-link" data-route="payments">
+              <span class="flex items-center gap-3"><i data-lucide="wallet" class="w-5 h-5 text-amber-600"></i><span id="mobile-label-payments">Comptabilité</span></span>
+            </a>
+            <a href="#attendance" class="mobile-nav-link" data-route="attendance">
+              <span class="flex items-center gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i><span id="mobile-label-attendance">Présences</span></span>
             </a>
             <a href="#groups" class="mobile-nav-link" data-route="groups">
               <span class="flex items-center gap-3"><i data-lucide="users" class="w-5 h-5"></i><span id="mobile-label-groups">Groupes</span></span>
-              <span id="mobile-groups-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">0</span>
+              <span id="mobile-groups-count" class="text-xs font-bold px-2 py-0.5 rounded-full bg-white text-slate-700">0</span>
             </a>
             <a href="#repartition" class="mobile-nav-link" data-route="repartition">
-              <span class="flex items-center gap-3"><i data-lucide="sparkles" class="w-5 h-5 text-amber-500"></i><span id="mobile-label-repartition">Répartition IA</span></span>
-            </a>
-            <a href="#planning" class="mobile-nav-link" data-route="planning">
-              <span class="flex items-center gap-3"><i data-lucide="calendar" class="w-5 h-5"></i><span id="mobile-label-planning">Planning</span></span>
-            </a>
-            <a href="#attendance" class="mobile-nav-link" data-route="attendance">
-              <span class="flex items-center gap-3"><i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-500"></i><span id="mobile-label-attendance">Présences</span></span>
-            </a>
-            <a href="#payments" class="mobile-nav-link" data-route="payments">
-              <span class="flex items-center gap-3"><i data-lucide="wallet" class="w-5 h-5 text-indigo-500"></i><span id="mobile-label-payments">Paiements</span></span>
+              <span class="flex items-center gap-3"><i data-lucide="sparkles" class="w-5 h-5 text-[#c5a059]"></i><span id="mobile-label-repartition">Répartition IA</span></span>
             </a>
             <a href="#settings" class="mobile-nav-link" data-route="settings">
               <span class="flex items-center gap-3"><i data-lucide="settings" class="w-5 h-5"></i><span id="mobile-label-settings">Paramètres</span></span>
@@ -348,7 +314,7 @@
           </nav>
         </div>
 
-        <div class="pt-5 border-t border-slate-100">
+        <div class="pt-5 border-t border-[#ebd9b5]">
           <button id="mobile-logout-btn" class="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-sm transition-colors border border-rose-100">
             <i data-lucide="log-out" class="w-4 h-4"></i>
             <span class="i18n-text" data-key="logout">Déconnexion</span>
@@ -358,7 +324,7 @@
     </div>
 
     <!-- Mobile Bottom Navigation -->
-    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200/70 px-1 py-1 flex justify-around items-center z-30 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
+    <nav class="lg:hidden fixed bottom-0 inset-x-0 bg-[#fdfcf9]/95 backdrop-blur-md border-t border-[#e2dacb] px-1 py-1 flex justify-around items-center z-30 shadow-[0_-4px_20px_rgba(45,35,20,0.06)]">
       <a href="#dashboard" class="mobile-bottom-nav" data-route="dashboard">
         <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
         <span id="bottom-label-dashboard">Accueil</span>
@@ -367,13 +333,9 @@
         <i data-lucide="graduation-cap" class="w-5 h-5"></i>
         <span id="bottom-label-students">Élèves</span>
       </a>
-      <a href="#groups" class="mobile-bottom-nav" data-route="groups">
-        <i data-lucide="users" class="w-5 h-5"></i>
-        <span id="bottom-label-groups">Groupes</span>
-      </a>
       <a href="#planning" class="mobile-bottom-nav" data-route="planning">
         <i data-lucide="calendar" class="w-5 h-5"></i>
-        <span id="bottom-label-planning">Planning</span>
+        <span id="bottom-label-planning">Séances</span>
       </a>
       <a href="#payments" class="mobile-bottom-nav" data-route="payments">
         <i data-lucide="wallet" class="w-5 h-5"></i>
@@ -383,23 +345,22 @@
 
   </div>
 
-  <!-- Login Screen (dark premium background) -->
-  <div id="login-container" class="min-h-full flex items-center justify-center p-4 relative overflow-hidden" style="background: radial-gradient(ellipse at 15% 25%, rgba(99,102,241,0.18) 0%, transparent 55%), radial-gradient(ellipse at 85% 75%, rgba(139,92,246,0.12) 0%, transparent 55%), linear-gradient(135deg, #0c1220 0%, #0f172a 40%, #1a0a3d 70%, #0f172a 100%);">
+  <!-- Login Screen -->
+  <div id="login-container" class="min-h-full flex items-center justify-center p-4 relative overflow-hidden" style="background: radial-gradient(ellipse at 20% 20%, rgba(197,160,89,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(79,70,229,0.12) 0%, transparent 60%), linear-gradient(135deg, #f7f4ee 0%, #eee8dc 50%, #f4eee2 100%);">
     <!-- Math grid overlay -->
-    <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px); background-size: 60px 60px;"></div>
+    <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(rgba(197,160,89,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(197,160,89,0.04) 1px, transparent 1px); background-size: 50px 50px;"></div>
     <!-- Decorative math symbols -->
-    <div class="absolute top-1/4 left-12 text-white/[0.025] font-serif text-8xl font-black select-none pointer-events-none">∫</div>
-    <div class="absolute bottom-1/4 right-16 text-white/[0.02] font-serif text-6xl font-black select-none pointer-events-none">Σ</div>
-    <div class="absolute top-16 right-1/3 text-white/[0.02] font-serif text-5xl font-black select-none pointer-events-none">π</div>
-    <div class="absolute bottom-16 left-1/4 text-white/[0.02] font-serif text-4xl font-black select-none pointer-events-none">√x</div>
+    <div class="absolute top-1/4 left-12 text-[#c5a059]/15 font-serif text-8xl font-black select-none pointer-events-none">∫</div>
+    <div class="absolute bottom-1/4 right-16 text-[#c5a059]/15 font-serif text-6xl font-black select-none pointer-events-none">∑</div>
+    <div class="absolute top-16 right-1/3 text-[#c5a059]/15 font-serif text-5xl font-black select-none pointer-events-none">π</div>
     <!-- Login card rendered by LoginView -->
   </div>
 
   <!-- Global Modal Container -->
   <div id="modal-container" class="relative z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+    <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
     <div class="fixed inset-0 z-10 overflow-y-auto p-4 sm:p-6 flex min-h-full items-center justify-center">
-      <div id="modal-content" class="relative transform overflow-hidden rounded-2xl bg-white text-left rtl:text-right shadow-2xl transition-all w-full max-w-xl border border-slate-200/60 animate-fade-in">
+      <div id="modal-content" class="relative transform overflow-hidden rounded-3xl bg-white text-left rtl:text-right shadow-2xl transition-all w-full max-w-xl border border-[#ede7db] animate-scale-in">
         <!-- Injected by modal.js -->
       </div>
     </div>
@@ -407,12 +368,12 @@
 
   <!-- Global Search Dialog -->
   <div id="search-modal" class="fixed inset-0 z-50 hidden">
-    <div id="search-backdrop" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div id="search-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"></div>
     <div class="fixed inset-0 z-10 p-4 sm:p-6 md:p-16 flex justify-center items-start">
-      <div class="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-slate-200/60 overflow-hidden mt-8 sm:mt-12 animate-fade-in">
+      <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-[#ede7db] overflow-hidden mt-8 sm:mt-12 animate-fade-in">
         <div class="p-4 border-b border-slate-100 flex items-center gap-3">
           <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
-          <input id="global-search-input" type="text" placeholder="Rechercher par nom, téléphone, code élève, groupe, sujet..." class="w-full text-sm focus:outline-none text-slate-900 placeholder:text-slate-400 font-medium">
+          <input id="global-search-input" type="text" placeholder="Rechercher par nom, téléphone, groupe, sujet..." class="w-full text-sm focus:outline-none text-slate-900 placeholder:text-slate-400 font-medium">
           <kbd class="shrink-0 px-2 py-0.5 text-xs text-slate-400 bg-slate-100 border border-slate-200 rounded-lg font-bold">ESC</kbd>
         </div>
         <div id="global-search-results" class="max-h-96 overflow-y-auto p-3 space-y-1.5">

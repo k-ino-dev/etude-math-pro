@@ -195,36 +195,34 @@ const StudentDetailView = {
           ` : `
             <div class="overflow-x-auto">
               <table class="w-full text-left rtl:text-right text-xs sm:text-sm">
-                <thead class="bg-slate-50 text-slate-500 font-bold uppercase text-[11px]">
+                <thead class="bg-[#faf8f5] text-slate-500 font-bold uppercase text-[11px] border-b border-[#ede7db]">
                   <tr>
                     <th class="px-4 py-3">${I18n.t('month')}</th>
-                    <th class="px-4 py-3">${I18n.t('amount')}</th>
+                    <th class="px-4 py-3 font-extrabold text-slate-800">${I18n.currentLang === 'ar' ? 'الدفع' : 'Paiement'}</th>
                     <th class="px-4 py-3">${I18n.t('date')}</th>
-                    <th class="px-4 py-3">${I18n.t('paymentMethod')}</th>
                     <th class="px-4 py-3">${I18n.t('status')}</th>
                     <th class="px-4 py-3 text-right rtl:text-left">${I18n.t('receipt')}</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-[#f2ece1]">
                   ${payments.map(p => `
-                    <tr>
+                    <tr class="hover:bg-[#fdfbf7]">
                       <td class="px-4 py-3.5 font-bold text-slate-900">${p.month}</td>
                       <td class="px-4 py-3.5 font-black text-slate-900">${p.amount} ${I18n.t('currency')}</td>
-                      <td class="px-4 py-3.5 text-slate-500 text-xs">${p.payment_date}</td>
-                      <td class="px-4 py-3.5 text-slate-600">${I18n.getPaymentMethodLabel(p.payment_method)}</td>
+                      <td class="px-4 py-3.5 text-slate-500 text-xs font-medium">${p.payment_date}</td>
                       <td class="px-4 py-3.5">
-                        ${p.status === 'paid' ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 ${I18n.t('paid')}</span>` :
-                          p.status === 'partial' ? `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🟠 ${I18n.t('partial')}</span>` :
-                          `<span class="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">🔴 ${I18n.t('pending')}</span>`
+                        ${p.status === 'paid' ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">🟢 ${I18n.t('paid')}</span>` :
+                          p.status === 'partial' ? `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">🟠 ${I18n.t('partial')}</span>` :
+                          `<span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">🔴 ${I18n.t('pending')}</span>`
                         }
                       </td>
                       <td class="px-4 py-3.5 text-right rtl:text-left">
                         <div class="flex items-center justify-end rtl:justify-start gap-1.5">
-                          <button onclick="PaymentsView.openReceiptModal(${p.id})" class="px-2 py-1 text-xs font-bold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors inline-flex items-center gap-1">
-                            <i data-lucide="receipt" class="w-3.5 h-3.5"></i> ${I18n.t('receipt')}
+                          <button onclick="PaymentsView.openReceiptModal(${p.id})" class="px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-[#ede5d8] rounded-xl transition-colors inline-flex items-center gap-1">
+                            <i data-lucide="receipt" class="w-3.5 h-3.5 text-[#a27e38]"></i> ${I18n.t('receipt')}
                           </button>
-                          <a href="/api/payments/${p.id}/pdf" target="_blank" class="px-2 py-1 text-xs font-bold text-indigo-600 hover:bg-indigo-50 border border-indigo-200 rounded-lg transition-colors inline-flex items-center gap-1">
-                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i> PDF
+                          <a href="/api/payments/${p.id}/pdf" target="_blank" class="px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-[#fbf9f4] border border-[#ded7ca] rounded-xl transition-colors inline-flex items-center gap-1">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5 text-[#a27e38]"></i> PDF
                           </a>
                         </div>
                       </td>
