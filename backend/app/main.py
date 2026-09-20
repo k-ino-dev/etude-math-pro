@@ -470,6 +470,11 @@ if os.path.exists(FRONTEND_DIR):
     @app.get("/{full_path:path}")
     def serve_frontend(full_path: str):
         file_path = os.path.join(FRONTEND_DIR, full_path)
+        no_cache_headers = {
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0"
+        }
         if full_path and os.path.exists(file_path) and os.path.isfile(file_path):
-            return FileResponse(file_path)
-        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"))
+            return FileResponse(file_path, headers=no_cache_headers)
+        return FileResponse(os.path.join(FRONTEND_DIR, "index.html"), headers=no_cache_headers)
