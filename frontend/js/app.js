@@ -82,6 +82,8 @@ const app = {
       RepartitionView.render(this.mainContainer);
     } else if (hash === '#planning') {
       PlanningView.render(this.mainContainer);
+    } else if (hash === '#timetable') {
+      TimetableView.render(this.mainContainer);
     } else if (hash.startsWith('#attendance')) {
       const sessionId = hash.includes('/') ? hash.split('/')[1] : null;
       AttendanceView.render(this.mainContainer, sessionId);

@@ -37,10 +37,10 @@ const PlanningView = {
             </div>
 
             <!-- Master Timetable Overview Button -->
-            <button onclick="PlanningView.openTimetableSummaryModal()" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-800 border border-[#ded7ca] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-1.5">
+            <a href="#timetable" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-800 border border-[#ded7ca] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-1.5">
               <i data-lucide="layout-grid" class="w-4 h-4 text-[#a27e38]"></i>
               <span>${isAr ? 'عرض جدول الأوقات الكامل' : 'Emploi du temps complet'}</span>
-            </button>
+            </a>
 
             <!-- Download Tomorrow's PDF -->
             <a href="/api/reports/daily/tomorrow/pdf" target="_blank" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-700 border border-[#ded7ca] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-1.5 hidden sm:inline-flex">

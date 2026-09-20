@@ -149,12 +149,39 @@ def get_timetable_summary(
             
     total_hours = round(total_weekly_minutes / 60, 1)
     
+    # Generate structured day-by-day breakdown (0: Lundi ... 6: Dimanche)
+    days_breakdown = []
+    for day_idx in range(7):
+        day_items = [it for it in items if it["day_of_week"] == day_idx]
+        day_mins = sum(it["duration_minutes"] for it in day_items)
+        day_hrs = round(day_mins / 60, 1)
+        
+        # Formatted string like "4h" or "3h30" or "0h"
+        if day_mins == 0:
+            formatted_hrs = "0h"
+        elif day_mins % 60 == 0:
+            formatted_hrs = f"{day_mins // 60}h"
+        else:
+            formatted_hrs = f"{day_mins // 60}h{day_mins % 60:02d}"
+            
+        days_breakdown.append({
+            "day_of_week": day_idx,
+            "day_name_fr": day_names_fr[day_idx],
+            "day_name_ar": day_names_ar[day_idx],
+            "sessions_count": len(day_items),
+            "total_minutes": day_mins,
+            "total_hours": day_hrs,
+            "total_hours_formatted": formatted_hrs,
+            "sessions": day_items
+        })
+    
     return {
         "total_groups": len(groups),
         "active_scheduled_groups": len(items),
         "total_weekly_hours": total_hours,
         "total_weekly_minutes": total_weekly_minutes,
-        "schedule_items": items
+        "schedule_items": items,
+        "days_breakdown": days_breakdown
     }
 
 @router.post("/set-group-recurring")

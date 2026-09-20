@@ -537,4 +537,8 @@ html[dir="rtl"] .toast-item::before { left: auto; right: 0; border-radius: 3px 0
   #modal-content { display: block !important; position: static !important; max-height: none !important; overflow: visible !important; transform: none !important; border: none !important; box-shadow: none !important; padding: 0 !important; width: 100% !important; max-width: 100% !important; background: transparent !important; }
   #printable-receipt { display: block !important; position: static !important; width: 100% !important; max-width: 190mm !important; margin: 0 auto !important; padding: 8mm !important; background: #ffffff !important; border: 1px solid #cbd5e1 !important; box-shadow: none !important; visibility: visible !important; }
   #printable-receipt * { visibility: visible !important; }
+
+  .printable-timetable { display: block !important; position: static !important; width: 100% !important; margin: 0 auto !important; background: #ffffff !important; visibility: visible !important; }
+  .printable-timetable * { visibility: visible !important; }
+  .printable-timetable table { border: 1px solid #cbd5e1 !important; }
 }
