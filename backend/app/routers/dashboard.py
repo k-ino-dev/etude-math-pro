@@ -25,18 +25,14 @@ def get_dashboard_stats(
     # 2. Total Groups
     total_groups = db.query(Group).filter(Group.user_id == current_user.id).count()
     
-    # 3. Sessions Today
-    today_sessions_query = db.query(DBSession).join(Group).filter(
-        Group.user_id == current_user.id,
-        DBSession.date == today,
-        DBSession.status != "cancelled"
-    ).order_by(DBSession.start_time.asc()).all()
-    
-    sessions_today_count = len(today_sessions_query)
-    today_sessions = [build_session_out(s, db, user_id=current_user.id) for s in today_sessions_query]
+    # 3. Sessions Today (Recurring + Exceptions)
+    from .sessions import list_sessions
+    all_today = list_sessions(start_date=today.isoformat(), end_date=today.isoformat(), current_user=current_user, db=db)
+    today_sessions = [s for s in all_today if s.get("status") != "cancelled"]
+    sessions_today_count = len(today_sessions)
     
     # 4. Students Present Today
-    today_session_ids = [s.id for s in today_sessions_query]
+    today_session_ids = [s["id"] for s in today_sessions if s.get("id")]
     students_present_today = 0
     if today_session_ids:
         students_present_today = db.query(Attendance).filter(
@@ -45,13 +41,13 @@ def get_dashboard_stats(
         ).count()
     
     # 5. Next Session
-    next_session_obj = db.query(DBSession).join(Group).filter(
-        Group.user_id == current_user.id,
-        DBSession.date >= today,
-        DBSession.status != "cancelled"
-    ).order_by(DBSession.date.asc(), DBSession.start_time.asc()).first()
-    
-    next_session = build_session_out(next_session_obj, db, user_id=current_user.id) if next_session_obj else None
+    upcoming_end = today + datetime.timedelta(days=14)
+    upcoming_sessions = list_sessions(start_date=today.isoformat(), end_date=upcoming_end.isoformat(), current_user=current_user, db=db)
+    valid_upcoming = [
+        s for s in upcoming_sessions 
+        if s.get("status") != "cancelled" and (s["date"] > today or (s["date"] == today and s["end_time"] >= now_time))
+    ]
+    next_session = valid_upcoming[0] if valid_upcoming else (today_sessions[0] if today_sessions else None)
     
     # 6. Current Month Payments
     active_month = get_active_month(db, user_id=current_user.id)

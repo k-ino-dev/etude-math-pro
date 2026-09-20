@@ -1,4 +1,4 @@
-﻿// Groups Management View — 2026 Commercial Edition (Étude Math Pro)
+// Groups Management View — 2026 Commercial Edition (Étude Math Pro)
 const GroupsView = {
   groups: [],
   selectedLevel: 'all',
@@ -191,6 +191,26 @@ const GroupsView = {
     }
 
     const isAr = I18n.currentLang === 'ar';
+    const weekdaysFr = [
+      { name: 'Lundi', short: 'Lu', index: 0 },
+      { name: 'Mardi', short: 'Ma', index: 1 },
+      { name: 'Mercredi', short: 'Me', index: 2 },
+      { name: 'Jeudi', short: 'Je', index: 3 },
+      { name: 'Vendredi', short: 'Ve', index: 4 },
+      { name: 'Samedi', short: 'Sa', index: 5 },
+      { name: 'Dimanche', short: 'Di', index: 6 }
+    ];
+    const weekdaysAr = [
+      { name: 'الإثنين', short: 'إثن', index: 0 },
+      { name: 'الثلاثاء', short: 'ثلا', index: 1 },
+      { name: 'الأربعاء', short: 'أرب', index: 2 },
+      { name: 'الخميس', short: 'خمي', index: 3 },
+      { name: 'الجمعة', short: 'جمع', index: 4 },
+      { name: 'السبت', short: 'سبت', index: 5 },
+      { name: 'الأحد', short: 'أحد', index: 6 }
+    ];
+    const weekdays = isAr ? weekdaysAr : weekdaysFr;
+    const initialDayOfWeek = (group && group.day_of_week !== null && group.day_of_week !== undefined) ? group.day_of_week : 6; // Default Dimanche
 
     Modal.open({
       title: group ? `${isAr ? 'تعديل الفوج' : 'Modifier le Groupe'} : ${group.name}` : `+ ${I18n.t('add_group')}`,
@@ -199,7 +219,7 @@ const GroupsView = {
         <form id="group-form" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${I18n.t('group_name')} *</label>
-            <input id="grp-name" type="text" required value="${group ? group.name : ''}" placeholder="Bac Math A" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-semibold">
+            <input id="grp-name" type="text" required value="${group ? group.name : ''}" placeholder="Bac Math A" class="w-full px-3.5 py-2.5 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 bg-white font-semibold text-slate-900">
           </div>
 
           <!-- 2-Step Dependent Academic Level & Section Selector -->
@@ -213,29 +233,61 @@ const GroupsView = {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${I18n.t('max_capacity')} *</label>
-              <input id="grp-capacity" type="number" min="1" max="50" required value="${group ? group.capacity : 15}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold">
+              <input id="grp-capacity" type="number" min="1" max="50" required value="${group ? group.capacity : 15}" class="w-full px-3.5 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-bold">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${I18n.t('group_color')}</label>
-              <input id="grp-color" type="color" value="${group && group.color ? group.color : '#4f46e5'}" class="w-full h-9 p-1 border border-slate-200 rounded-xl cursor-pointer">
+              <input id="grp-color" type="color" value="${group && group.color ? group.color : '#c5a059'}" class="w-full h-10 p-1 border border-[#ded7ca] rounded-2xl cursor-pointer bg-white">
             </div>
           </div>
 
-          <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'التوقيت المعتاد' : 'Horaire habituel'}</label>
-            <input id="grp-schedule" type="text" value="${group && group.schedule ? group.schedule : ''}" placeholder="Samedi 10:00 - 12:00" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
+          <!-- Recurring Weekly Schedule (Horaire Fixe & Récurrent) -->
+          <div class="p-3.5 bg-[#faf8f4] rounded-2xl border border-[#ebd9b5]/80 space-y-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-800 uppercase mb-1.5 flex items-center justify-between">
+                <span>${isAr ? 'يوم الحصة الأسبوعية القار *' : 'Jour du cours fixe (Récurrent) *'}</span>
+                <span class="text-[10px] text-[#a27e38] font-bold">🔁 ${isAr ? 'أسبوعي' : 'Chaque semaine'}</span>
+              </label>
+              <div class="grid grid-cols-7 gap-1" id="grp-weekday-selector">
+                ${weekdays.map(w => {
+                  const isSelected = w.index === initialDayOfWeek;
+                  return `
+                    <button type="button" class="weekday-pill ${isSelected ? 'active' : ''}" data-day="${w.index}" data-name="${w.name}">
+                      <span class="text-[10px] uppercase font-bold">${w.short}</span>
+                    </button>
+                  `;
+                }).join('')}
+              </div>
+              <input id="grp-day-of-week" type="hidden" value="${initialDayOfWeek}">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">${isAr ? 'من الساعة' : 'De (Heure début)'}</label>
+                <input id="grp-start-time" type="time" required value="${group && group.start_time ? group.start_time : '10:00'}" class="w-full px-3 py-1.5 text-xs font-bold border border-[#ded7ca] rounded-xl bg-white">
+              </div>
+              <div>
+                <label class="block text-[11px] font-bold text-slate-600 mb-1">${isAr ? 'إلى الساعة' : 'À (Heure fin)'}</label>
+                <input id="grp-end-time" type="time" required value="${group && group.end_time ? group.end_time : '12:00'}" class="w-full px-3 py-1.5 text-xs font-bold border border-[#ded7ca] rounded-xl bg-white">
+              </div>
+            </div>
+
+            <div class="p-2 bg-white rounded-xl border border-[#ede5d8] text-[11px] flex items-center justify-between">
+              <span class="text-slate-500 font-medium">${isAr ? 'ملخص التوقيت :' : 'Horaire récurrent :'}</span>
+              <strong class="text-slate-900 font-bold" id="grp-schedule-preview">---</strong>
+            </div>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${isAr ? 'القاعة' : 'Salle / Lieu'}</label>
-            <input id="grp-location" type="text" value="${group && group.location ? group.location : 'Salle 1'}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none">
+            <input id="grp-location" type="text" value="${group && group.location ? group.location : 'Salle 1'}" class="w-full px-3.5 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium">
           </div>
 
-          <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-            <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-100 rounded-xl">
+          <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-[#ede7db]">
+            <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-[#ede5d8] rounded-2xl transition-colors">
               ${I18n.t('cancel')}
             </button>
-            <button type="submit" class="px-5 py-2.5 text-xs sm:text-sm font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-sm">
+            <button type="submit" class="px-5 py-2.5 btn-gold-action text-xs sm:text-sm font-black">
               ${group ? I18n.t('save') : I18n.t('add_group')}
             </button>
           </div>
@@ -250,27 +302,62 @@ const GroupsView = {
           initialLevel: group ? group.level : 'Bac — Mathématiques'
         });
 
+        const dayInput = content.querySelector('#grp-day-of-week');
+        const startTimeInput = content.querySelector('#grp-start-time');
+        const endTimeInput = content.querySelector('#grp-end-time');
+        const previewEl = content.querySelector('#grp-schedule-preview');
+        const weekdayButtons = content.querySelectorAll('#grp-weekday-selector .weekday-pill');
+
+        function updateSchedulePreview() {
+          const dIdx = parseInt(dayInput.value);
+          const dayObj = weekdays.find(w => w.index === dIdx) || weekdays[6];
+          const st = startTimeInput.value || '10:00';
+          const et = endTimeInput.value || '12:00';
+          previewEl.innerText = `${dayObj.name} ${st} → ${et}`;
+        }
+
+        weekdayButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            weekdayButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            dayInput.value = btn.getAttribute('data-day');
+            updateSchedulePreview();
+          });
+        });
+
+        startTimeInput.addEventListener('input', updateSchedulePreview);
+        endTimeInput.addEventListener('input', updateSchedulePreview);
+        updateSchedulePreview();
+
         const form = content.querySelector('#group-form');
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const selectedFullLevel = levelBinding ? levelBinding.getSelectedLevel() : 'Bac — Mathématiques';
+          const dIdx = parseInt(dayInput.value);
+          const dayObj = weekdays.find(w => w.index === dIdx) || weekdays[6];
+          const st = startTimeInput.value;
+          const et = endTimeInput.value;
+          const scheduleSummary = `${dayObj.name} ${st} - ${et}`;
 
           const payload = {
             name: content.querySelector('#grp-name').value.trim(),
             level: selectedFullLevel,
             capacity: parseInt(content.querySelector('#grp-capacity').value) || 15,
-            schedule: content.querySelector('#grp-schedule').value.trim() || null,
+            day_of_week: dIdx,
+            start_time: st,
+            end_time: et,
+            schedule: scheduleSummary,
             location: content.querySelector('#grp-location').value.trim() || 'Salle 1',
-            color: content.querySelector('#grp-color').value || '#4f46e5'
+            color: content.querySelector('#grp-color').value || '#c5a059'
           };
 
           try {
             if (group) {
               await API.put(`/api/groups/${group.id}`, payload);
-              Toast.success(isAr ? 'تم تعديل الفوج بنجاح !' : 'Groupe modifié avec succès !');
+              Toast.success(isAr ? 'تم تعديل الفوج بنجاح !' : 'Groupe et horaire récurrent modifiés avec succès !');
             } else {
               await API.post('/api/groups', payload);
-              Toast.success(isAr ? 'تم إنشاء الفوج بنجاح !' : 'Groupe créé avec succès !');
+              Toast.success(isAr ? 'تم إنشاء الفوج مع جدولته التلقائية !' : 'Groupe créé avec horaire hebdomadaire récurrent !');
             }
             Modal.close();
             await State.loadInitialData();

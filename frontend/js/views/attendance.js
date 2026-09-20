@@ -74,17 +74,20 @@ const AttendanceView = {
       select.innerHTML = `<option value="">-- ${I18n.t('choose_session')} --</option>` +
         sessions.map(s => {
           const levelLabel = I18n.getLevelLabel(s.level || '');
+          const val = s.id ? `id:${s.id}` : `gd:${s.group_id}:${s.date}`;
+          const isSelected = (preSelectedSessionId && (s.id === parseInt(preSelectedSessionId) || val === preSelectedSessionId));
+          const excBadge = s.is_exception ? '⚡ ' : (s.is_recurring ? '🔁 ' : '');
           return `
-            <option value="${s.id}" ${preSelectedSessionId && s.id === parseInt(preSelectedSessionId) ? 'selected' : ''}>
-              ${s.date} (${s.start_time} - ${s.end_time}) • ${s.group_name} ${levelLabel ? `[${levelLabel}]` : ''} ${s.is_completed ? '✅' : '🕒'}
+            <option value="${val}" ${isSelected ? 'selected' : ''}>
+              ${excBadge}${s.date} (${s.start_time} - ${s.end_time}) • ${s.group_name} ${levelLabel ? `[${levelLabel}]` : ''} ${s.is_completed ? '✅' : '🕒'}
             </option>
           `;
         }).join('');
 
       select.addEventListener('change', (e) => {
-        const sid = e.target.value;
-        if (sid) {
-          this.loadSessionSheet(container, parseInt(sid));
+        const val = e.target.value;
+        if (val) {
+          this.loadSessionBySelector(container, val);
         } else {
           container.querySelector('#att-sheet-container').innerHTML = `
             <div class="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-slate-200/70 shadow-sm">
@@ -100,12 +103,16 @@ const AttendanceView = {
 
       // If preselected or auto select today's session
       if (preSelectedSessionId) {
-        this.loadSessionSheet(container, parseInt(preSelectedSessionId));
+        const targetVal = String(preSelectedSessionId).startsWith('id:') || String(preSelectedSessionId).startsWith('gd:')
+          ? String(preSelectedSessionId)
+          : `id:${preSelectedSessionId}`;
+        this.loadSessionBySelector(container, targetVal);
       } else if (sessions.length > 0) {
         const today = new Date().toISOString().split('T')[0];
         const todaySession = sessions.find(s => s.date === today) || sessions[0];
-        select.value = todaySession.id;
-        this.loadSessionSheet(container, todaySession.id);
+        const autoVal = todaySession.id ? `id:${todaySession.id}` : `gd:${todaySession.group_id}:${todaySession.date}`;
+        select.value = autoVal;
+        this.loadSessionBySelector(container, autoVal);
       }
     } catch (e) {
       Toast.error(isAr ? 'خطأ في تحميل الحصص.' : 'Erreur de chargement des séances.');
@@ -117,21 +124,56 @@ const AttendanceView = {
     setTimeout(() => {
       const container = document.getElementById('main-view');
       if (container) {
-        this.render(container, sessionId);
+        this.render(container, `id:${sessionId}`);
       }
     }, 50);
   },
 
-  async loadSessionSheet(container, sessionId) {
-    this.selectedSessionId = sessionId;
+  async openForGroupAndDate(groupId, dateStr) {
+    window.location.hash = '#attendance';
+    setTimeout(() => {
+      const container = document.getElementById('main-view');
+      if (container) {
+        this.render(container, `gd:${groupId}:${dateStr}`);
+      }
+    }, 50);
+  },
+
+  async loadSessionBySelector(container, selectorStr) {
+    const isAr = I18n.currentLang === 'ar';
     const sheet = container.querySelector('#att-sheet-container');
     if (!sheet) return;
-    const isAr = I18n.currentLang === 'ar';
 
     try {
       sheet.innerHTML = `<div class="flex flex-col items-center justify-center py-16 text-center bg-white rounded-2xl border border-slate-200/70 shadow-sm animate-pulse"><div class="w-10 h-10 rounded-xl bg-slate-100 mx-auto mb-3"></div><div class="h-3 w-40 bg-slate-100 rounded-full mx-auto mb-2"></div><div class="h-2.5 w-28 bg-slate-100 rounded-full mx-auto"></div></div>`;
-      const data = await API.get(`/api/attendance/session/${sessionId}`);
+      
+      let data;
+      if (selectorStr.startsWith('gd:')) {
+        const parts = selectorStr.split(':');
+        const groupId = parts[1];
+        const dateStr = parts[2];
+        data = await API.get(`/api/attendance/for-date/${groupId}/${dateStr}`);
+      } else {
+        const sid = selectorStr.replace('id:', '');
+        data = await API.get(`/api/attendance/session/${sid}`);
+      }
+
+      this.selectedSessionId = data.session_id;
       this.sessionData = data;
+      this.renderAttendanceSheet(container, data);
+    } catch (e) {
+      sheet.innerHTML = `<div class="p-8 text-center text-rose-500">${isAr ? 'خطأ أثناء تحميل بيانات الحصة.' : 'Erreur lors de la récupération de la séance.'}</div>`;
+    }
+  },
+
+  async loadSessionSheet(container, sessionId) {
+    return this.loadSessionBySelector(container, `id:${sessionId}`);
+  },
+
+  renderAttendanceSheet(container, data) {
+    const sheet = container.querySelector('#att-sheet-container');
+    if (!sheet) return;
+    const isAr = I18n.currentLang === 'ar';
 
       if (!data.students || data.students.length === 0) {
         sheet.innerHTML = `

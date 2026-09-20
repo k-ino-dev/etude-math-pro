@@ -20,7 +20,7 @@ const PlanningView = {
               <span>${isAr ? 'برنامج الحصص والتخطيط الأسبوعي' : 'Planning & Emploi du Temps'}</span>
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-              ${isAr ? 'تنظيم الحصص الأسبوعية من الإثنين إلى الأحد مع التحديد التلقائي للتواريخ.' : 'Organisez vos séances par jour de la semaine (Lundi à Dimanche) avec calcul automatique des dates.'}
+              ${isAr ? 'تنظيم الحصص الأسبوعية من الإثنين إلى الأحد مع التحديد التلقائي للتواريخ وتعديل الاستثناءات.' : 'Gestion automatique des horaires fixes de chaque groupe avec modifications exceptionnelles par séance.'}
             </p>
           </div>
 
@@ -40,12 +40,12 @@ const PlanningView = {
 
             <button onclick="app.openNewSessionModal()" class="px-4 py-2.5 btn-gold-action text-xs sm:text-sm font-black flex items-center gap-2">
               <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>+ ${isAr ? 'برمجة حصة جديدة' : 'Nouvelle Séance'}</span>
+              <span>+ ${isAr ? 'حصة جديدة' : 'Nouvelle Séance'}</span>
             </button>
           </div>
         </div>
 
-        <!-- Navigation Bar (Prev / Today / Next / Date Label) -->
+        <!-- Navigation Bar (Prev / Today / Next / Date Label / Legend) -->
         <div class="bg-white p-4 rounded-3xl border border-[#ede7db] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <button onclick="PlanningView.navigateDate(-1)" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-[#ede5d8] rounded-xl transition-colors" title="Semaine précédente">
@@ -63,9 +63,10 @@ const PlanningView = {
             ${I18n.t('currentWeek')}
           </h3>
 
-          <div class="flex items-center justify-center sm:justify-end gap-3 text-xs font-semibold text-slate-500">
+          <div class="flex items-center justify-center sm:justify-end gap-3 text-xs font-semibold text-slate-500 flex-wrap">
             <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ${I18n.t('attendanceTaken')}</span>
-            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> ${I18n.t('scheduled')}</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#c5a059]"></span> ${isAr ? 'أسبوعي قار' : 'Horaire habituel'}</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> ${isAr ? 'تعديل استثنائي' : 'Exception'}</span>
             <span class="inline-flex items-center gap-1.5 hidden md:inline-flex"><span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span> ${I18n.t('conflictDetected')}</span>
           </div>
         </div>
@@ -219,23 +220,32 @@ const PlanningView = {
                   </div>
                 ` : daySessions.map(s => {
                   const levelLabel = I18n.getLevelLabel(s.level);
+                  const isCancelled = s.status === 'cancelled';
                   return `
-                    <div class="p-3 rounded-2xl border cursor-pointer hover:shadow-sm transition-all relative group ${
+                    <div class="p-3 rounded-2xl border transition-all relative group ${
+                      isCancelled ? 'bg-slate-100 border-slate-300 text-slate-400 opacity-75' :
                       s.has_conflict ? 'bg-rose-50 border-rose-300 text-rose-950 ring-1 ring-rose-300' :
-                      s.is_completed ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950' : 'bg-white border-[#ded7ca] text-slate-900 shadow-2xs'
+                      s.is_completed ? 'bg-emerald-50/90 border-emerald-200 text-emerald-950' : 
+                      s.is_exception ? 'bg-amber-50/70 border-amber-300 text-amber-950 shadow-2xs' :
+                      'bg-white border-[#ded7ca] text-slate-900 shadow-2xs'
                     }">
                       
-                      <!-- Top Line: Time & Conflict -->
-                      <div class="flex items-center justify-between text-[10px] font-black pb-1 border-b border-black/5">
-                        <span class="px-2 py-0.5 rounded-lg font-mono ${s.is_completed ? 'bg-emerald-100/70 text-emerald-900' : 'bg-[#f4eee3] text-slate-800'}">
+                      <!-- Top Line: Time & Badges -->
+                      <div class="flex items-center justify-between text-[10px] font-black pb-1 border-b border-black/5 gap-1">
+                        <span class="px-2 py-0.5 rounded-lg font-mono ${s.is_completed ? 'bg-emerald-100/70 text-emerald-900' : isCancelled ? 'bg-slate-200 text-slate-600 line-through' : 'bg-[#f4eee3] text-slate-800'}">
                           ${s.start_time} — ${s.end_time}
                         </span>
-                        ${s.has_conflict ? `<span class="text-rose-600 font-extrabold flex items-center gap-0.5" title="${s.conflict_details || 'Conflit'}">⚠️ Conflit</span>` : ''}
+
+                        <div class="flex items-center gap-1">
+                          ${isCancelled ? `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-rose-100 text-rose-700">Annulée</span>` : ''}
+                          ${s.is_exception ? `<span class="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-800 border border-amber-300" title="Séance modifiée exceptionnellement">⚡ Exception</span>` : ''}
+                          ${s.has_conflict ? `<span class="text-rose-600 font-extrabold flex items-center gap-0.5" title="${s.conflict_details || 'Conflit'}">⚠️</span>` : ''}
+                        </div>
                       </div>
 
                       <!-- Group Name & Level -->
                       <div class="pt-2">
-                        <h4 class="text-xs font-black text-slate-900 truncate leading-tight">${s.group_name}</h4>
+                        <h4 class="text-xs font-black ${isCancelled ? 'text-slate-600' : 'text-slate-900'} truncate leading-tight">${s.group_name}</h4>
                         <p class="text-[10px] text-slate-500 font-semibold truncate mt-0.5">${levelLabel} • 📍 ${s.location || 'Salle 1'}</p>
                         ${s.topic ? `<p class="text-[10px] text-slate-600 italic truncate mt-1">📖 ${s.topic}</p>` : ''}
                       </div>
@@ -248,10 +258,10 @@ const PlanningView = {
 
                         <!-- Action Buttons on Card -->
                         <div class="flex items-center gap-1">
-                          <button onclick="AttendanceView.openForSession(${s.id})" title="Faire l'appel" class="p-1 rounded-lg ${s.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-[#c5a059]/15 text-[#856428]'} hover:scale-105 transition-transform">
+                          <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" title="Faire l'appel" class="p-1 rounded-lg ${s.is_completed ? 'bg-emerald-100 text-emerald-800' : 'bg-[#c5a059]/15 text-[#856428]'} hover:scale-105 transition-transform">
                             <i data-lucide="check-circle" class="w-3 h-3"></i>
                           </button>
-                          <button onclick="PlanningView.openSessionDetail(${s.id})" title="Modifier" class="p-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                          <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" title="Modifier la séance / Exception" class="p-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
                             <i data-lucide="edit-2" class="w-3 h-3"></i>
                           </button>
                         </div>
@@ -296,12 +306,13 @@ const PlanningView = {
         ` : daySessions.map(s => {
           const levelLabel = I18n.getLevelLabel(s.level);
           return `
-            <div class="p-5 rounded-3xl border ${s.has_conflict ? 'border-rose-300 bg-rose-50/60' : 'border-[#ede7db] bg-[#faf8f5]'} hover:bg-white transition-all space-y-3">
+            <div class="p-5 rounded-3xl border ${s.has_conflict ? 'border-rose-300 bg-rose-50/60' : s.is_exception ? 'border-amber-300 bg-amber-50/40' : 'border-[#ede7db] bg-[#faf8f5]'} hover:bg-white transition-all space-y-3">
               <div class="flex items-start justify-between">
                 <div>
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
                     <h4 class="text-base font-black text-slate-900">${s.group_name}</h4>
                     <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#eee7db] text-slate-700">${levelLabel}</span>
+                    ${s.is_exception ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">⚡ Exception</span>` : ''}
                     ${s.has_conflict ? `<span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700">⚠️ ${I18n.t('conflictDetected')}</span>` : ''}
                   </div>
                   <p class="text-xs text-slate-600 mt-1 font-medium">${s.topic || I18n.t('mathLesson')}</p>
@@ -318,10 +329,10 @@ const PlanningView = {
                   ${s.is_completed ? `✅ ${I18n.t('attendanceTaken')} (${s.attended_count}/${s.student_count})` : `🕒 ${I18n.t('scheduled')}`}
                 </span>
                 <div class="flex items-center gap-2">
-                  <button onclick="AttendanceView.openForSession(${s.id})" class="px-3 py-1.5 rounded-xl ${s.is_completed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'btn-gold-action'} text-xs font-black">
+                  <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" class="px-3 py-1.5 rounded-xl ${s.is_completed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'btn-gold-action'} text-xs font-black">
                     ${s.is_completed ? I18n.t('editAttendance') : I18n.t('takeAttendance')}
                   </button>
-                  <button onclick="PlanningView.openSessionDetail(${s.id})" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-[#ede5d8]">
+                  <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-[#ede5d8]">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                   </button>
                 </div>
@@ -425,7 +436,12 @@ const PlanningView = {
               <tr class="hover:bg-[#fdfbf7] transition-colors">
                 <td class="px-6 py-4 font-bold text-slate-900">${s.date}</td>
                 <td class="px-6 py-4 font-mono font-semibold text-slate-700">${s.start_time} - ${s.end_time}</td>
-                <td class="px-6 py-4 font-black text-slate-900">${s.group_name}</td>
+                <td class="px-6 py-4 font-black text-slate-900">
+                  <div class="flex items-center gap-1.5">
+                    <span>${s.group_name}</span>
+                    ${s.is_exception ? `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800 border border-amber-300">⚡ Exc</span>` : ''}
+                  </div>
+                </td>
                 <td class="px-6 py-4 text-slate-600">${s.topic || '---'}</td>
                 <td class="px-6 py-4 font-bold">${s.student_count}</td>
                 <td class="px-6 py-4">
@@ -435,14 +451,11 @@ const PlanningView = {
                 </td>
                 <td class="px-6 py-4 text-right rtl:text-left">
                   <div class="flex items-center justify-end rtl:justify-start gap-1.5">
-                    <button onclick="AttendanceView.openForSession(${s.id})" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-xl transition-colors">
+                    <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-xl transition-colors">
                       <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="PlanningView.openSessionDetail(${s.id})" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors">
+                    <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors">
                       <i data-lucide="edit-3" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="PlanningView.deleteSession(${s.id})" class="p-1.5 text-slate-400 hover:text-rose-600 rounded-xl transition-colors">
-                      <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                   </div>
                 </td>
@@ -459,16 +472,48 @@ const PlanningView = {
     this.setViewMode('day');
   },
 
-  async openSessionDetail(sessionId) {
-    const session = this.sessions.find(s => s.id === sessionId);
-    if (!session) return;
+  async quickTakeAttendance(groupId, dateStr, sessionId) {
+    if (sessionId) {
+      AttendanceView.openForSession(sessionId);
+    } else {
+      AttendanceView.openForGroupAndDate(groupId, dateStr);
+    }
+  },
+
+  async openSessionDetail(groupId, dateStr) {
+    const session = this.sessions.find(s => s.group_id === groupId && s.date === dateStr) || {
+      group_id: groupId,
+      date: dateStr,
+      start_time: '17:00',
+      end_time: '18:30',
+      location: 'Salle 1',
+      topic: '',
+      status: 'scheduled',
+      is_recurring: true,
+      is_exception: false
+    };
+
     const isAr = I18n.currentLang === 'ar';
+    const isException = session.is_exception;
 
     Modal.open({
-      title: `${isAr ? 'تعديل الحصة' : 'Modifier la séance'} : ${session.group_name}`,
+      title: `${isAr ? 'تعديل الحصة' : 'Modifier la séance'} : ${session.group_name || 'Groupe'} (${session.date})`,
       size: 'max-w-lg',
       html: `
         <form id="edit-session-form" class="space-y-4">
+          
+          <!-- Explanatory Banner -->
+          <div class="p-3.5 rounded-2xl ${isException ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-[#faf8f5] border border-[#ede7db] text-slate-700'} text-xs space-y-1">
+            <div class="flex items-center gap-1.5 font-bold">
+              <span>${isException ? '⚡ Séance modifiée exceptionnellement' : '🔁 Horaire fixe du groupe'}</span>
+            </div>
+            <p class="text-[11px] leading-relaxed text-slate-600">
+              ${isException 
+                ? (isAr ? 'هذه الحصة معدلة كاستثناء لهذا التاريخ فقط. يمكنك حفظ التعديل أو استرجاع التوقيت الأسبوعي الأصلي للفوج.' : 'Cette séance a un horaire exceptionnel pour ce jour. Vous pouvez le modifier ou rétablir l\'horaire fixe habituel.') 
+                : (isAr ? 'هذه الحصة تتبع التوقيت الأسبوعي الثابت للفوج. تعديل التوقيت الآن سيسجل كاستثناء لهذا التاريخ فقط دون المساس بباقي الأسابيع.' : 'Ce groupe a un horaire fixe récurrent. Modifier l\'horaire ci-dessous s\'appliquera uniquement pour cette séance (exception) sans altérer les autres semaines.')}
+            </p>
+          </div>
+
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${I18n.t('date')}</label>
@@ -497,7 +542,7 @@ const PlanningView = {
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${I18n.t('topic')}</label>
-            <input id="edit-sess-topic" type="text" value="${session.topic || ''}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium">
+            <input id="edit-sess-topic" type="text" value="${session.topic || ''}" placeholder="${isAr ? 'موضوع الدرس...' : 'ex: Suites numériques, Dérivation...'}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium">
           </div>
 
           <div>
@@ -506,9 +551,19 @@ const PlanningView = {
           </div>
 
           <div class="flex items-center justify-between pt-4 border-t border-[#ede7db]">
-            <button type="button" onclick="PlanningView.deleteSession(${session.id})" class="px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-2xl">
-              ${I18n.t('delete')}
-            </button>
+            <div>
+              ${isException ? `
+                <button type="button" onclick="PlanningView.revertToRecurring(${session.group_id}, '${session.date}')" class="px-3.5 py-2 text-xs font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 rounded-2xl border border-amber-300 transition-colors flex items-center gap-1.5">
+                  <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                  <span>${isAr ? 'استرجاع التوقيت الأصلي' : 'Rétablir l\'horaire habituel'}</span>
+                </button>
+              ` : session.id ? `
+                <button type="button" onclick="PlanningView.deleteSession(${session.id}, ${session.group_id}, '${session.date}')" class="px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors">
+                  ${I18n.t('delete')}
+                </button>
+              ` : `<span></span>`}
+            </div>
+
             <div class="flex items-center gap-2">
               <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-[#ede5d8] rounded-2xl">
                 ${I18n.t('cancel')}
@@ -521,10 +576,12 @@ const PlanningView = {
         </form>
       `,
       onOpen: (content) => {
+        if (window.lucide) lucide.createIcons();
         const form = content.querySelector('#edit-session-form');
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const payload = {
+            group_id: session.group_id,
             date: content.querySelector('#edit-sess-date').value,
             start_time: content.querySelector('#edit-sess-start').value,
             end_time: content.querySelector('#edit-sess-end').value,
@@ -534,8 +591,8 @@ const PlanningView = {
           };
 
           try {
-            await API.put(`/api/sessions/${session.id}`, payload);
-            Toast.success(isAr ? 'تم تعديل الحصة بنجاح.' : 'Séance mise à jour.');
+            await API.post('/api/sessions/resolve', payload);
+            Toast.success(isAr ? 'تم حفظ تعديل الحصة بنجاح.' : 'Séance mise à jour avec succès.');
             Modal.close();
             await PlanningView.loadSessions(document.getElementById('main-view'));
           } catch (err) {
@@ -546,15 +603,31 @@ const PlanningView = {
     });
   },
 
-  deleteSession(sessionId) {
+  async revertToRecurring(groupId, dateStr) {
+    const isAr = I18n.currentLang === 'ar';
+    try {
+      await API.post(`/api/sessions/revert-to-recurring?group_id=${groupId}&date=${dateStr}`);
+      Toast.success(isAr ? 'تم استرجاع التوقيت الأسبوعي الأصلي للفوج.' : 'Horaire habituel du groupe rétabli avec succès.');
+      Modal.close();
+      await this.loadSessions(document.getElementById('main-view'));
+    } catch (e) {
+      Toast.error(e.message);
+    }
+  },
+
+  deleteSession(sessionId, groupId = null, dateStr = null) {
     const isAr = I18n.currentLang === 'ar';
     Modal.confirm({
       title: isAr ? 'حذف الحصة' : 'Supprimer la séance',
-      message: isAr ? 'هل أنت متأكد من حذف هذه الحصة ؟ سيتم حذف تسجيلات الحضور المرتبطة بها.' : 'Supprimer cette séance ? Les présences associées seront également supprimées.',
+      message: isAr ? 'هل أنت متأكد من حذف هذه الحصة ؟ سيتم استرجاع التوقيت الأصلي أو إزالتها.' : 'Supprimer cette séance ?',
       confirmText: isAr ? 'حذف' : 'Supprimer',
       onConfirm: async () => {
         try {
-          await API.delete(`/api/sessions/${sessionId}`);
+          if (sessionId) {
+            await API.delete(`/api/sessions/${sessionId}`);
+          } else if (groupId && dateStr) {
+            await API.post(`/api/sessions/revert-to-recurring?group_id=${groupId}&date=${dateStr}`);
+          }
           Toast.success(isAr ? 'تم حذف الحصة.' : 'Séance supprimée.');
           await PlanningView.loadSessions(document.getElementById('main-view'));
         } catch (e) {
@@ -564,3 +637,4 @@ const PlanningView = {
     });
   }
 };
+

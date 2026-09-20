@@ -261,7 +261,7 @@ class SessionUpdate(BaseModel):
     status: Optional[str] = None
 
 class SessionOut(SessionBase):
-    id: int
+    id: Optional[int] = None
     group_name: str
     level: str
     student_count: int = 0
@@ -269,7 +269,10 @@ class SessionOut(SessionBase):
     is_completed: bool = False
     has_conflict: bool = False
     conflict_details: Optional[str] = None
-    created_at: datetime.datetime
+    is_recurring: bool = False
+    is_exception: bool = False
+    is_virtual: bool = False
+    created_at: Optional[datetime.datetime] = None
 
     class Config:
         from_attributes = True

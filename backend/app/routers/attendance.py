@@ -52,6 +52,40 @@ def get_session_attendance(
         "students": student_list
     }
 
+@router.get("/for-date/{group_id}/{date_str}")
+def get_or_create_attendance_for_date(
+    group_id: int,
+    date_str: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    import datetime
+    target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == current_user.id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Groupe non trouvé")
+
+    session = db.query(DBSession).filter(
+        DBSession.group_id == group_id,
+        DBSession.date == target_date
+    ).first()
+
+    if not session:
+        session = DBSession(
+            user_id=current_user.id,
+            group_id=group_id,
+            date=target_date,
+            start_time=group.start_time or "17:00",
+            end_time=group.end_time or "18:30",
+            location=group.location or "Salle 1",
+            status="scheduled"
+        )
+        db.add(session)
+        db.commit()
+        db.refresh(session)
+
+    return get_session_attendance(session.id, current_user=current_user, db=db)
+
 @router.post("/bulk")
 def record_bulk_attendance(
     data: AttendanceBulkCreate,
