@@ -249,6 +249,7 @@ class SessionBase(BaseModel):
 
 class SessionCreate(SessionBase):
     force: bool = False # If true, ignore conflict warnings
+    is_permanent_move: bool = False # If true, also permanently updates group.day_of_week, start_time, end_time
 
 class SessionUpdate(BaseModel):
     group_id: Optional[int] = None
@@ -259,10 +260,19 @@ class SessionUpdate(BaseModel):
     location: Optional[str] = None
     notes: Optional[str] = None
     status: Optional[str] = None
+    is_permanent_move: bool = False
+
+class GroupScheduleSet(BaseModel):
+    group_id: int
+    day_of_week: int # 0: Lundi ... 6: Dimanche
+    start_time: str  # "10:00"
+    end_time: str    # "12:00"
+    location: Optional[str] = "Salle 1"
 
 class SessionOut(SessionBase):
     id: Optional[int] = None
     group_name: str
+    group_color: Optional[str] = "#4f46e5"
     level: str
     student_count: int = 0
     attended_count: int = 0

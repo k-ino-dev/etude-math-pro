@@ -413,4 +413,71 @@ def test_strict_levels_and_payment_methods():
     assert pay_data["payment_method"] == "Espèces"
     assert pay_data["status"] == "paid"
 
+def test_set_group_recurring_and_timetable_summary():
+    # 1. Create a dedicated group
+    grp = client.post("/api/groups", json={
+        "name": "Groupe Bac Maths Fixe",
+        "level": "Bac — Mathématiques",
+        "capacity": 12,
+        "color": "#10b981"
+    }).json()
+    g_id = grp["id"]
+
+    # 2. Set recurring schedule: Mercredi 14:00 -> 16:00 (day_of_week = 2 for Wednesday, 0=Monday)
+    res_set = client.post("/api/sessions/set-group-recurring", json={
+        "group_id": g_id,
+        "day_of_week": 2,
+        "start_time": "14:00",
+        "end_time": "16:00"
+    })
+    assert res_set.status_code == 200
+    data = res_set.json()
+    assert data["success"] is True
+    assert data["group"]["day_of_week"] == 2
+    assert data["group"]["start_time"] == "14:00"
+    assert data["group"]["end_time"] == "16:00"
+
+    # 3. Check timetable summary endpoint
+    sum_res = client.get("/api/sessions/timetable-summary")
+    assert sum_res.status_code == 200
+    summary = sum_res.json()
+    assert summary["total_weekly_hours"] > 0
+    assert summary["active_scheduled_groups"] >= 1
+    # Check that our group is in the timetable items
+    found = any(item["group_id"] == g_id and item["day_of_week"] == 2 for item in summary["schedule_items"])
+    assert found
+
+def test_permanent_move_session():
+    # 1. Create a group on Lundi (day_of_week=0)
+    grp = client.post("/api/groups", json={
+        "name": "Groupe Permanent Move Test",
+        "level": "2ème — Sciences",
+        "capacity": 10,
+        "day_of_week": 0,
+        "start_time": "10:00",
+        "end_time": "12:00",
+        "color": "#8b5cf6"
+    }).json()
+    g_id = grp["id"]
+
+    # 2. Perform a permanent move to Vendredi (2026-09-25 is Friday, weekday()=4) 16:00-18:00
+    res_move = client.post("/api/sessions/resolve", json={
+        "group_id": g_id,
+        "date": "2026-09-25",
+        "start_time": "16:00",
+        "end_time": "18:00",
+        "is_permanent_move": True
+    })
+    assert res_move.status_code == 200
+    session_data = res_move.json()
+    assert session_data["group_id"] == g_id
+
+    # 3. Verify that the group's default recurring day is now 4 (Vendredi) and time is 16:00-18:00
+    updated_grp = client.get(f"/api/groups/{g_id}").json()
+    assert updated_grp["day_of_week"] == 4
+    assert updated_grp["start_time"] == "16:00"
+    assert updated_grp["end_time"] == "18:00"
+
+
+
 

@@ -41,6 +41,7 @@ def build_session_out(
 ) -> dict:
     group = db.query(Group).filter(Group.id == s.group_id).first()
     group_name = group.name if group else "Groupe inconnu"
+    group_color = group.color if (group and group.color) else "#4f46e5"
     level = group.level if group else ""
     uid = user_id or (group.user_id if group else None)
     
@@ -54,6 +55,7 @@ def build_session_out(
         "id": s.id,
         "group_id": s.group_id,
         "group_name": group_name,
+        "group_color": group_color,
         "level": level,
         "date": s.date,
         "start_time": s.start_time,
@@ -84,6 +86,7 @@ def synthesize_virtual_session(
         "id": None,
         "group_id": group.id,
         "group_name": group.name,
+        "group_color": group.color or "#4f46e5",
         "level": group.level,
         "date": target_date,
         "start_time": group.start_time or "17:00",
@@ -101,6 +104,98 @@ def synthesize_virtual_session(
         "is_exception": False,
         "is_virtual": True,
         "created_at": None
+    }
+
+@router.get("/timetable-summary")
+def get_timetable_summary(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    groups = db.query(Group).filter(Group.user_id == current_user.id).order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
+    day_names_fr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    day_names_ar = ["الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
+    
+    items = []
+    total_weekly_minutes = 0
+    
+    for g in groups:
+        if g.day_of_week is not None and g.start_time and g.end_time:
+            try:
+                h1, m1 = map(int, g.start_time.split(":"))
+                h2, m2 = map(int, g.end_time.split(":"))
+                dur_min = (h2 * 60 + m2) - (h1 * 60 + m1)
+                if dur_min > 0:
+                    total_weekly_minutes += dur_min
+            except Exception:
+                dur_min = 120
+                
+            student_count = db.query(Student).filter(Student.group_id == g.id, Student.is_active == True).count()
+            
+            items.append({
+                "group_id": g.id,
+                "group_name": g.name,
+                "level": g.level,
+                "day_of_week": g.day_of_week,
+                "day_name_fr": day_names_fr[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
+                "day_name_ar": day_names_ar[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
+                "start_time": g.start_time,
+                "end_time": g.end_time,
+                "duration_minutes": dur_min,
+                "location": g.location or "Salle 1",
+                "color": g.color or "#4f46e5",
+                "student_count": student_count,
+                "capacity": g.capacity
+            })
+            
+    total_hours = round(total_weekly_minutes / 60, 1)
+    
+    return {
+        "total_groups": len(groups),
+        "active_scheduled_groups": len(items),
+        "total_weekly_hours": total_hours,
+        "total_weekly_minutes": total_weekly_minutes,
+        "schedule_items": items
+    }
+
+@router.post("/set-group-recurring")
+def set_group_recurring_schedule(
+    data: dict,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    group_id = data.get("group_id")
+    day_of_week = data.get("day_of_week")
+    start_time = data.get("start_time")
+    end_time = data.get("end_time")
+    location = data.get("location", "Salle 1")
+    
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == current_user.id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Groupe non trouvé")
+        
+    day_names = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+    day_name = day_names[day_of_week] if 0 <= int(day_of_week) < 7 else "Jour"
+    
+    group.day_of_week = int(day_of_week)
+    group.start_time = start_time
+    group.end_time = end_time
+    group.location = location or group.location
+    group.schedule = f"{day_name} {start_time} - {end_time}"
+    
+    db.commit()
+    db.refresh(group)
+    return {
+        "success": True,
+        "message": f"Horaire fixe récurrent mis à jour : {group.schedule}",
+        "group": {
+            "id": group.id,
+            "name": group.name,
+            "day_of_week": group.day_of_week,
+            "start_time": group.start_time,
+            "end_time": group.end_time,
+            "schedule": group.schedule,
+            "color": group.color
+        }
     }
 
 @router.get("", response_model=List[SessionOut])
@@ -187,10 +282,24 @@ def resolve_or_create_session(
     """
     Given a group_id and date, either returns the existing DBSession (updating it)
     or creates/materializes it into a permanent DBSession with exception support.
+    If is_permanent_move is True, also updates the group's default recurring day and time!
     """
     group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
+        
+    if data.is_permanent_move:
+        # Update group's recurring schedule permanently
+        day_names = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+        d_idx = data.date.weekday()
+        day_name = day_names[d_idx]
+        group.day_of_week = d_idx
+        group.start_time = data.start_time
+        group.end_time = data.end_time
+        group.schedule = f"{day_name} {data.start_time} - {data.end_time}"
+        group.location = data.location or group.location
+        db.commit()
+        db.refresh(group)
         
     existing = db.query(DBSession).filter(
         DBSession.group_id == data.group_id,
@@ -206,7 +315,7 @@ def resolve_or_create_session(
         if data.status is not None: existing.status = data.status
         db.commit()
         db.refresh(existing)
-        return build_session_out(existing, db, user_id=current_user.id, is_recurring=True, is_exception=True)
+        return build_session_out(existing, db, user_id=current_user.id, is_recurring=True, is_exception=not data.is_permanent_move)
     else:
         new_sess = DBSession(
             user_id=current_user.id,
@@ -222,7 +331,7 @@ def resolve_or_create_session(
         db.add(new_sess)
         db.commit()
         db.refresh(new_sess)
-        return build_session_out(new_sess, db, user_id=current_user.id, is_recurring=True, is_exception=True)
+        return build_session_out(new_sess, db, user_id=current_user.id, is_recurring=True, is_exception=not data.is_permanent_move)
 
 @router.post("/revert-to-recurring")
 def revert_to_recurring(
