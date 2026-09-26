@@ -45,12 +45,8 @@ const SettingsView = {
                 <span>${isAr ? 'حسابات الفريق' : 'Staff'}</span>
               </button>
               <button type="button" id="tab-btn-expenses" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'expenses' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
-                <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
-                <span>${isAr ? 'المصاريف' : 'Dépenses'}</span>
-              </button>
-              <button type="button" id="tab-btn-audit" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'audit' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
-                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-                <span>${isAr ? 'سجل العمليات' : 'Journal d\'audit'}</span>
+                <i data-lucide="wallet" class="w-3.5 h-3.5"></i>
+                <span>${isAr ? 'المصاريف والخزينة' : 'Dépenses & Caisse'}</span>
               </button>
               <button type="button" id="tab-btn-backup" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'backup' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
                 <i data-lucide="database" class="w-3.5 h-3.5"></i>
@@ -291,72 +287,127 @@ const SettingsView = {
           </div>
 
           <!-- TAB 4: Expenses & Costs -->
+          <!-- TAB 4: Cashflow, Treasury & Expenses -->
           <div id="tab-content-expenses" class="space-y-6 ${this.activeTab === 'expenses' ? '' : 'hidden'}">
             <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
               
+              <!-- Section Header & Add Button with Micro-interactions -->
               <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                 <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
-                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                  <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-rose-500 to-amber-500 text-white flex items-center justify-center font-bold shadow-md shadow-rose-500/20">
+                    <i data-lucide="wallet" class="w-5 h-5"></i>
                   </div>
                   <div>
-                    <h2 class="text-base font-bold text-slate-900">${isAr ? 'إدارة المصاريف والنفقات' : 'Gestion des Dépenses & Charges'}</h2>
-                    <p class="text-xs text-slate-500">${isAr ? 'متابعة نفقات الكراء، الطباعة، التجهيزات وحساب صافي الأرباح بدقة.' : 'Suivez vos charges (loyer, matériel, impressions) pour calculer votre bénéfice net réel.'}</p>
+                    <h2 class="text-lg font-black text-slate-900">${isAr ? 'الخزينة والتدفقات المالية' : 'Trésorerie & Mouvements'}</h2>
+                    <p class="text-xs text-slate-500">${isAr ? 'متابعة شاملة للمداخيل المقبوضة، المصاريف والنفقات والرصيد الصافي المتوفر.' : 'Aperçu global des entrées, sorties et solde restant disponible en temps réel.'}</p>
                   </div>
                 </div>
-                <button id="add-expense-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto">
-                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                  <span>${isAr ? '+ إضافة نفقة' : '+ Ajouter une Dépense'}</span>
+                <button id="add-expense-btn" class="group relative px-5 py-2.5 bg-gradient-to-r from-rose-600 via-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 text-white text-xs font-black rounded-2xl shadow-lg shadow-rose-600/25 transition-all duration-300 flex items-center gap-2 self-start sm:self-auto overflow-hidden">
+                  <span class="absolute inset-0 w-full h-full bg-white/20 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></span>
+                  <i data-lucide="plus-circle" class="w-4 h-4 transition-transform group-hover:rotate-90 duration-300"></i>
+                  <span class="tracking-wide">${isAr ? '+ إضافة عملية صرف / نفقة' : '+ Ajouter une Opération'}</span>
                 </button>
               </div>
 
-              <!-- Financial Summary Cards -->
-              <div id="expenses-kpis" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
-                  <p class="text-xs font-semibold text-emerald-700">${isAr ? 'إجمالي المداخيل' : 'Revenus Encaissés'}</p>
-                  <p id="kpi-expenses-revenue" class="text-xl font-black text-emerald-900 mt-1">0.000 DT</p>
-                </div>
-                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100">
-                  <p class="text-xs font-semibold text-rose-700">${isAr ? 'إجمالي المصاريف' : 'Total Dépenses'}</p>
-                  <p id="kpi-expenses-total" class="text-xl font-black text-rose-900 mt-1">0.000 DT</p>
-                </div>
-                <div class="p-4 rounded-2xl bg-brand-50 border border-brand-100">
-                  <p class="text-xs font-semibold text-brand-700">${isAr ? 'صافي الأرباح' : 'Bénéfice Net'}</p>
-                  <p id="kpi-expenses-profit" class="text-xl font-black text-brand-900 mt-1">0.000 DT</p>
-                </div>
-              </div>
-
-              <!-- Expenses List Table -->
-              <div id="expenses-list-container" class="space-y-3">
-                <div class="text-center py-8 text-slate-400 text-xs">${isAr ? 'جاري تحميل المصاريف...' : 'Chargement des dépenses...'}</div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- TAB 5: Audit Log -->
-          <div id="tab-content-audit" class="space-y-6 ${this.activeTab === 'audit' ? '' : 'hidden'}">
-            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
-              
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+              <!-- 3 Top Financial KPI Cards (Exact User Layout) -->
+              <div id="expenses-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                
+                <!-- Card 1: Entrées (Revenus) -->
+                <div class="p-6 rounded-3xl bg-emerald-50/70 border-2 border-emerald-200/90 flex flex-col justify-between transition-all hover:shadow-md hover:border-emerald-300">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-emerald-800">${isAr ? 'المداخيل المقبوضة (المقبوضات)' : 'REVENUS ENCAISSÉS (ENTRÉES)'}</span>
+                    <span class="w-7 h-7 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs">
+                      <i data-lucide="arrow-down-left" class="w-4 h-4"></i>
+                    </span>
                   </div>
-                  <div>
-                    <h2 class="text-base font-bold text-slate-900">${isAr ? 'سجل العمليات والأمان' : 'Journal d\'Audit & Sécurité'}</h2>
-                    <p class="text-xs text-slate-500">${isAr ? 'تتبع فوري ومفصل لجميع العمليات المنجزة من قبل المدير والمساعدين (تعديل، إضافة، حذف).' : 'Historique immuable de toutes les actions réalisées sur l\'application.'}</p>
+                  <div class="mt-3">
+                    <p id="kpi-expenses-revenue" class="text-2xl sm:text-3xl font-black text-emerald-700 tracking-tight">+ 0.000 DT</p>
                   </div>
                 </div>
-                <button id="refresh-audit-btn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
-                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
-                  <span>${isAr ? 'تحديث' : 'Actualiser'}</span>
-                </button>
+
+                <!-- Card 2: Sorties (Dépenses) -->
+                <div class="p-6 rounded-3xl bg-rose-50/70 border-2 border-rose-200/90 flex flex-col justify-between transition-all hover:shadow-md hover:border-rose-300">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-rose-800">${isAr ? 'إجمالي المصاريف (المدفوعات)' : 'TOTAL DÉPENSÉ (SORTIES)'}</span>
+                    <span class="w-7 h-7 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-xs">
+                      <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
+                    </span>
+                  </div>
+                  <div class="mt-3">
+                    <p id="kpi-expenses-total" class="text-2xl sm:text-3xl font-black text-rose-600 tracking-tight">- 0.000 DT</p>
+                  </div>
+                </div>
+
+                <!-- Card 3: Solde Net Restant -->
+                <div class="p-6 rounded-3xl bg-[#0f172a] text-white border-2 border-slate-800 shadow-xl flex flex-col justify-between relative overflow-hidden transition-all hover:shadow-2xl">
+                  <div class="absolute -right-8 -top-8 w-28 h-28 bg-brand-500/10 rounded-full blur-2xl pointer-events-none"></div>
+                  <div class="flex items-center justify-between relative z-10">
+                    <span class="text-[11px] font-black uppercase tracking-wider text-slate-300">${isAr ? 'الرصيد الصافي المتبقي' : 'SOLDE NET RESTANT'}</span>
+                    <span class="w-7 h-7 rounded-xl bg-slate-800 text-brand-400 flex items-center justify-center font-bold text-xs border border-slate-700">
+                      <i data-lucide="coins" class="w-4 h-4"></i>
+                    </span>
+                  </div>
+                  <div class="mt-3 relative z-10">
+                    <p id="kpi-expenses-profit" class="text-2xl sm:text-3xl font-black text-white tracking-tight">0.000 DT</p>
+                  </div>
+                </div>
+
               </div>
 
-              <!-- Audit Logs Table -->
-              <div id="audit-list-container" class="space-y-3">
-                <div class="text-center py-8 text-slate-400 text-xs">${isAr ? 'جاري تحميل سجل العمليات...' : 'Chargement du journal d\'audit...'}</div>
+              <!-- Cashflow List / Timeline Section -->
+              <div class="pt-4 border-t border-slate-100 space-y-4">
+                
+                <!-- Cashflow Controls Bar -->
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/90 p-3.5 rounded-2xl border border-slate-200/70">
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <span>${isAr ? 'سجل التدفقات المالية المفصل' : 'HISTORIQUE DÉTAILLÉ DES FLUX'}</span>
+                    </h3>
+                    <span id="cashflow-count-badge" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-slate-200 text-slate-700">0 opérations</span>
+                  </div>
+
+                  <!-- Interactive Filters -->
+                  <div class="flex flex-wrap items-center gap-2">
+                    
+                    <!-- Search Input -->
+                    <div class="relative">
+                      <input id="cashflow-search-input" type="text" placeholder="${isAr ? 'بحث في الحركات...' : 'Rechercher un flux...'}" class="text-xs font-semibold bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 focus:ring-2 focus:ring-brand-500 w-44 sm:w-52">
+                      <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                    </div>
+
+                    <!-- Type Filter Pills -->
+                    <div class="inline-flex p-1 bg-white rounded-xl border border-slate-200 shadow-xs text-xs font-bold">
+                      <button type="button" id="cflow-pill-all" class="cflow-pill-btn px-2.5 py-1 rounded-lg transition-all bg-slate-900 text-white">
+                        ${isAr ? 'الكل' : 'Tous'}
+                      </button>
+                      <button type="button" id="cflow-pill-income" class="cflow-pill-btn px-2.5 py-1 rounded-lg transition-all text-slate-600 hover:text-emerald-700">
+                        ${isAr ? 'المداخيل (+)' : 'Entrées (+)'}
+                      </button>
+                      <button type="button" id="cflow-pill-expense" class="cflow-pill-btn px-2.5 py-1 rounded-lg transition-all text-slate-600 hover:text-rose-700">
+                        ${isAr ? 'المصاريف (-)' : 'Sorties (-)'}
+                      </button>
+                    </div>
+
+                    <!-- Category Selector -->
+                    <select id="cashflow-cat-filter" class="text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 focus:ring-2 focus:ring-brand-500">
+                      <option value="all">${isAr ? 'جميع الأصناف' : 'Toutes les catégories'}</option>
+                      <option value="Paiement / Inscription">${isAr ? 'مستخلصات التلاميذ' : 'Paiements / Inscriptions'}</option>
+                      <option value="Loyer">Loyer / Local</option>
+                      <option value="Matériel">Matériel & Fournitures</option>
+                      <option value="Impression">Photocopies & Feuilles</option>
+                      <option value="Internet">Internet & Électricité</option>
+                      <option value="Transport">Transport</option>
+                      <option value="Autre">Autre charge</option>
+                    </select>
+
+                  </div>
+                </div>
+
+                <!-- Cashflow Items Render Container -->
+                <div id="cashflow-list-container" class="space-y-2.5">
+                  <div class="text-center py-10 text-slate-400 text-xs">${isAr ? 'جاري تحميل سجل التدفقات...' : 'Chargement des flux financiers...'}</div>
+                </div>
+
               </div>
 
             </div>
@@ -437,14 +488,13 @@ const SettingsView = {
     if (isAdmin) {
       this.bindStaffSection(container);
       this.bindExpensesSection(container);
-      this.bindAuditSection(container);
       this.bindBackupActions(container);
     }
   },
 
   bindTabs(container) {
     const isAdmin = State.isAdmin();
-    const tabs = isAdmin ? ['profile', 'display', 'staff', 'expenses', 'audit', 'backup'] : ['profile', 'display'];
+    const tabs = isAdmin ? ['profile', 'display', 'staff', 'expenses', 'backup'] : ['profile', 'display'];
     
     tabs.forEach(tab => {
       const btn = container.querySelector(`#tab-btn-${tab}`);
@@ -466,7 +516,6 @@ const SettingsView = {
           // Lazy load tab data
           if (tab === 'staff') this.loadStaffList(container);
           if (tab === 'expenses') this.loadExpenses(container);
-          if (tab === 'audit') this.loadAuditLogs(container);
         });
       }
     });
@@ -474,7 +523,6 @@ const SettingsView = {
     // If initial tab is one of the async ones, trigger load
     if (this.activeTab === 'staff') this.loadStaffList(container);
     if (this.activeTab === 'expenses') this.loadExpenses(container);
-    if (this.activeTab === 'audit') this.loadAuditLogs(container);
   },
 
   async loadProfile(container) {
@@ -802,8 +850,13 @@ const SettingsView = {
   },
 
   // -------------------------------------------------------------
-  // EXPENSES SECTION (ADMIN ONLY)
+  // TRÉSORERIE, FLUX & DÉPENSES SECTION (ADMIN ONLY)
   // -------------------------------------------------------------
+  cachedCashflow: [],
+  activeCashflowType: 'all', // 'all', 'income', 'expense'
+  activeCashflowCategory: 'all',
+  cashflowSearchQuery: '',
+
   bindExpensesSection(container) {
     const addBtn = container.querySelector('#add-expense-btn');
     if (addBtn) {
@@ -811,135 +864,309 @@ const SettingsView = {
         this.openExpenseModal(container);
       });
     }
+
+    // Filter pills
+    ['all', 'income', 'expense'].forEach(type => {
+      const pill = container.querySelector(`#cflow-pill-${type}`);
+      if (pill) {
+        pill.addEventListener('click', () => {
+          this.activeCashflowType = type;
+          ['all', 'income', 'expense'].forEach(t => {
+            const p = container.querySelector(`#cflow-pill-${t}`);
+            if (p) {
+              if (t === type) {
+                p.className = 'cflow-pill-btn px-2.5 py-1 rounded-lg transition-all bg-slate-900 text-white font-bold';
+              } else {
+                p.className = 'cflow-pill-btn px-2.5 py-1 rounded-lg transition-all text-slate-600 hover:text-slate-900 font-bold';
+              }
+            }
+          });
+          this.renderCashflowList(container);
+        });
+      }
+    });
+
+    // Category dropdown filter
+    const catSelect = container.querySelector('#cashflow-cat-filter');
+    if (catSelect) {
+      catSelect.addEventListener('change', (e) => {
+        this.activeCashflowCategory = e.target.value;
+        this.renderCashflowList(container);
+      });
+    }
+
+    // Search input
+    const searchInput = container.querySelector('#cashflow-search-input');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.cashflowSearchQuery = e.target.value.toLowerCase().trim();
+        this.renderCashflowList(container);
+      });
+    }
   },
 
   async loadExpenses(container) {
     const isAr = I18n.currentLang === 'ar';
-    const wrapper = container.querySelector('#expenses-list-container');
+    const wrapper = container.querySelector('#cashflow-list-container');
     if (!wrapper) return;
 
     try {
-      const summary = await API.get('/api/expenses/summary');
-      if (summary) {
+      const data = await API.get('/api/expenses');
+      if (data) {
         const revEl = container.querySelector('#kpi-expenses-revenue');
         const expEl = container.querySelector('#kpi-expenses-total');
         const profEl = container.querySelector('#kpi-expenses-profit');
 
-        if (revEl) revEl.textContent = `${(summary.total_revenue || 0).toFixed(3)} DT`;
-        if (expEl) expEl.textContent = `${(summary.total_expenses || 0).toFixed(3)} DT`;
+        const totalIncome = data.total_revenue || data.total_income || 0;
+        const totalExpenses = data.total_expenses || 0;
+        const netProfit = data.net_profit !== undefined ? data.net_profit : (data.net_balance || 0);
+
+        if (revEl) revEl.textContent = `+ ${totalIncome.toFixed(3)} DT`;
+        if (expEl) expEl.textContent = `- ${totalExpenses.toFixed(3)} DT`;
         if (profEl) {
-          profEl.textContent = `${(summary.net_profit || 0).toFixed(3)} DT`;
-          profEl.className = `text-xl font-black mt-1 ${summary.net_profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`;
+          profEl.textContent = `${netProfit.toFixed(3)} DT`;
+          profEl.className = `text-2xl sm:text-3xl font-black tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
         }
-      }
 
-      const expenses = await API.get('/api/expenses');
-      if (!expenses || expenses.length === 0) {
-        wrapper.innerHTML = `
-          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-2 font-bold">
-              <i data-lucide="receipt" class="w-6 h-6"></i>
-            </div>
-            <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد مصاريف مسجلة بعد' : 'Aucune dépense enregistrée'}</p>
-            <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">${isAr ? 'سجل مصاريف الكراء والطباعة والتجهيزات لحساب صافي الأرباح تلقائياً.' : 'Enregistrez vos frais fixes et variables pour suivre votre rentabilité nette.'}</p>
-          </div>
-        `;
-        if (window.lucide) lucide.createIcons();
-        return;
-      }
+        this.cachedCashflow = data.cashflow || [];
+        // Fallback if cashflow empty but expenses exist
+        if (this.cachedCashflow.length === 0 && Array.isArray(data.expenses)) {
+          this.cachedCashflow = data.expenses.map(e => ({
+            id: `exp-${e.id}`,
+            type: 'expense',
+            title: e.title,
+            amount: e.amount,
+            date: e.expense_date || e.date,
+            category: e.category || 'Autre',
+            notes: e.notes,
+            expense_id: e.id
+          }));
+        }
 
+        this.renderCashflowList(container);
+      }
+    } catch (e) {
+      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-2xl text-xs font-semibold">${e.message || 'Erreur chargement'}</div>`;
+    }
+  },
+
+  getCategoryBadge(category, type) {
+    const isIncome = type === 'income';
+    const cat = (category || '').toUpperCase();
+    
+    if (isIncome || cat.includes('PAIEMENT') || cat.includes('INSCRIPTION')) {
+      return {
+        label: 'INSCRIPTION / PAIEMENT',
+        classes: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-black'
+      };
+    }
+    if (cat.includes('MATÉRIEL') || cat.includes('MATERIEL')) {
+      return {
+        label: 'MATÉRIEL',
+        classes: 'bg-blue-50 text-blue-700 border border-blue-200/80 font-black'
+      };
+    }
+    if (cat.includes('TRANSPORT')) {
+      return {
+        label: 'TRANSPORT',
+        classes: 'bg-amber-50 text-amber-800 border border-amber-200/80 font-black'
+      };
+    }
+    if (cat.includes('IMPRESSION') || cat.includes('PHOTOCOPIE')) {
+      return {
+        label: 'IMPRESSION',
+        classes: 'bg-purple-50 text-purple-700 border border-purple-200/80 font-black'
+      };
+    }
+    if (cat.includes('INTERNET') || cat.includes('ÉLECTRICITÉ')) {
+      return {
+        label: 'INTERNET',
+        classes: 'bg-sky-50 text-sky-700 border border-sky-200/80 font-black'
+      };
+    }
+    if (cat.includes('LOYER') || cat.includes('LOCAL')) {
+      return {
+        label: 'LOYER',
+        classes: 'bg-indigo-50 text-indigo-700 border border-indigo-200/80 font-black'
+      };
+    }
+    return {
+      label: category ? category.toUpperCase() : 'AUTRE',
+      classes: 'bg-slate-100 text-slate-700 border border-slate-200 font-bold'
+    };
+  },
+
+  renderCashflowList(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const wrapper = container.querySelector('#cashflow-list-container');
+    const badgeCount = container.querySelector('#cashflow-count-badge');
+    if (!wrapper) return;
+
+    let items = [...(this.cachedCashflow || [])];
+
+    // Filter by type
+    if (this.activeCashflowType === 'income') {
+      items = items.filter(i => i.type === 'income');
+    } else if (this.activeCashflowType === 'expense') {
+      items = items.filter(i => i.type === 'expense');
+    }
+
+    // Filter by category
+    if (this.activeCashflowCategory !== 'all') {
+      items = items.filter(i => (i.category || '').toLowerCase() === this.activeCashflowCategory.toLowerCase());
+    }
+
+    // Filter by search
+    if (this.cashflowSearchQuery) {
+      items = items.filter(i => 
+        (i.title || '').toLowerCase().includes(this.cashflowSearchQuery) ||
+        (i.category || '').toLowerCase().includes(this.cashflowSearchQuery) ||
+        (i.notes || '').toLowerCase().includes(this.cashflowSearchQuery)
+      );
+    }
+
+    if (badgeCount) {
+      badgeCount.textContent = `${items.length} ${isAr ? 'عملية' : (items.length > 1 ? 'opérations' : 'opération')}`;
+    }
+
+    if (items.length === 0) {
       wrapper.innerHTML = `
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left rtl:text-right border-collapse">
-            <thead>
-              <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-                <th class="py-3 px-4">${isAr ? 'التاريخ' : 'Date'}</th>
-                <th class="py-3 px-4">${isAr ? 'الوصف / العنوان' : 'Titre / Description'}</th>
-                <th class="py-3 px-4">${isAr ? 'الصنف' : 'Catégorie'}</th>
-                <th class="py-3 px-4">${isAr ? 'المبلغ' : 'Montant'}</th>
-                <th class="py-3 px-4 text-right rtl:text-left">${isAr ? 'الإجراءات' : 'Actions'}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-              ${expenses.map(exp => `
-                <tr class="hover:bg-slate-50/60 transition-colors">
-                  <td class="py-3 px-4 text-slate-500">${exp.expense_date}</td>
-                  <td class="py-3 px-4">
-                    <p class="font-bold text-slate-900">${exp.title}</p>
-                    ${exp.notes ? `<p class="text-[11px] text-slate-400">${exp.notes}</p>` : ''}
-                  </td>
-                  <td class="py-3 px-4">
-                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700">
-                      ${exp.category || 'Autre'}
-                    </span>
-                  </td>
-                  <td class="py-3 px-4 font-black text-rose-600">
-                    -${exp.amount.toFixed(3)} DT
-                  </td>
-                  <td class="py-3 px-4 text-right rtl:text-left">
-                    <div class="inline-flex items-center gap-1.5">
-                      <button onclick="SettingsView.openExpenseModal(document, ${JSON.stringify(exp).replace(/"/g, '&quot;')})" class="p-1.5 hover:bg-slate-200/70 text-slate-600 rounded-lg transition-colors" title="${isAr ? 'تعديل' : 'Modifier'}">
-                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                      </button>
-                      <button onclick="SettingsView.deleteExpense(document, ${exp.id}, '${exp.title.replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors" title="${isAr ? 'حذف' : 'Supprimer'}">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
+        <div class="text-center py-12 bg-slate-50/80 rounded-3xl border border-dashed border-slate-200">
+          <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-2 font-bold">
+            <i data-lucide="receipt" class="w-6 h-6"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد عمليات تطابق البحث أو التصفية' : 'Aucun flux ne correspond aux critères'}</p>
+          <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">${isAr ? 'أضف عمليات صرف جديدة أو راجع المقبوضات الشهرية.' : 'Enregistrez vos dépenses ou visualisez les règlements de vos élèves.'}</p>
         </div>
       `;
-
       if (window.lucide) lucide.createIcons();
-    } catch (e) {
-      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">${e.message || 'Erreur'}</div>`;
+      return;
     }
+
+    wrapper.innerHTML = items.map(item => {
+      const isIncome = item.type === 'income';
+      const badge = this.getCategoryBadge(item.category, item.type);
+      
+      // Relative date formatting
+      let formattedDate = item.date;
+      try {
+        const d = new Date(item.date);
+        const today = new Date();
+        const isToday = d.toDateString() === today.toDateString();
+        const yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        const isYesterday = d.toDateString() === yesterday.toDateString();
+
+        if (isToday) {
+          formattedDate = isAr ? 'اليوم' : "Aujourd'hui";
+        } else if (isYesterday) {
+          formattedDate = isAr ? 'أمس' : 'Hier';
+        } else {
+          formattedDate = d.toLocaleDateString(isAr ? 'ar-TN' : 'fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+      } catch (e) {}
+
+      return `
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group">
+          
+          <!-- Left: Category Badge & Details -->
+          <div class="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+            <span class="inline-block px-2.5 py-1 rounded-xl text-[10px] tracking-wider uppercase shrink-0 ${badge.classes}">
+              ${badge.label}
+            </span>
+            <div class="min-w-0 flex-1">
+              <p class="text-xs sm:text-sm font-bold text-slate-900 truncate group-hover:text-brand-600 transition-colors">
+                ${item.title}
+              </p>
+              <div class="flex flex-wrap items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                <span class="font-medium text-slate-500">${formattedDate}</span>
+                ${item.payment_method ? `<span>• <span class="text-slate-600 font-semibold">${item.payment_method}</span></span>` : ''}
+                ${item.notes ? `<span class="truncate max-w-xs">• <span class="italic text-slate-400">${item.notes}</span></span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Signed Amount & Action Buttons -->
+          <div class="flex items-center justify-between sm:justify-end gap-3 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+            <div class="text-right rtl:text-left">
+              ${isIncome ? `
+                <span class="text-sm sm:text-base font-black text-emerald-600 tracking-tight whitespace-nowrap">
+                  + ${(item.amount || 0).toFixed(3)} DT
+                </span>
+              ` : `
+                <span class="text-sm sm:text-base font-black text-rose-600 tracking-tight whitespace-nowrap">
+                  - ${(item.amount || 0).toFixed(3)} DT
+                </span>
+              `}
+            </div>
+
+            <!-- Actions -->
+            ${item.expense_id ? `
+              <div class="flex items-center gap-1">
+                <button onclick="SettingsView.openExpenseModal(document, ${JSON.stringify(item).replace(/"/g, '&quot;')})" class="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-xl transition-all" title="${isAr ? 'تعديل' : 'Modifier'}">
+                  <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                </button>
+                <button onclick="SettingsView.deleteExpense(document, ${item.expense_id}, '${item.title.replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-rose-50 text-rose-500 hover:text-rose-700 rounded-xl transition-all" title="${isAr ? 'حذف' : 'Supprimer'}">
+                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                </button>
+              </div>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/50 shrink-0">
+                <i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i>
+                ${isAr ? 'مقبوض' : 'Encaissé'}
+              </span>
+            `}
+          </div>
+
+        </div>
+      `;
+    }).join('');
+
+    if (window.lucide) lucide.createIcons();
   },
 
   openExpenseModal(container, expense = null) {
     const isAr = I18n.currentLang === 'ar';
-    const isEdit = !!expense;
+    const isEdit = !!expense && !!expense.expense_id;
+    const expId = isEdit ? expense.expense_id : (expense ? expense.id : null);
     const today = new Date().toISOString().split('T')[0];
 
     Modal.open({
-      title: isEdit ? (isAr ? 'تعديل النفقة' : 'Modifier la Dépense') : (isAr ? 'إضافة نفقة جديدة' : 'Ajouter une Dépense'),
+      title: isEdit ? (isAr ? 'تعديل النفقة / المصروف' : 'Modifier la Dépense') : (isAr ? 'إضافة عملية صرف جديدة' : 'Ajouter une Opération / Dépense'),
       html: `
         <form id="expense-modal-form" class="space-y-4">
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'عنوان / بيان النفقة *' : 'Titre / Motif de la dépense *'}</label>
-            <input id="exp-form-title" type="text" required value="${expense ? expense.title : ''}" placeholder="Ex: Loyer du local, Rames de papier..." class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold">
+            <input id="exp-form-title" type="text" required value="${expense ? expense.title : ''}" placeholder="Ex: Achat de papier et fournitures pour examens..." class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold text-slate-900">
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'المبلغ (DT) *' : 'Montant (DT) *'}</label>
-              <input id="exp-form-amount" type="number" step="any" min="0.001" required value="${expense ? expense.amount : ''}" placeholder="Ex: 50.000" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-rose-600">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'المبلغ (DT) *' : 'Montant de la dépense (DT) *'}</label>
+              <input id="exp-form-amount" type="number" step="any" min="0.001" required value="${expense ? expense.amount : ''}" placeholder="Ex: 550.000" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-rose-600">
             </div>
 
             <div>
-              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'التاريخ *' : 'Date de la dépense *'}</label>
-              <input id="exp-form-date" type="date" required value="${expense ? expense.expense_date : today}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'التاريخ *' : 'Date de l\'opération *'}</label>
+              <input id="exp-form-date" type="date" required value="${expense ? (expense.expense_date || expense.date) : today}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium">
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'الصنف' : 'Catégorie'}</label>
-            <select id="exp-form-cat" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium">
-              <option value="Loyer" ${expense && expense.category === 'Loyer' ? 'selected' : ''}>Loyer / Local</option>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'الصنف' : 'Catégorie de charge'}</label>
+            <select id="exp-form-cat" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-slate-700">
               <option value="Matériel" ${expense && expense.category === 'Matériel' ? 'selected' : ''}>Matériel & Fournitures</option>
-              <option value="Impression" ${expense && expense.category === 'Impression' ? 'selected' : ''}>Photocopies & Feuilles</option>
+              <option value="Transport" ${expense && expense.category === 'Transport' ? 'selected' : ''}>Transport & Déplacements</option>
+              <option value="Impression" ${expense && expense.category === 'Impression' ? 'selected' : ''}>Photocopies & Impression</option>
+              <option value="Loyer" ${expense && expense.category === 'Loyer' ? 'selected' : ''}>Loyer / Local</option>
               <option value="Internet" ${expense && expense.category === 'Internet' ? 'selected' : ''}>Internet & Électricité</option>
-              <option value="Transport" ${expense && expense.category === 'Transport' ? 'selected' : ''}>Transport</option>
               <option value="Autre" ${!expense || expense.category === 'Autre' ? 'selected' : ''}>Autre charge</option>
             </select>
           </div>
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'ملاحظات إضافية' : 'Notes / Remarques'}</label>
-            <textarea id="exp-form-notes" rows="2" placeholder="${isAr ? 'تفاصيل إضافية...' : 'Détails ou référence facture...'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500">${expense ? (expense.notes || '') : ''}</textarea>
+            <textarea id="exp-form-notes" rows="2" placeholder="${isAr ? 'تفاصيل إضافية...' : 'Référence facture, détails...'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 text-slate-700">${expense ? (expense.notes || '') : ''}</textarea>
           </div>
 
           <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -947,7 +1174,7 @@ const SettingsView = {
               ${isAr ? 'إلغاء' : 'Annuler'}
             </button>
             <button type="submit" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
-              ${isAr ? 'حفظ النفقة' : 'Enregistrer la Dépense'}
+              ${isAr ? 'حفظ العملية' : 'Enregistrer'}
             </button>
           </div>
         </form>
@@ -989,11 +1216,11 @@ const SettingsView = {
           try {
             const payload = { title, amount, expense_date, category, notes };
             if (isEdit) {
-              await API.put(`/api/expenses/${expense.id}`, payload);
+              await API.put(`/api/expenses/${expId}`, payload);
               Toast.success(isAr ? 'تم تعديل النفقة !' : 'Dépense mise à jour !');
             } else {
               await API.post('/api/expenses', payload);
-              Toast.success(isAr ? 'تم تسجيل النفقة بنجاح !' : 'Dépense enregistrée avec succès !');
+              Toast.success(isAr ? 'تم تسجيل النفقة بنجاح !' : 'Opération enregistrée avec succès !');
             }
             Modal.close();
             this.loadExpenses(document);
@@ -1008,105 +1235,19 @@ const SettingsView = {
   deleteExpense(container, expId, expTitle) {
     const isAr = I18n.currentLang === 'ar';
     Modal.confirm({
-      title: isAr ? `حذف النفقة "${expTitle}" ؟` : `Supprimer la dépense "${expTitle}" ?`,
-      message: isAr ? "سيتم حذف هذه النفقة وإعادة احتساب صافي الأرباح." : "Cette dépense sera définitivement supprimée du calcul de rentabilité.",
+      title: isAr ? `حذف العملية "${expTitle}" ؟` : `Supprimer la dépense "${expTitle}" ?`,
+      message: isAr ? "سيتم حذف هذه العملية وإعادة احتساب الرصيد الصافي." : "Cette opération sera définitivement supprimée et le solde net sera recalculé.",
       confirmText: isAr ? "نعم، حذف" : "Oui, Supprimer",
       onConfirm: async () => {
         try {
           await API.delete(`/api/expenses/${expId}`);
-          Toast.success(isAr ? 'تم حذف النفقة !' : 'Dépense supprimée !');
+          Toast.success(isAr ? 'تم حذف العملية !' : 'Opération supprimée !');
           this.loadExpenses(document);
         } catch (e) {
           Toast.error(e.message || 'Erreur suppression');
         }
       }
     });
-  },
-
-  // -------------------------------------------------------------
-  // AUDIT LOGS SECTION (ADMIN ONLY)
-  // -------------------------------------------------------------
-  bindAuditSection(container) {
-    const refreshBtn = container.querySelector('#refresh-audit-btn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        this.loadAuditLogs(container);
-      });
-    }
-  },
-
-  async loadAuditLogs(container) {
-    const isAr = I18n.currentLang === 'ar';
-    const wrapper = container.querySelector('#audit-list-container');
-    if (!wrapper) return;
-
-    try {
-      const logs = await API.get('/api/audit-logs?limit=50');
-      if (!logs || logs.length === 0) {
-        wrapper.innerHTML = `
-          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 mx-auto flex items-center justify-center mb-2 font-bold">
-              <i data-lucide="shield-check" class="w-6 h-6"></i>
-            </div>
-            <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد سجلات بعد' : 'Aucune entrée dans le journal'}</p>
-          </div>
-        `;
-        if (window.lucide) lucide.createIcons();
-        return;
-      }
-
-      wrapper.innerHTML = `
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs text-left rtl:text-right border-collapse">
-            <thead>
-              <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
-                <th class="py-3 px-4">${isAr ? 'التاريخ والوقت' : 'Date & Heure'}</th>
-                <th class="py-3 px-4">${isAr ? 'المستخدم' : 'Utilisateur'}</th>
-                <th class="py-3 px-4">${isAr ? 'العملية' : 'Action'}</th>
-                <th class="py-3 px-4">${isAr ? 'العنصر' : 'Cible'}</th>
-                <th class="py-3 px-4">${isAr ? 'التفاصيل' : 'Détails'}</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
-              ${logs.map(log => {
-                const dateObj = new Date(log.created_at);
-                const formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                
-                let actionBadge = 'bg-slate-100 text-slate-700';
-                if (log.action.includes('CREATE')) actionBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-200/50';
-                if (log.action.includes('UPDATE')) actionBadge = 'bg-blue-50 text-blue-700 border border-blue-200/50';
-                if (log.action.includes('DELETE')) actionBadge = 'bg-rose-50 text-rose-700 border border-rose-200/50';
-                
-                return `
-                  <tr class="hover:bg-slate-50/60 transition-colors">
-                    <td class="py-3 px-4 text-slate-400 whitespace-nowrap">${formattedDate}</td>
-                    <td class="py-3 px-4 whitespace-nowrap">
-                      <p class="font-bold text-slate-900">${log.user_name || 'Système'}</p>
-                      <span class="text-[10px] text-slate-400">${log.user_role || 'ADMIN'}</span>
-                    </td>
-                    <td class="py-3 px-4 whitespace-nowrap">
-                      <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${actionBadge}">
-                        ${log.action}
-                      </span>
-                    </td>
-                    <td class="py-3 px-4 text-slate-600 whitespace-nowrap font-medium">
-                      ${log.entity_type} ${log.entity_id ? `#${log.entity_id}` : ''}
-                    </td>
-                    <td class="py-3 px-4 text-slate-500 font-mono text-[11px] max-w-xs truncate" title="${(log.details || '').replace(/"/g, '&quot;')}">
-                      ${log.details || '-'}
-                    </td>
-                  </tr>
-                `;
-              }).join('')}
-            </tbody>
-          </table>
-        </div>
-      `;
-
-      if (window.lucide) lucide.createIcons();
-    } catch (e) {
-      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">${e.message || 'Erreur'}</div>`;
-    }
   },
 
   // -------------------------------------------------------------

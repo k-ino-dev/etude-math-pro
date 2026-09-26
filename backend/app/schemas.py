@@ -151,6 +151,18 @@ class ExpenseOut(ExpenseBase):
     class Config:
         from_attributes = True
 
+class CashflowItem(BaseModel):
+    id: str
+    type: str  # "income" or "expense"
+    title: str
+    amount: float
+    date: str
+    category: str
+    notes: Optional[str] = None
+    payment_method: Optional[str] = None
+    expense_id: Optional[int] = None
+    student_id: Optional[int] = None
+
 class ExpenseSummary(BaseModel):
     total_income: Optional[float] = 0.0
     total_revenue: Optional[float] = 0.0
@@ -158,6 +170,7 @@ class ExpenseSummary(BaseModel):
     net_balance: Optional[float] = 0.0
     net_profit: Optional[float] = 0.0
     expenses: List[ExpenseOut] = []
+    cashflow: List[CashflowItem] = []
 
 # --- Audit Logs ---
 class AuditLogOut(BaseModel):

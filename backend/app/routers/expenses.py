@@ -34,17 +34,54 @@ def list_expenses(
     total_expenses = sum(e.amount for e in expenses)
     net_balance = total_income - total_expenses
     
-    # Enrich expenses with expense_date alias
+    # 3. Build unified cashflow timeline (Incomes + Expenses)
+    cashflow = []
     for e in expenses:
-        setattr(e, "expense_date", e.date)
+        cashflow.append({
+            "id": f"exp-{e.id}",
+            "type": "expense",
+            "title": e.title,
+            "amount": float(e.amount),
+            "date": str(e.date),
+            "category": e.category or "Autre",
+            "notes": e.notes,
+            "payment_method": None,
+            "expense_id": e.id,
+            "student_id": None
+        })
+
+    payments_query = db.query(Payment, Student).join(Student, Payment.student_id == Student.id).filter(
+        Student.user_id == tenant_id
+    ).order_by(Payment.payment_date.desc(), Payment.id.desc()).all()
+
+    for p, s in payments_query:
+        st_name = f"{s.first_name} {s.last_name}".strip() if s else "Élève"
+        st_grp = f" - Groupe {s.group.name}" if s and s.group else ""
+        title = f"Règlement mensualités {p.month} ({st_name}{st_grp})"
+        cashflow.append({
+            "id": f"pay-{p.id}",
+            "type": "income",
+            "title": title,
+            "amount": float(p.amount),
+            "date": str(p.payment_date) if p.payment_date else str(datetime.date.today()),
+            "category": "Paiement / Inscription",
+            "notes": p.notes,
+            "payment_method": p.payment_method or "Espèces",
+            "expense_id": None,
+            "student_id": p.student_id
+        })
+
+    # Sort cashflow descending by date
+    cashflow.sort(key=lambda x: (x["date"], x["id"]), reverse=True)
 
     return {
-        "total_income": round(total_income, 2),
-        "total_revenue": round(total_income, 2),
-        "total_expenses": round(total_expenses, 2),
-        "net_balance": round(net_balance, 2),
-        "net_profit": round(net_balance, 2),
-        "expenses": expenses
+        "total_income": round(total_income, 3),
+        "total_revenue": round(total_income, 3),
+        "total_expenses": round(total_expenses, 3),
+        "net_balance": round(net_balance, 3),
+        "net_profit": round(net_balance, 3),
+        "expenses": expenses,
+        "cashflow": cashflow
     }
 
 @router.get("/summary", response_model=ExpenseSummary)
