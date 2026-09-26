@@ -85,10 +85,12 @@ const TimetableView = {
               <i data-lucide="printer" class="w-4 h-4 text-slate-600"></i>
               <span>${isAr ? 'طباعة / PDF' : 'Imprimer / PDF'}</span>
             </button>
+            ${State.isAdmin() ? `
             <button onclick="TimetableView.openSetScheduleModal()" class="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-[#c5a059] to-[#b89146] hover:brightness-105 rounded-xl transition-all shadow-md shadow-[#c5a059]/20">
               <i data-lucide="plus-circle" class="w-4 h-4"></i>
               <span>${isAr ? 'برمجة فوج' : 'Affecter un horaire'}</span>
             </button>
+            ` : ''}
             <a href="#planning" class="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-[#e2dacb] rounded-xl transition-all shadow-xs">
               <i data-lucide="calendar" class="w-4 h-4 text-[#c5a059]"></i>
               <span>${isAr ? 'روزنامة الحصص' : 'Planning Calendrier'}</span>

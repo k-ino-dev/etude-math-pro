@@ -9,7 +9,7 @@ from ..database import get_db
 from ..models import Payment, Student, Group, User
 from ..schemas import PaymentCreate, PaymentUpdate, PaymentOut
 from ..services.pdf_generator import generate_payment_receipt_pdf, RECEIPTS_DIR
-from .auth import get_current_user
+from .auth import get_current_user, get_tenant_admin_id, require_admin, log_audit
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
@@ -51,7 +51,8 @@ def list_payments(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Payment).join(Student).filter(Student.user_id == current_user.id)
+    tenant_id = get_tenant_admin_id(current_user)
+    query = db.query(Payment).join(Student).filter(Student.user_id == tenant_id)
     
     if student_id:
         query = query.filter(Payment.student_id == student_id)
@@ -71,7 +72,8 @@ def create_payment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    student = db.query(Student).filter(Student.id == data.student_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    student = db.query(Student).filter(Student.id == data.student_id, Student.user_id == tenant_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Élève non trouvé")
         
@@ -79,7 +81,7 @@ def create_payment(
     receipt_num = data.receipt_number
     if not receipt_num:
         year = datetime.date.today().year
-        count = db.query(Payment).join(Student).filter(Student.user_id == current_user.id).count() + 1
+        count = db.query(Payment).join(Student).filter(Student.user_id == tenant_id).count() + 1
         receipt_num = f"REC-{year}-{count:04d}"
         
     # Calculate status
@@ -105,6 +107,23 @@ def create_payment(
     db.add(payment)
     db.commit()
     db.refresh(payment)
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="PAYMENT_CREATED",
+        entity_type="Payment",
+        entity_id=payment.id,
+        new_values={
+            "student_id": payment.student_id,
+            "student_name": f"{student.first_name} {student.last_name}",
+            "amount": payment.amount,
+            "month": payment.month,
+            "status": payment.status,
+            "receipt_number": payment.receipt_number
+        }
+    )
+    
     return build_payment_out(payment, db)
 
 @router.put("/{payment_id}", response_model=PaymentOut)
@@ -114,9 +133,19 @@ def update_payment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    payment = db.query(Payment).join(Student).filter(Payment.id == payment_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    payment = db.query(Payment).join(Student).filter(Payment.id == payment_id, Student.user_id == tenant_id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
+        
+    student = db.query(Student).filter(Student.id == payment.student_id).first()
+    old_vals = {
+        "amount": payment.amount,
+        "payment_date": str(payment.payment_date),
+        "payment_method": payment.payment_method,
+        "status": payment.status,
+        "notes": payment.notes
+    }
         
     if data.amount is not None:
         payment.amount = data.amount
@@ -126,11 +155,36 @@ def update_payment(
         payment.payment_method = data.payment_method
     if data.status is not None:
         payment.status = data.status
+    elif data.amount is not None and student:
+        if payment.amount >= student.monthly_price:
+            payment.status = "paid"
+        elif payment.amount > 0:
+            payment.status = "partial"
+        else:
+            payment.status = "unpaid"
+            
     if data.notes is not None:
         payment.notes = data.notes
         
     db.commit()
     db.refresh(payment)
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="PAYMENT_UPDATED",
+        entity_type="Payment",
+        entity_id=payment.id,
+        old_values=old_vals,
+        new_values={
+            "amount": payment.amount,
+            "payment_date": str(payment.payment_date),
+            "payment_method": payment.payment_method,
+            "status": payment.status,
+            "notes": payment.notes
+        }
+    )
+    
     return build_payment_out(payment, db)
 
 @router.delete("/{payment_id}")
@@ -139,11 +193,30 @@ def delete_payment(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    require_admin(current_user)
     payment = db.query(Payment).join(Student).filter(Payment.id == payment_id, Student.user_id == current_user.id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
+        
+    old_vals = {
+        "student_id": payment.student_id,
+        "amount": payment.amount,
+        "month": payment.month,
+        "receipt_number": payment.receipt_number
+    }
+    
     db.delete(payment)
     db.commit()
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="PAYMENT_DELETED",
+        entity_type="Payment",
+        entity_id=payment_id,
+        old_values=old_vals
+    )
+    
     return {"success": True, "message": "Paiement supprimé"}
 
 @router.get("/summary/matrix")
@@ -153,7 +226,8 @@ def get_payment_matrix(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Student).filter(Student.user_id == current_user.id, Student.is_active == True)
+    tenant_id = get_tenant_admin_id(current_user)
+    query = db.query(Student).filter(Student.user_id == tenant_id, Student.is_active == True)
     if level and level != "all":
         query = query.filter(Student.level == level)
     if group_id and group_id > 0:
@@ -197,12 +271,20 @@ def get_payment_matrix(
             "months": months_data
         })
         
+    # Mask global aggregates for staff
+    if current_user.role == "STAFF":
+        total_collected = 0.0
+        total_expected = 0.0
+        total_due = 0.0
+    else:
+        total_due = max(0.0, total_expected - total_collected)
+        
     return {
         "months": MONTHS_LIST,
         "students_count": len(students),
         "total_collected": total_collected,
         "total_expected": total_expected,
-        "total_due": max(0.0, total_expected - total_collected),
+        "total_due": total_due,
         "rows": matrix_rows
     }
 
@@ -212,10 +294,12 @@ def get_payment_receipt(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    payment = db.query(Payment).join(Student).filter(Payment.id == payment_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    payment = db.query(Payment).join(Student).filter(Payment.id == payment_id, Student.user_id == tenant_id).first()
     if not payment:
         raise HTTPException(status_code=404, detail="Paiement non trouvé")
     
+    tenant_admin = db.query(User).filter(User.id == tenant_id).first()
     student = db.query(Student).filter(Student.id == payment.student_id).first()
     group = db.query(Group).filter(Group.id == student.group_id).first() if student and student.group_id else None
     
@@ -224,12 +308,17 @@ def get_payment_receipt(
     remaining_due = max(0.0, monthly_price - payment.amount) if not is_fully_paid else 0.0
     status_display = "RÉGLÉ" if is_fully_paid else ("PARTIEL" if payment.status == "partial" else "EN ATTENTE")
     
+    teacher_name = (tenant_admin.name if tenant_admin else None) or "Professeur de Mathématiques"
+    teacher_phone = (tenant_admin.phone if tenant_admin else None) or ""
+    school_year = (tenant_admin.school_year if tenant_admin else None) or "2025-2026"
+    currency = (tenant_admin.currency if tenant_admin else None) or "DT"
+    
     return {
         "receipt_number": payment.receipt_number,
         "date": payment.payment_date,
-        "teacher_name": current_user.name or "Professeur de Mathématiques",
-        "teacher_phone": current_user.phone or "",
-        "school_year": current_user.school_year or "2025-2026",
+        "teacher_name": teacher_name,
+        "teacher_phone": teacher_phone,
+        "school_year": school_year,
         "student_name": f"{student.first_name} {student.last_name}" if student else "",
         "level": student.level if student else "",
         "group_name": group.name if group else "",
@@ -241,7 +330,7 @@ def get_payment_receipt(
         "status_display": status_display,
         "payment_method": payment.payment_method,
         "status": payment.status,
-        "currency": current_user.currency or "DT",
+        "currency": currency,
         "notes": payment.notes
     }
 
@@ -265,5 +354,6 @@ def get_payment_receipt_pdf(
         "Content-Disposition": f"{'attachment' if download else 'inline'}; filename={pdf_filename}"
     }
     return FileResponse(pdf_path, media_type="application/pdf", headers=headers)
+
 
 

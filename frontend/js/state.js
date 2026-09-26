@@ -8,6 +8,18 @@ const State = {
   currency: 'DT',
   listeners: [],
 
+  getRole() {
+    return (this.user && this.user.role) ? this.user.role.toUpperCase() : 'ADMIN';
+  },
+
+  isAdmin() {
+    return this.getRole() === 'ADMIN';
+  },
+
+  isStaff() {
+    return this.getRole() === 'STAFF';
+  },
+
   subscribe(listener) {
     this.listeners.push(listener);
     return () => {

@@ -7,7 +7,7 @@ from ..models import Student, Group, Session as DBSession, Attendance, Payment, 
 from ..schemas import DashboardStats, SessionOut
 from .students import get_current_month_str, get_active_month
 from .sessions import build_session_out
-from .auth import get_current_user
+from .auth import get_current_user, get_tenant_admin_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
@@ -16,14 +16,15 @@ def get_dashboard_stats(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(current_user)
     today = datetime.date.today()
     now_time = datetime.datetime.now().strftime("%H:%M")
     
     # 1. Total Students
-    total_students = db.query(Student).filter(Student.user_id == current_user.id, Student.is_active == True).count()
+    total_students = db.query(Student).filter(Student.user_id == tenant_id, Student.is_active == True).count()
     
     # 2. Total Groups
-    total_groups = db.query(Group).filter(Group.user_id == current_user.id).count()
+    total_groups = db.query(Group).filter(Group.user_id == tenant_id).count()
     
     # 3. Sessions Today (Recurring + Exceptions)
     from .sessions import list_sessions
@@ -50,8 +51,8 @@ def get_dashboard_stats(
     next_session = valid_upcoming[0] if valid_upcoming else (today_sessions[0] if today_sessions else None)
     
     # 6. Current Month Payments
-    active_month = get_active_month(db, user_id=current_user.id)
-    teacher_student_ids = [s.id for s in db.query(Student.id).filter(Student.user_id == current_user.id).all()]
+    active_month = get_active_month(db, user_id=tenant_id)
+    teacher_student_ids = [s.id for s in db.query(Student.id).filter(Student.user_id == tenant_id).all()]
     
     paid_this_month = []
     all_payments_this_month = []
@@ -70,8 +71,13 @@ def get_dashboard_stats(
     total_collected_this_month = sum(p.amount for p in all_payments_this_month)
     
     # Total expected: sum of monthly_price of all active students
-    all_active_students = db.query(Student).filter(Student.user_id == current_user.id, Student.is_active == True).all()
+    all_active_students = db.query(Student).filter(Student.user_id == tenant_id, Student.is_active == True).all()
     total_expected_this_month = sum(s.monthly_price for s in all_active_students)
+    
+    # If Staff, mask financial totals
+    if current_user.role == "STAFF":
+        total_collected_this_month = 0.0
+        total_expected_this_month = 0.0
     
     # Paid students IDs
     paid_student_ids = {p.student_id for p in paid_this_month}
@@ -81,7 +87,7 @@ def get_dashboard_stats(
     # 7. Internal Alerts
     alerts = []
     
-    if pending_payments_count > 0:
+    if pending_payments_count > 0 and current_user.role != "STAFF":
         alerts.append({
             "type": "warning",
             "icon": "alert-triangle",
@@ -90,7 +96,7 @@ def get_dashboard_stats(
         })
         
     # Check full groups
-    groups = db.query(Group).filter(Group.user_id == current_user.id).all()
+    groups = db.query(Group).filter(Group.user_id == tenant_id).all()
     for g in groups:
         g_count = db.query(Student).filter(Student.group_id == g.id, Student.is_active == True).count()
         if g_count >= g.capacity:
@@ -123,4 +129,5 @@ def get_dashboard_stats(
         "today_sessions": today_sessions,
         "recent_alerts": alerts
     }
+
 

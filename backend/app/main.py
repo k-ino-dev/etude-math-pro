@@ -16,7 +16,7 @@ import threading
 from .seed_data import seed_database, init_virgin_database
 from .routers import (
     auth, dashboard, students, groups, sessions, attendance,
-    payments, repartition, reports, corrections
+    payments, repartition, reports, corrections, expenses, audit_logs
 )
 from .services.scheduler import start_scheduler, shutdown_scheduler
 
@@ -110,9 +110,10 @@ app.include_router(payments.router)
 app.include_router(repartition.router)
 app.include_router(reports.router)
 app.include_router(corrections.router)
+app.include_router(expenses.router)
+app.include_router(audit_logs.router)
 
-
-from .routers.auth import get_current_user
+from .routers.auth import get_current_user, get_tenant_admin_id, require_admin
 
 # Global Search Endpoint
 @app.get("/api/search")
@@ -121,11 +122,12 @@ def global_search(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(current_user)
     search_term = f"%{q.strip()}%"
     
     # 1. Search Students
     matched_students = db.query(Student).filter(
-        Student.user_id == current_user.id,
+        Student.user_id == tenant_id,
         (
             (Student.first_name.ilike(search_term)) |
             (Student.last_name.ilike(search_term)) |
@@ -151,7 +153,7 @@ def global_search(
     
     # 2. Search Groups
     matched_groups = db.query(Group).filter(
-        Group.user_id == current_user.id,
+        Group.user_id == tenant_id,
         (
             (Group.name.ilike(search_term)) |
             (Group.level.ilike(search_term)) |
@@ -172,7 +174,7 @@ def global_search(
     
     # 3. Search Sessions
     matched_sessions = db.query(DBSession).filter(
-        DBSession.user_id == current_user.id,
+        DBSession.user_id == tenant_id,
         (
             (DBSession.topic.ilike(search_term)) |
             (DBSession.notes.ilike(search_term))
@@ -229,6 +231,7 @@ def reset_demo_data(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    require_admin(current_user)
     seed_database(db, reset=True)
     return {"success": True, "message": "Données de démonstration réinitialisées avec succès ! (30 élèves, 5 groupes, présences et paiements restaurés)"}
 
@@ -239,6 +242,7 @@ def clear_all_data(
     db: Session = Depends(get_db)
 ):
     """Wipe out students, groups, sessions, attendance, payments and logs for this teacher account."""
+    require_admin(current_user)
     try:
         user_id = current_user.id
         # Student IDs for this user
@@ -270,6 +274,7 @@ def export_database(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    require_admin(current_user)
     user = current_user
     students = db.query(Student).filter(Student.user_id == user.id).all()
     groups = db.query(Group).filter(Group.user_id == user.id).all()
@@ -309,6 +314,7 @@ def import_database(
     db: Session = Depends(get_db)
 ):
     """Restore database from exported JSON file for the authenticated teacher."""
+    require_admin(current_user)
     try:
         user_id = current_user.id
         # 1. Clear current user's tables

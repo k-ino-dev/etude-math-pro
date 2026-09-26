@@ -41,10 +41,12 @@ const PaymentsView = {
               </button>
             </div>
 
+            ${State.isAdmin() ? `
             <a href="/api/reports/monthly/current/pdf" target="_blank" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-700 border border-[#e2dacb] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-2">
               <i data-lucide="file-text" class="w-4 h-4 text-[#a27e38]"></i>
               <span>${I18n.t('pdf_report')}</span>
             </a>
+            ` : ''}
 
             <button onclick="PaymentsView.openModal()" class="px-4 py-2.5 btn-gold-action text-xs sm:text-sm font-black flex items-center gap-2">
               <i data-lucide="plus" class="w-4 h-4"></i>
@@ -53,13 +55,15 @@ const PaymentsView = {
           </div>
         </div>
 
-        <!-- 4 Financial Summary Cards -->
+        <!-- 4 Financial Summary Cards (Admin Only) -->
+        ${State.isAdmin() ? `
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4" id="pay-kpi-grid">
           <div class="skeleton h-24 rounded-3xl"></div>
           <div class="skeleton h-24 rounded-3xl"></div>
           <div class="skeleton h-24 rounded-3xl"></div>
           <div class="skeleton h-24 rounded-3xl"></div>
         </div>
+        ` : '<div id="pay-kpi-grid" class="hidden"></div>'}
 
         <!-- Dedicated Quick Student Search Bar (Section 2 Requirement) -->
         <div class="bg-gradient-to-r from-[#fdfbf7] via-white to-[#fcfaf6] p-4 sm:p-5 rounded-3xl border border-[#ede7db] shadow-xs space-y-3">
@@ -419,15 +423,20 @@ const PaymentsView = {
                 </td>
                 <td class="px-6 py-4 text-right rtl:text-left">
                   <div class="flex items-center justify-end rtl:justify-start gap-1.5">
+                    <button onclick="PaymentsView.openEditModal(${p.id})" title="${isAr ? 'تعديل الخلاص' : 'Modifier le paiement'}" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors">
+                      <i data-lucide="pencil" class="w-4 h-4"></i>
+                    </button>
                     <button onclick="PaymentsView.openReceiptModal(${p.id})" title="${isAr ? 'عرض الوصل' : 'Voir Reçu'}" class="p-1.5 text-slate-400 hover:text-[#a27e38] hover:bg-[#faf5ec] rounded-xl transition-colors">
                       <i data-lucide="receipt" class="w-4 h-4"></i>
                     </button>
                     <a href="/api/payments/${p.id}/pdf" target="_blank" title="${isAr ? 'تحميل الوصل PDF' : 'Télécharger Reçu PDF Officiel'}" class="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-colors">
                       <i data-lucide="file-text" class="w-4 h-4"></i>
                     </a>
+                    ${State.isAdmin() ? `
                     <button onclick="PaymentsView.deletePayment(${p.id})" title="${isAr ? 'حذف' : 'Supprimer'}" class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors">
                       <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
+                    ` : ''}
                   </div>
                 </td>
               </tr>
@@ -838,6 +847,99 @@ const PaymentsView = {
     } catch (e) {
       Toast.error(isAr ? 'خطأ أثناء إنشاء الوصل.' : 'Erreur lors de la génération du reçu.');
     }
+  },
+
+  async openEditModal(paymentId) {
+    const isAr = I18n.currentLang === 'ar';
+    const currency = 'DT';
+    const payment = (this.payments || []).find(p => p.id === paymentId);
+    if (!payment) {
+      Toast.error(isAr ? 'لم يتم العثور على الدفع.' : 'Paiement non trouvé.');
+      return;
+    }
+
+    Modal.open({
+      title: isAr ? 'تعديل عملية الدفع' : 'Modifier le Paiement',
+      size: 'max-w-lg',
+      html: `
+        <form id="edit-payment-form" class="space-y-4">
+          <div class="p-3.5 bg-[#faf8f5] rounded-2xl border border-[#ede7db] flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-slate-900">${payment.student_name}</p>
+              <p class="text-[11px] text-slate-500">${payment.receipt_number || ''} • ${payment.month}</p>
+            </div>
+            <span class="text-xs font-black text-[#a27e38]">${payment.amount} DT</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'المبلغ (DT) *' : `Montant (${currency}) *`}</label>
+              <input id="edit-pay-amount" type="number" step="5" required value="${payment.amount}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-black text-slate-900 bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'الحالة' : 'Statut'}</label>
+              <select id="edit-pay-status" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-bold bg-white text-slate-900">
+                <option value="paid" ${payment.status === 'paid' ? 'selected' : ''}>🟢 ${isAr ? 'خالص (RÉGLÉ)' : 'RÉGLÉ'}</option>
+                <option value="partial" ${payment.status === 'partial' ? 'selected' : ''}>🟠 ${I18n.t('partial')}</option>
+                <option value="unpaid" ${payment.status === 'unpaid' ? 'selected' : ''}>🔴 ${I18n.t('unpaid')}</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'تاريخ الدفع' : 'Date de paiement'}</label>
+              <input id="edit-pay-date" type="date" value="${payment.payment_date || ''}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'طريقة الدفع' : 'Mode de paiement'}</label>
+              <select id="edit-pay-method" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-semibold bg-white">
+                <option value="Espèces" ${payment.payment_method === 'Espèces' ? 'selected' : ''}>Espèces</option>
+                <option value="Virement bancaire" ${payment.payment_method === 'Virement bancaire' ? 'selected' : ''}>Virement bancaire</option>
+                <option value="Chèque" ${payment.payment_method === 'Chèque' ? 'selected' : ''}>Chèque</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'ملاحظات' : 'Notes / Remarque'}</label>
+            <input id="edit-pay-notes" type="text" value="${payment.notes || ''}" placeholder="${isAr ? 'ملاحظة...' : 'Remarque...'}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium bg-white">
+          </div>
+
+          <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-[#ede7db]">
+            <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs sm:text-sm font-semibold text-slate-600 hover:bg-[#ede5d8] rounded-2xl transition-colors">
+              ${isAr ? 'إلغاء' : 'Annuler'}
+            </button>
+            <button type="submit" class="px-5 py-2.5 btn-gold-action text-xs sm:text-sm font-black">
+              ${isAr ? 'حفظ التعديلات' : 'Enregistrer'}
+            </button>
+          </div>
+        </form>
+      `,
+      onOpen: (content) => {
+        const form = content.querySelector('#edit-payment-form');
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const payload = {
+            amount: parseFloat(content.querySelector('#edit-pay-amount').value),
+            status: content.querySelector('#edit-pay-status').value,
+            payment_date: content.querySelector('#edit-pay-date').value || null,
+            payment_method: content.querySelector('#edit-pay-method').value,
+            notes: content.querySelector('#edit-pay-notes').value.trim() || null
+          };
+
+          try {
+            await API.put(`/api/payments/${paymentId}`, payload);
+            Toast.success(isAr ? 'تم تعديل الدفع بنجاح !' : 'Paiement modifié avec succès !');
+            Modal.close();
+            await State.loadInitialData();
+            await PaymentsView.loadData(document.getElementById('main-view'));
+          } catch (err) {
+            Toast.error(err.message);
+          }
+        });
+      }
+    });
   },
 
   deletePayment(paymentId) {

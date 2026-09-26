@@ -82,6 +82,9 @@ class UserOut(BaseModel):
     avatar: Optional[str] = None
     currency: str = "DT"
     school_year: str = "2025-2026"
+    role: str = "ADMIN"
+    admin_id: Optional[int] = None
+    is_active: bool = True
 
     class Config:
         from_attributes = True
@@ -94,6 +97,85 @@ class UserUpdate(BaseModel):
     currency: Optional[str] = None
     school_year: Optional[str] = None
     password: Optional[str] = None
+
+# --- Staff Accounts ---
+class StaffCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+    phone: Optional[str] = None
+
+class StaffUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    password: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class StaffOut(BaseModel):
+    id: int
+    name: str
+    email: str
+    phone: Optional[str] = None
+    role: str = "STAFF"
+    is_active: bool = True
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+# --- Expenses (Dépenses) ---
+class ExpenseBase(BaseModel):
+    title: str
+    amount: float
+    date: Optional[datetime.date] = None
+    expense_date: Optional[datetime.date] = None
+    category: Optional[str] = "Autre"
+    notes: Optional[str] = None
+
+class ExpenseCreate(ExpenseBase):
+    pass
+
+class ExpenseUpdate(BaseModel):
+    title: Optional[str] = None
+    amount: Optional[float] = None
+    date: Optional[datetime.date] = None
+    expense_date: Optional[datetime.date] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
+
+class ExpenseOut(ExpenseBase):
+    id: int
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+class ExpenseSummary(BaseModel):
+    total_income: Optional[float] = 0.0
+    total_revenue: Optional[float] = 0.0
+    total_expenses: float = 0.0
+    net_balance: Optional[float] = 0.0
+    net_profit: Optional[float] = 0.0
+    expenses: List[ExpenseOut] = []
+
+# --- Audit Logs ---
+class AuditLogOut(BaseModel):
+    id: int
+    admin_id: int
+    user_id: Optional[int] = None
+    user_name: Optional[str] = None
+    role: str
+    action: str
+    entity_type: str
+    entity_id: Optional[str] = None
+    old_value: Optional[str] = None
+    new_value: Optional[str] = None
+    created_at: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
 
 # --- Groups ---
 class GroupBase(BaseModel):

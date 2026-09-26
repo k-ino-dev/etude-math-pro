@@ -222,51 +222,81 @@ const DashboardView = {
       const currency = 'DT';
 
       // 1. Render 6 3D Geometric Crystal KPI Cards
+      // 1. Render 3D Geometric Crystal KPI Cards
       const kpiGrid = container.querySelector('#dash-kpi-grid');
       if (kpiGrid) {
-        kpiGrid.innerHTML = `
-          <!-- Total Élèves -->
-          <div class="kpi-crystal-card kpi-crystal-blue group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalStudents')}</p>
-            <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_students || 0}</p>
-          </div>
+        if (State.isAdmin()) {
+          kpiGrid.innerHTML = `
+            <!-- Total Élèves -->
+            <div class="kpi-crystal-card kpi-crystal-blue group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalStudents')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_students || 0}</p>
+            </div>
 
-          <!-- Total Groupes -->
-          <div class="kpi-crystal-card kpi-crystal-slate group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalGroups')}</p>
-            <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_groups || 0}</p>
-          </div>
+            <!-- Total Groupes -->
+            <div class="kpi-crystal-card kpi-crystal-slate group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalGroups')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_groups || 0}</p>
+            </div>
 
-          <!-- Présences Aujourd'hui -->
-          <div class="kpi-crystal-card kpi-crystal-green group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('presentToday')}</p>
-            <p class="text-3xl sm:text-4xl font-black text-emerald-600 tabular-nums">${stats.students_present_today || 0}</p>
-          </div>
+            <!-- Présences Aujourd'hui -->
+            <div class="kpi-crystal-card kpi-crystal-green group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('presentToday')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-emerald-600 tabular-nums">${stats.students_present_today || 0}</p>
+            </div>
 
-          <!-- Séances Aujourd'hui -->
-          <div class="kpi-crystal-card kpi-crystal-slate group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('sessionsToday')}</p>
-            <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.sessions_today || 0}</p>
-          </div>
+            <!-- Séances Aujourd'hui -->
+            <div class="kpi-crystal-card kpi-crystal-slate group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('sessionsToday')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.sessions_today || 0}</p>
+            </div>
 
-          <!-- Paiements en Attente -->
-          <div class="kpi-crystal-card kpi-crystal-champagne group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('pendingPayments')}</p>
-            <p class="text-3xl sm:text-4xl font-black text-[#a27e38] tabular-nums">${stats.pending_payments_count || 0}</p>
-          </div>
+            <!-- Paiements en Attente -->
+            <div class="kpi-crystal-card kpi-crystal-champagne group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('pendingPayments')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-[#a27e38] tabular-nums">${stats.pending_payments_count || 0}</p>
+            </div>
 
-          <!-- Collecté ce mois -->
-          <div class="kpi-crystal-card kpi-crystal-amber group">
-            <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('collectedThisMonth')}</p>
-            <p class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">${stats.total_collected_this_month || 0}<span class="text-xs font-bold text-slate-500 ml-1">${currency}</span></p>
-          </div>
-        `;
+            <!-- Collecté ce mois -->
+            <div class="kpi-crystal-card kpi-crystal-amber group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('collectedThisMonth')}</p>
+              <p class="text-2xl sm:text-3xl font-black text-slate-900 tabular-nums">${stats.total_collected_this_month || 0}<span class="text-xs font-bold text-slate-500 ml-1">${currency}</span></p>
+            </div>
+          `;
+        } else {
+          kpiGrid.className = "grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4";
+          kpiGrid.innerHTML = `
+            <!-- Total Élèves -->
+            <div class="kpi-crystal-card kpi-crystal-blue group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalStudents')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_students || 0}</p>
+            </div>
+
+            <!-- Total Groupes -->
+            <div class="kpi-crystal-card kpi-crystal-slate group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('totalGroups')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.total_groups || 0}</p>
+            </div>
+
+            <!-- Présences Aujourd'hui -->
+            <div class="kpi-crystal-card kpi-crystal-green group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('presentToday')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-emerald-600 tabular-nums">${stats.students_present_today || 0}</p>
+            </div>
+
+            <!-- Séances Aujourd'hui -->
+            <div class="kpi-crystal-card kpi-crystal-slate group">
+              <p class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1.5">${I18n.t('sessionsToday')}</p>
+              <p class="text-3xl sm:text-4xl font-black text-slate-900 tabular-nums">${stats.sessions_today || 0}</p>
+            </div>
+          `;
+        }
       }
 
       // 2. Pending Payments Alert Sub-Banner (Matching Reference Image)
       const pendingAlert = container.querySelector('#dash-pending-payments-alert');
       if (pendingAlert) {
-        if (stats.pending_payments_count > 0) {
+        if (State.isAdmin() && stats.pending_payments_count > 0) {
           const currentMonth = new Date().toLocaleDateString(isAr ? 'ar-TN' : 'fr-FR', { month: 'long', year: 'numeric' });
           pendingAlert.classList.remove('hidden');
           pendingAlert.innerHTML = `

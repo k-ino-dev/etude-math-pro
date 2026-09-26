@@ -58,8 +58,16 @@ def run_migrations():
             # 1. users table
             cur.execute("PRAGMA table_info(users)")
             cols = [r[1] for r in cur.fetchall()]
-            if cols and "avatar" not in cols:
-                cur.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+            if cols:
+                if "avatar" not in cols:
+                    cur.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+                if "role" not in cols:
+                    cur.execute("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'ADMIN'")
+                    cur.execute("UPDATE users SET role = 'ADMIN' WHERE role IS NULL")
+                if "admin_id" not in cols:
+                    cur.execute("ALTER TABLE users ADD COLUMN admin_id INTEGER DEFAULT NULL")
+                if "is_active" not in cols:
+                    cur.execute("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1")
                 conn.commit()
 
             # Tables requiring user_id

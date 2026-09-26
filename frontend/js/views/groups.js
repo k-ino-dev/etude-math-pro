@@ -27,10 +27,12 @@ const GroupsView = {
               <span>${I18n.t('navRepartition')}</span>
             </a>
 
+            ${State.isAdmin() ? `
             <button onclick="GroupsView.openModal()" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white text-xs sm:text-sm font-bold rounded-xl shadow-sm shadow-brand-600/30 transition-all flex items-center gap-2">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>+ ${I18n.t('add_group')}</span>
             </button>
+            ` : ''}
           </div>
         </div>
 
@@ -164,6 +166,7 @@ const GroupsView = {
                 <span>${isAr ? 'عرض التلاميذ' : 'Voir les élèves'}</span>
               </a>
 
+              ${State.isAdmin() ? `
               <div class="flex items-center gap-1">
                 <button onclick="GroupsView.openModal(${g.id})" class="p-1.5 text-slate-400 hover:text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
                   <i data-lucide="edit-3" class="w-4 h-4"></i>
@@ -172,6 +175,7 @@ const GroupsView = {
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
               </div>
+              ` : ''}
             </div>
 
           </div>

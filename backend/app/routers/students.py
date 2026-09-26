@@ -9,7 +9,7 @@ from ..schemas import (
     StudentCreate, StudentUpdate, StudentOut, StudentDetailOut,
     StudentNoteCreate, StudentNoteOut, PaymentOut, GroupOut
 )
-from .auth import get_current_user
+from .auth import get_current_user, get_tenant_admin_id, log_audit
 
 router = APIRouter(prefix="/api/students", tags=["students"])
 
@@ -116,7 +116,8 @@ def list_students(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Student).filter(Student.user_id == current_user.id, Student.is_active == True)
+    tenant_id = get_tenant_admin_id(current_user)
+    query = db.query(Student).filter(Student.user_id == tenant_id, Student.is_active == True)
     
     if level and level != "all":
         query = query.filter(Student.level == level)
@@ -139,7 +140,7 @@ def list_students(
         )
     
     students = query.order_by(Student.last_name.asc(), Student.first_name.asc()).all()
-    active_m = get_active_month(db, user_id=current_user.id)
+    active_m = get_active_month(db, user_id=tenant_id)
     results = [build_student_out(s, db, active_month=active_m) for s in students]
     
     if payment_status and payment_status != "all":
@@ -154,27 +155,28 @@ def create_student(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(current_user)
     # Auto-generate student code if not provided
     student_code = data.student_code
     if not student_code:
         current_year = datetime.date.today().year
-        count = db.query(Student).filter(Student.user_id == current_user.id).count() + 1
-        if current_user.id == 1:
+        count = db.query(Student).filter(Student.user_id == tenant_id).count() + 1
+        if tenant_id == 1:
             student_code = f"{current_year}-{count:03d}"
         else:
-            student_code = f"{current_year}-T{current_user.id}-{count:03d}"
+            student_code = f"{current_year}-T{tenant_id}-{count:03d}"
         
         # ensure globally unique across database
         while db.query(Student).filter(Student.student_code == student_code).first():
             count += 1
-            if current_user.id == 1:
+            if tenant_id == 1:
                 student_code = f"{current_year}-{count:03d}"
             else:
-                student_code = f"{current_year}-T{current_user.id}-{count:03d}"
+                student_code = f"{current_year}-T{tenant_id}-{count:03d}"
             
     # Check group capacity and ownership
     if data.group_id:
-        group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
+        group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
         if not group:
             raise HTTPException(status_code=404, detail="Groupe non trouvé")
         current_count = db.query(Student).filter(Student.group_id == group.id, Student.is_active == True).count()
@@ -185,7 +187,7 @@ def create_student(
             )
 
     student = Student(
-        user_id=current_user.id,
+        user_id=tenant_id,
         student_code=student_code,
         first_name=data.first_name.strip(),
         last_name=data.last_name.strip(),
@@ -203,6 +205,21 @@ def create_student(
     db.commit()
     db.refresh(student)
     
+    log_audit(
+        db=db,
+        user=current_user,
+        action="STUDENT_CREATED",
+        entity_type="Student",
+        entity_id=student.id,
+        new_values={
+            "student_code": student.student_code,
+            "name": f"{student.first_name} {student.last_name}",
+            "level": student.level,
+            "group_id": student.group_id,
+            "monthly_price": student.monthly_price
+        }
+    )
+    
     return build_student_out(student, db)
 
 @router.get("/{student_id}", response_model=StudentDetailOut)
@@ -211,7 +228,8 @@ def get_student_detail(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    student = db.query(Student).filter(Student.id == student_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    student = db.query(Student).filter(Student.id == student_id, Student.user_id == tenant_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Élève non trouvé")
         
@@ -294,13 +312,22 @@ def update_student(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    student = db.query(Student).filter(Student.id == student_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    student = db.query(Student).filter(Student.id == student_id, Student.user_id == tenant_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Élève non trouvé")
         
+    old_vals = {
+        "name": f"{student.first_name} {student.last_name}",
+        "level": student.level,
+        "group_id": student.group_id,
+        "monthly_price": student.monthly_price,
+        "is_active": student.is_active
+    }
+        
     if data.group_id is not None and data.group_id != student.group_id:
         if data.group_id > 0:
-            group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
+            group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
             if not group:
                 raise HTTPException(status_code=404, detail="Groupe non trouvé")
             curr_count = db.query(Student).filter(Student.group_id == group.id, Student.is_active == True).count()
@@ -336,6 +363,23 @@ def update_student(
         
     db.commit()
     db.refresh(student)
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="STUDENT_UPDATED",
+        entity_type="Student",
+        entity_id=student.id,
+        old_values=old_vals,
+        new_values={
+            "name": f"{student.first_name} {student.last_name}",
+            "level": student.level,
+            "group_id": student.group_id,
+            "monthly_price": student.monthly_price,
+            "is_active": student.is_active
+        }
+    )
+    
     return build_student_out(student, db)
 
 @router.delete("/{student_id}")
@@ -344,11 +388,29 @@ def delete_student(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    student = db.query(Student).filter(Student.id == student_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    student = db.query(Student).filter(Student.id == student_id, Student.user_id == tenant_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Élève non trouvé")
+        
+    old_vals = {
+        "student_code": student.student_code,
+        "name": f"{student.first_name} {student.last_name}",
+        "level": student.level
+    }
+    
     db.delete(student)
     db.commit()
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="STUDENT_DELETED",
+        entity_type="Student",
+        entity_id=student_id,
+        old_values=old_vals
+    )
+    
     return {"success": True, "message": "Élève supprimé avec succès"}
 
 @router.post("/{student_id}/notes", response_model=StudentNoteOut)
@@ -358,7 +420,8 @@ def add_student_note(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    student = db.query(Student).filter(Student.id == student_id, Student.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    student = db.query(Student).filter(Student.id == student_id, Student.user_id == tenant_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Élève non trouvé")
         
@@ -374,13 +437,15 @@ def delete_student_note(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(current_user)
     note = db.query(StudentNote).join(Student).filter(
         StudentNote.id == note_id,
-        Student.user_id == current_user.id
+        Student.user_id == tenant_id
     ).first()
     if not note:
         raise HTTPException(status_code=404, detail="Note non trouvée")
     db.delete(note)
     db.commit()
     return {"success": True, "message": "Note supprimée"}
+
 

@@ -5,7 +5,7 @@ import datetime
 from ..database import get_db
 from ..models import Session as DBSession, Group, Student, Attendance, User
 from ..schemas import SessionCreate, SessionUpdate, SessionOut
-from .auth import get_current_user
+from .auth import get_current_user, require_admin, get_tenant_admin_id, log_audit
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -111,7 +111,8 @@ def get_timetable_summary(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    groups = db.query(Group).filter(Group.user_id == current_user.id).order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
+    tenant_id = get_tenant_admin_id(current_user)
+    groups = db.query(Group).filter(Group.user_id == tenant_id).order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
     day_names_fr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
     day_names_ar = ["الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
     
@@ -187,22 +188,24 @@ def get_timetable_summary(
 @router.post("/set-group-recurring")
 def set_group_recurring_schedule(
     data: dict,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(admin_user)
     group_id = data.get("group_id")
     day_of_week = data.get("day_of_week")
     start_time = data.get("start_time")
     end_time = data.get("end_time")
     location = data.get("location", "Salle 1")
     
-    group = db.query(Group).filter(Group.id == group_id, Group.user_id == current_user.id).first()
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
         
     day_names = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
     day_name = day_names[day_of_week] if 0 <= int(day_of_week) < 7 else "Jour"
     
+    old_sched = group.schedule
     group.day_of_week = int(day_of_week)
     group.start_time = start_time
     group.end_time = end_time
@@ -211,6 +214,17 @@ def set_group_recurring_schedule(
     
     db.commit()
     db.refresh(group)
+
+    log_audit(
+        db=db,
+        user=admin_user,
+        action="SCHEDULE_UPDATED",
+        entity_type="schedule",
+        entity_id=group.id,
+        old_value={"schedule": old_sched},
+        new_value={"schedule": group.schedule, "day_of_week": group.day_of_week, "start_time": group.start_time, "end_time": group.end_time}
+    )
+
     return {
         "success": True,
         "message": f"Horaire fixe récurrent mis à jour : {group.schedule}",
@@ -233,6 +247,7 @@ def list_sessions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    tenant_id = get_tenant_admin_id(current_user)
     today = datetime.date.today()
     if start_date:
         d_start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
@@ -248,7 +263,7 @@ def list_sessions(
 
     # 1. Fetch real DBSession records in range
     db_query = db.query(DBSession).join(Group).filter(
-        Group.user_id == current_user.id,
+        Group.user_id == tenant_id,
         DBSession.date >= d_start,
         DBSession.date <= d_end
     )
@@ -260,7 +275,7 @@ def list_sessions(
 
     # 2. Fetch recurring groups
     grp_query = db.query(Group).filter(
-        Group.user_id == current_user.id,
+        Group.user_id == tenant_id,
         Group.day_of_week.isnot(None),
         Group.start_time.isnot(None),
         Group.end_time.isnot(None)
@@ -287,15 +302,15 @@ def list_sessions(
                     is_cancelled = (s.status == "cancelled")
                     is_loc_changed = (s.location != grp.location)
                     is_exception = is_time_changed or is_cancelled or bool(s.topic) or is_loc_changed
-                    result_sessions.append(build_session_out(s, db, user_id=current_user.id, is_recurring=True, is_exception=is_exception))
+                    result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=True, is_exception=is_exception))
                 else:
-                    result_sessions.append(synthesize_virtual_session(grp, cur_d, db, user_id=current_user.id))
+                    result_sessions.append(synthesize_virtual_session(grp, cur_d, db, user_id=tenant_id))
             cur_d += datetime.timedelta(days=1)
 
     # 4. Add standalone/non-recurring DBSessions
     for (gid, d), s in db_sessions_map.items():
         if (gid, d) not in processed_keys:
-            result_sessions.append(build_session_out(s, db, user_id=current_user.id, is_recurring=False, is_exception=True))
+            result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=False, is_exception=True))
 
     result_sessions.sort(key=lambda x: (x["date"], x["start_time"]))
     return result_sessions
@@ -303,15 +318,16 @@ def list_sessions(
 @router.post("/resolve", response_model=SessionOut)
 def resolve_or_create_session(
     data: SessionCreate,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
     """
     Given a group_id and date, either returns the existing DBSession (updating it)
     or creates/materializes it into a permanent DBSession with exception support.
-    If is_permanent_move is True, also updates the group's default recurring day and time!
+    (ADMIN ONLY)
     """
-    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(admin_user)
+    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
         
@@ -342,10 +358,20 @@ def resolve_or_create_session(
         if data.status is not None: existing.status = data.status
         db.commit()
         db.refresh(existing)
-        return build_session_out(existing, db, user_id=current_user.id, is_recurring=True, is_exception=not data.is_permanent_move)
+
+        log_audit(
+            db=db,
+            user=admin_user,
+            action="SCHEDULE_UPDATED",
+            entity_type="session",
+            entity_id=existing.id,
+            new_value={"group_id": existing.group_id, "date": str(existing.date), "start_time": existing.start_time, "end_time": existing.end_time}
+        )
+
+        return build_session_out(existing, db, user_id=tenant_id, is_recurring=True, is_exception=not data.is_permanent_move)
     else:
         new_sess = DBSession(
-            user_id=current_user.id,
+            user_id=tenant_id,
             group_id=data.group_id,
             date=data.date,
             start_time=data.start_time or group.start_time or "17:00",
@@ -358,32 +384,57 @@ def resolve_or_create_session(
         db.add(new_sess)
         db.commit()
         db.refresh(new_sess)
-        return build_session_out(new_sess, db, user_id=current_user.id, is_recurring=True, is_exception=not data.is_permanent_move)
+
+        log_audit(
+            db=db,
+            user=admin_user,
+            action="SCHEDULE_CREATED",
+            entity_type="session",
+            entity_id=new_sess.id,
+            new_value={"group_id": new_sess.group_id, "date": str(new_sess.date), "start_time": new_sess.start_time, "end_time": new_sess.end_time}
+        )
+
+        return build_session_out(new_sess, db, user_id=tenant_id, is_recurring=True, is_exception=not data.is_permanent_move)
 
 @router.post("/revert-to-recurring")
 def revert_to_recurring(
     group_id: int,
     date: datetime.date,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
+    """Revert a single session exception to the group's recurring schedule (ADMIN ONLY)."""
+    tenant_id = get_tenant_admin_id(admin_user)
     session = db.query(DBSession).join(Group).filter(
         DBSession.group_id == group_id,
         DBSession.date == date,
-        Group.user_id == current_user.id
+        Group.user_id == tenant_id
     ).first()
     if session:
+        s_id = session.id
         db.delete(session)
         db.commit()
+
+        log_audit(
+            db=db,
+            user=admin_user,
+            action="SCHEDULE_DELETED",
+            entity_type="session_exception",
+            entity_id=s_id,
+            old_value={"group_id": group_id, "date": str(date)}
+        )
+
     return {"success": True, "message": "Horaire rétabli à l'horaire habituel du groupe."}
 
 @router.post("", response_model=SessionOut)
 def create_session(
     data: SessionCreate,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
+    """Create a new session (ADMIN ONLY)."""
+    tenant_id = get_tenant_admin_id(admin_user)
+    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
         
@@ -394,7 +445,7 @@ def create_session(
         start_time=data.start_time,
         end_time=data.end_time
     )
-    has_conflict, conflict_details = detect_conflicts(temp_session, db, user_id=current_user.id)
+    has_conflict, conflict_details = detect_conflicts(temp_session, db, user_id=tenant_id)
     
     if has_conflict and not data.force:
         raise HTTPException(
@@ -420,10 +471,20 @@ def create_session(
         existing.status = data.status
         db.commit()
         db.refresh(existing)
-        return build_session_out(existing, db, user_id=current_user.id, is_recurring=True, is_exception=True)
+
+        log_audit(
+            db=db,
+            user=admin_user,
+            action="SCHEDULE_UPDATED",
+            entity_type="session",
+            entity_id=existing.id,
+            new_value={"group_id": existing.group_id, "date": str(existing.date), "start_time": existing.start_time, "end_time": existing.end_time}
+        )
+
+        return build_session_out(existing, db, user_id=tenant_id, is_recurring=True, is_exception=True)
         
     session = DBSession(
-        user_id=current_user.id,
+        user_id=tenant_id,
         group_id=data.group_id,
         date=data.date,
         start_time=data.start_time,
@@ -436,7 +497,17 @@ def create_session(
     db.add(session)
     db.commit()
     db.refresh(session)
-    return build_session_out(session, db, user_id=current_user.id, is_recurring=True, is_exception=True)
+
+    log_audit(
+        db=db,
+        user=admin_user,
+        action="SCHEDULE_CREATED",
+        entity_type="session",
+        entity_id=session.id,
+        new_value={"group_id": session.group_id, "date": str(session.date), "start_time": session.start_time, "end_time": session.end_time}
+    )
+
+    return build_session_out(session, db, user_id=tenant_id, is_recurring=True, is_exception=True)
 
 @router.get("/{session_id}", response_model=SessionOut)
 def get_session(
@@ -444,25 +515,30 @@ def get_session(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    s = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    s = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
     if not s:
         raise HTTPException(status_code=404, detail="Séance non trouvée")
-    return build_session_out(s, db, user_id=current_user.id)
+    return build_session_out(s, db, user_id=tenant_id)
 
 @router.put("/{session_id}", response_model=SessionOut)
 def update_session(
     session_id: int,
     data: SessionUpdate,
     force: bool = False,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == current_user.id).first()
+    """Update a session (ADMIN ONLY)."""
+    tenant_id = get_tenant_admin_id(admin_user)
+    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Séance non trouvée")
         
+    old_val = {"start_time": session.start_time, "end_time": session.end_time, "date": str(session.date)}
+
     if data.group_id is not None:
-        target_grp = db.query(Group).filter(Group.id == data.group_id, Group.user_id == current_user.id).first()
+        target_grp = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
         if not target_grp:
             raise HTTPException(status_code=404, detail="Groupe non trouvé")
         session.group_id = data.group_id
@@ -482,7 +558,7 @@ def update_session(
         session.status = data.status
         
     # Check conflicts
-    has_conflict, conflict_details = detect_conflicts(session, db, user_id=current_user.id)
+    has_conflict, conflict_details = detect_conflicts(session, db, user_id=tenant_id)
     if has_conflict and not force:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -494,18 +570,44 @@ def update_session(
         
     db.commit()
     db.refresh(session)
-    return build_session_out(session, db, user_id=current_user.id, is_recurring=True, is_exception=True)
+
+    log_audit(
+        db=db,
+        user=admin_user,
+        action="SCHEDULE_UPDATED",
+        entity_type="session",
+        entity_id=session.id,
+        old_value=old_val,
+        new_value={"start_time": session.start_time, "end_time": session.end_time, "date": str(session.date)}
+    )
+
+    return build_session_out(session, db, user_id=tenant_id, is_recurring=True, is_exception=True)
 
 @router.delete("/{session_id}")
 def delete_session(
     session_id: int,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == current_user.id).first()
+    """Delete a session (ADMIN ONLY)."""
+    tenant_id = get_tenant_admin_id(admin_user)
+    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Séance non trouvée")
+        
+    s_info = {"group_id": session.group_id, "date": str(session.date), "start_time": session.start_time}
     db.delete(session)
     db.commit()
+
+    log_audit(
+        db=db,
+        user=admin_user,
+        action="SCHEDULE_DELETED",
+        entity_type="session",
+        entity_id=session_id,
+        old_value=s_info
+    )
+
     return {"success": True, "message": "Séance supprimée / Exception retirée. L'horaire fixe du groupe s'applique à nouveau."}
+
 

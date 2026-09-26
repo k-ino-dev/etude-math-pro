@@ -1,13 +1,19 @@
 // Settings View — Commercial SaaS Edition (Étude Math Pro)
 const SettingsView = {
   activeAvatar: null,
-  activeTab: 'profile', // 'profile', 'display', 'backup'
+  activeTab: 'profile', // 'profile', 'display', 'staff', 'expenses', 'audit', 'backup'
 
   async render(container) {
     const isAr = I18n.currentLang === 'ar';
+    const isAdmin = State.isAdmin();
+
+    // If activeTab is admin-only and current user is staff, reset to profile
+    if (!isAdmin && ['staff', 'expenses', 'audit', 'backup'].includes(this.activeTab)) {
+      this.activeTab = 'profile';
+    }
 
     container.innerHTML = `
-      <div class="space-y-8 animate-fade-in max-w-4xl mx-auto pb-12">
+      <div class="space-y-8 animate-fade-in max-w-5xl mx-auto pb-12">
         
         <!-- Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -19,24 +25,38 @@ const SettingsView = {
               <span>${I18n.t('accountSettings')}</span>
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
-              ${isAr ? 'تخصيص الملف الشخصي للأستاذ، إعدادات العرض واللغة، والنسخ الاحتياطي.' : 'Personnalisez votre profil enseignant, configurez la langue et gérez vos sauvegardes sécurisées.'}
+              ${isAr ? 'تخصيص الملف الشخصي، إعدادات العرض، إدارة الفريق والمالية والأمان.' : 'Personnalisez votre profil, configurez la langue et gérez votre équipe, vos dépenses et la sécurité.'}
             </p>
           </div>
 
           <!-- Tab Navigation Pill -->
-          <div class="flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0">
-            <button type="button" id="tab-btn-profile" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'profile' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
+          <div class="flex items-center p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 shrink-0 overflow-x-auto max-w-full">
+            <button type="button" id="tab-btn-profile" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'profile' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
               <i data-lucide="user" class="w-3.5 h-3.5"></i>
               <span>${I18n.t('profile')}</span>
             </button>
-            <button type="button" id="tab-btn-display" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'display' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
+            <button type="button" id="tab-btn-display" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'display' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
               <i data-lucide="globe" class="w-3.5 h-3.5"></i>
-              <span>${isAr ? 'اللغة والعرض' : 'Langue & Affichage'}</span>
+              <span>${isAr ? 'اللغة والعرض' : 'Langue'}</span>
             </button>
-            <button type="button" id="tab-btn-backup" class="settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'backup' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2">
-              <i data-lucide="database" class="w-3.5 h-3.5"></i>
-              <span>${isAr ? 'النسخ الاحتياطي' : 'Sauvegardes'}</span>
-            </button>
+            ${isAdmin ? `
+              <button type="button" id="tab-btn-staff" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'staff' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
+                <i data-lucide="users" class="w-3.5 h-3.5"></i>
+                <span>${isAr ? 'حسابات الفريق' : 'Staff'}</span>
+              </button>
+              <button type="button" id="tab-btn-expenses" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'expenses' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
+                <i data-lucide="receipt" class="w-3.5 h-3.5"></i>
+                <span>${isAr ? 'المصاريف' : 'Dépenses'}</span>
+              </button>
+              <button type="button" id="tab-btn-audit" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'audit' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
+                <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+                <span>${isAr ? 'سجل العمليات' : 'Journal d\'audit'}</span>
+              </button>
+              <button type="button" id="tab-btn-backup" class="settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${this.activeTab === 'backup' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap">
+                <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                <span>${isAr ? 'النسخ الاحتياطي' : 'Sauvegardes'}</span>
+              </button>
+            ` : ''}
           </div>
         </div>
 
@@ -241,68 +261,170 @@ const SettingsView = {
           </div>
         </div>
 
-        <!-- TAB 3: Data Management & Backups -->
-        <div id="tab-content-backup" class="space-y-6 ${this.activeTab === 'backup' ? '' : 'hidden'}">
-          <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
-            
-            <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
-              <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
-                <i data-lucide="database" class="w-4 h-4"></i>
-              </div>
-              <div>
-                <h2 class="text-base font-bold text-slate-900">${isAr ? 'النسخ الاحتياطي وإدارة البيانات' : 'Sauvegarde, Restauration & Données'}</h2>
-                <p class="text-xs text-slate-500">${isAr ? 'تصدير كامل بياناتك في ملف آمن أو تفريغ القاعدة لبدء العمل من الصفر.' : 'Sécurisez vos élèves et plannings, restaurez une sauvegarde ou préparez une base propre.'}</p>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        ${isAdmin ? `
+          <!-- TAB 3: Staff Accounts -->
+          <div id="tab-content-staff" class="space-y-6 ${this.activeTab === 'staff' ? '' : 'hidden'}">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
               
-              <!-- Export JSON Card -->
-              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                    <i data-lucide="download-cloud" class="w-4 h-4 text-brand-600"></i>
-                    <span>${isAr ? 'تصدير نسخة احتياطية (JSON)' : 'Sauvegarde Complète (JSON)'}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    <i data-lucide="users" class="w-4 h-4"></i>
                   </div>
-                  <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'تنزيل جميع التلاميذ، الأفواج، الحصص والمدفوعات في ملف واحد.' : 'Téléchargez l\'intégralité de vos élèves, groupes, séances et paiements en un fichier sécurisé.'}</p>
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900">${isAr ? 'إدارة حسابات الفريق (Staff)' : 'Gestion des Comptes Staff'}</h2>
+                    <p class="text-xs text-slate-500">${isAr ? 'إنشاء وإدارة حسابات المساعدين بصلاحيات مقيدة (تسجيل التلاميذ، الحضور، المدفوعات دون الاطلاع على الأرباح أو تعديل التوقيت).' : 'Gérez les accès de vos assistants opérationnels (élèves, appels, paiements sans accès aux chiffres globaux).'}</p>
+                  </div>
                 </div>
-                <button id="export-json-btn" class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="download" class="w-3.5 h-3.5 text-brand-600"></i> ${isAr ? 'تنزيل النسخة' : 'Télécharger ma sauvegarde'}
+                <button id="add-staff-btn" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto">
+                  <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                  <span>${isAr ? '+ إضافة عضو Staff' : '+ Nouveau Compte Staff'}</span>
                 </button>
               </div>
 
-              <!-- Import JSON Card -->
-              <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
-                    <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-600"></i>
-                    <span>${isAr ? 'استرجاع نسخة احتياطية' : 'Restaurer une Sauvegarde'}</span>
-                  </div>
-                  <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'استيراد ملف JSON تم حفظه مسبقاً لاستعادة البيانات.' : 'Importez un fichier JSON préalablement sauvegardé pour restaurer vos données.'}</p>
-                </div>
-                <label class="cursor-pointer w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="folder-open" class="w-3.5 h-3.5 text-indigo-600"></i> ${isAr ? 'اختيار ملف JSON' : 'Choisir un fichier JSON'}
-                  <input id="import-json-file" type="file" accept=".json" class="hidden">
-                </label>
-              </div>
-
-              <!-- Clean Customer Wipe Card -->
-              <div class="p-5 rounded-2xl bg-rose-50/60 border border-rose-200/70 space-y-3 flex flex-col justify-between">
-                <div>
-                  <div class="flex items-center gap-2 text-rose-950 font-bold text-sm">
-                    <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
-                    <span>${isAr ? 'قاعدة فارغة (0 تلاميذ)' : 'Base Vierge (0 Élèves)'}</span>
-                  </div>
-                  <p class="text-xs text-rose-800 mt-1.5">${isAr ? 'حذف جميع البيانات التجريبية لتسليم قاعدة بيانات نظيفة وجاهزة لأستاذ جديد.' : 'Supprime les données pour laisser une base propre à 0 élèves prête pour votre activité.'}</p>
-                </div>
-                <button id="clean-client-btn" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
-                  <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ${isAr ? 'تفريغ البيانات (0 تلاميذ)' : 'Nettoyer la base (0 élèves)'}
-                </button>
+              <!-- Staff List Table -->
+              <div id="staff-list-container" class="space-y-3">
+                <div class="text-center py-8 text-slate-400 text-xs">${isAr ? 'جاري تحميل قائمة الفريق...' : 'Chargement de l\'équipe...'}</div>
               </div>
 
             </div>
           </div>
-        </div>
+
+          <!-- TAB 4: Expenses & Costs -->
+          <div id="tab-content-expenses" class="space-y-6 ${this.activeTab === 'expenses' ? '' : 'hidden'}">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+              
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold">
+                    <i data-lucide="receipt" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900">${isAr ? 'إدارة المصاريف والنفقات' : 'Gestion des Dépenses & Charges'}</h2>
+                    <p class="text-xs text-slate-500">${isAr ? 'متابعة نفقات الكراء، الطباعة، التجهيزات وحساب صافي الأرباح بدقة.' : 'Suivez vos charges (loyer, matériel, impressions) pour calculer votre bénéfice net réel.'}</p>
+                  </div>
+                </div>
+                <button id="add-expense-btn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 self-start sm:self-auto">
+                  <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                  <span>${isAr ? '+ إضافة نفقة' : '+ Ajouter une Dépense'}</span>
+                </button>
+              </div>
+
+              <!-- Financial Summary Cards -->
+              <div id="expenses-kpis" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-100">
+                  <p class="text-xs font-semibold text-emerald-700">${isAr ? 'إجمالي المداخيل' : 'Revenus Encaissés'}</p>
+                  <p id="kpi-expenses-revenue" class="text-xl font-black text-emerald-900 mt-1">0.000 DT</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-rose-50 border border-rose-100">
+                  <p class="text-xs font-semibold text-rose-700">${isAr ? 'إجمالي المصاريف' : 'Total Dépenses'}</p>
+                  <p id="kpi-expenses-total" class="text-xl font-black text-rose-900 mt-1">0.000 DT</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-brand-50 border border-brand-100">
+                  <p class="text-xs font-semibold text-brand-700">${isAr ? 'صافي الأرباح' : 'Bénéfice Net'}</p>
+                  <p id="kpi-expenses-profit" class="text-xl font-black text-brand-900 mt-1">0.000 DT</p>
+                </div>
+              </div>
+
+              <!-- Expenses List Table -->
+              <div id="expenses-list-container" class="space-y-3">
+                <div class="text-center py-8 text-slate-400 text-xs">${isAr ? 'جاري تحميل المصاريف...' : 'Chargement des dépenses...'}</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 5: Audit Log -->
+          <div id="tab-content-audit" class="space-y-6 ${this.activeTab === 'audit' ? '' : 'hidden'}">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+              
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
+                    <i data-lucide="shield-check" class="w-4 h-4"></i>
+                  </div>
+                  <div>
+                    <h2 class="text-base font-bold text-slate-900">${isAr ? 'سجل العمليات والأمان' : 'Journal d\'Audit & Sécurité'}</h2>
+                    <p class="text-xs text-slate-500">${isAr ? 'تتبع فوري ومفصل لجميع العمليات المنجزة من قبل المدير والمساعدين (تعديل، إضافة، حذف).' : 'Historique immuable de toutes les actions réalisées sur l\'application.'}</p>
+                  </div>
+                </div>
+                <button id="refresh-audit-btn" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5">
+                  <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                  <span>${isAr ? 'تحديث' : 'Actualiser'}</span>
+                </button>
+              </div>
+
+              <!-- Audit Logs Table -->
+              <div id="audit-list-container" class="space-y-3">
+                <div class="text-center py-8 text-slate-400 text-xs">${isAr ? 'جاري تحميل سجل العمليات...' : 'Chargement du journal d\'audit...'}</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- TAB 6: Data Management & Backups -->
+          <div id="tab-content-backup" class="space-y-6 ${this.activeTab === 'backup' ? '' : 'hidden'}">
+            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/80 shadow-sm space-y-6">
+              
+              <div class="flex items-center gap-3 pb-4 border-b border-slate-100">
+                <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+                  <i data-lucide="database" class="w-4 h-4"></i>
+                </div>
+                <div>
+                  <h2 class="text-base font-bold text-slate-900">${isAr ? 'النسخ الاحتياطي وإدارة البيانات' : 'Sauvegarde, Restauration & Données'}</h2>
+                  <p class="text-xs text-slate-500">${isAr ? 'تصدير كامل بياناتك في ملف آمن أو تفريغ القاعدة لبدء العمل من الصفر.' : 'Sécurisez vos élèves et plannings, restaurez une sauvegarde ou préparez une base propre.'}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                
+                <!-- Export JSON Card -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                      <i data-lucide="download-cloud" class="w-4 h-4 text-brand-600"></i>
+                      <span>${isAr ? 'تصدير نسخة احتياطية (JSON)' : 'Sauvegarde Complète (JSON)'}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'تنزيل جميع التلاميذ، الأفواج، الحصص والمدفوعات في ملف واحد.' : 'Téléchargez l\'intégralité de vos élèves, groupes, séances et paiements en un fichier sécurisé.'}</p>
+                  </div>
+                  <button id="export-json-btn" class="w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-brand-600"></i> ${isAr ? 'تنزيل النسخة' : 'Télécharger ma sauvegarde'}
+                  </button>
+                </div>
+
+                <!-- Import JSON Card -->
+                <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center gap-2 text-slate-800 font-bold text-sm">
+                      <i data-lucide="upload-cloud" class="w-4 h-4 text-indigo-600"></i>
+                      <span>${isAr ? 'استرجاع نسخة احتياطية' : 'Restaurer une Sauvegarde'}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1.5">${isAr ? 'استيراد ملف JSON تم حفظه مسبقاً لاستعادة البيانات.' : 'Importez un fichier JSON préalablement sauvegardé pour restaurer vos données.'}</p>
+                  </div>
+                  <label class="cursor-pointer w-full py-2.5 px-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="folder-open" class="w-3.5 h-3.5 text-indigo-600"></i> ${isAr ? 'اختيار ملف JSON' : 'Choisir un fichier JSON'}
+                    <input id="import-json-file" type="file" accept=".json" class="hidden">
+                  </label>
+                </div>
+
+                <!-- Clean Customer Wipe Card -->
+                <div class="p-5 rounded-2xl bg-rose-50/60 border border-rose-200/70 space-y-3 flex flex-col justify-between">
+                  <div>
+                    <div class="flex items-center gap-2 text-rose-950 font-bold text-sm">
+                      <i data-lucide="trash-2" class="w-4 h-4 text-rose-600"></i>
+                      <span>${isAr ? 'قاعدة فارغة (0 تلاميذ)' : 'Base Vierge (0 Élèves)'}</span>
+                    </div>
+                    <p class="text-xs text-rose-800 mt-1.5">${isAr ? 'حذف جميع البيانات التجريبية لتسليم قاعدة بيانات نظيفة وجاهزة لأستاذ جديد.' : 'Supprime les données pour laisser une base propre à 0 élèves prête pour votre activité.'}</p>
+                  </div>
+                  <button id="clean-client-btn" class="w-full py-2.5 px-4 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> ${isAr ? 'تفريغ البيانات (0 تلاميذ)' : 'Nettoyer la base (0 élèves)'}
+                  </button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        ` : ''}
 
       </div>
     `;
@@ -311,11 +433,19 @@ const SettingsView = {
 
     this.bindTabs(container);
     await this.loadProfile(container);
-    this.bindBackupActions(container);
+
+    if (isAdmin) {
+      this.bindStaffSection(container);
+      this.bindExpensesSection(container);
+      this.bindAuditSection(container);
+      this.bindBackupActions(container);
+    }
   },
 
   bindTabs(container) {
-    const tabs = ['profile', 'display', 'backup'];
+    const isAdmin = State.isAdmin();
+    const tabs = isAdmin ? ['profile', 'display', 'staff', 'expenses', 'audit', 'backup'] : ['profile', 'display'];
+    
     tabs.forEach(tab => {
       const btn = container.querySelector(`#tab-btn-${tab}`);
       if (btn) {
@@ -325,16 +455,26 @@ const SettingsView = {
             const b = container.querySelector(`#tab-btn-${t}`);
             const content = container.querySelector(`#tab-content-${t}`);
             if (b) {
-              b.className = `settings-tab-btn px-4 py-2 text-xs font-bold rounded-xl transition-all ${t === tab ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-2`;
+              b.className = `settings-tab-btn px-3.5 py-2 text-xs font-bold rounded-xl transition-all ${t === tab ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'} flex items-center gap-1.5 whitespace-nowrap`;
             }
             if (content) {
               content.classList.toggle('hidden', t !== tab);
             }
           });
           if (window.lucide) lucide.createIcons();
+
+          // Lazy load tab data
+          if (tab === 'staff') this.loadStaffList(container);
+          if (tab === 'expenses') this.loadExpenses(container);
+          if (tab === 'audit') this.loadAuditLogs(container);
         });
       }
     });
+
+    // If initial tab is one of the async ones, trigger load
+    if (this.activeTab === 'staff') this.loadStaffList(container);
+    if (this.activeTab === 'expenses') this.loadExpenses(container);
+    if (this.activeTab === 'audit') this.loadAuditLogs(container);
   },
 
   async loadProfile(container) {
@@ -372,7 +512,6 @@ const SettingsView = {
 
     this.updateAvatarPreview(container, user.name);
 
-    // Preset Avatars
     container.querySelectorAll('.avatar-preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const preset = btn.getAttribute('data-preset');
@@ -381,7 +520,6 @@ const SettingsView = {
       });
     });
 
-    // File Upload for Avatar
     const fileInput = container.querySelector('#avatar-file-input');
     if (fileInput) {
       fileInput.addEventListener('change', (e) => {
@@ -401,7 +539,6 @@ const SettingsView = {
       });
     }
 
-    // Reset Avatar
     const resetAvatarBtn = container.querySelector('#avatar-reset-btn');
     if (resetAvatarBtn) {
       resetAvatarBtn.addEventListener('click', () => {
@@ -410,7 +547,6 @@ const SettingsView = {
       });
     }
 
-    // Profile Form Submit
     const form = container.querySelector('#settings-profile-form');
     if (form) {
       form.addEventListener('submit', async (e) => {
@@ -469,6 +605,490 @@ const SettingsView = {
     }
   },
 
+  // -------------------------------------------------------------
+  // STAFF ACCOUNTS SECTION (ADMIN ONLY)
+  // -------------------------------------------------------------
+  bindStaffSection(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const addBtn = container.querySelector('#add-staff-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.openStaffModal(container);
+      });
+    }
+  },
+
+  async loadStaffList(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const wrapper = container.querySelector('#staff-list-container');
+    if (!wrapper) return;
+
+    try {
+      const staffList = await API.get('/api/auth/staff');
+      if (!staffList || staffList.length === 0) {
+        wrapper.innerHTML = `
+          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-500 mx-auto flex items-center justify-center mb-2 font-bold">
+              <i data-lucide="user-plus" class="w-6 h-6"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">${isAr ? 'لا يوجد أعضاء فريق مسجلين بعد' : 'Aucun compte Staff configuré'}</p>
+            <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">${isAr ? 'أضف مساعدين لتسهيل تسجيل الحضور، إضافة التلاميذ وتسجيل الدفعات بأمان.' : 'Créez un compte pour vos assistants pour déléguer les présences, la saisie des élèves et des paiements.'}</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      wrapper.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left rtl:text-right border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                <th class="py-3 px-4">${isAr ? 'المستخدم' : 'Membre Staff'}</th>
+                <th class="py-3 px-4">${isAr ? 'البريد الإلكتروني' : 'Email'}</th>
+                <th class="py-3 px-4">${isAr ? 'الهاتف' : 'Téléphone'}</th>
+                <th class="py-3 px-4">${isAr ? 'الحالة' : 'Statut'}</th>
+                <th class="py-3 px-4 text-right rtl:text-left">${isAr ? 'الإجراءات' : 'Actions'}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              ${staffList.map(s => `
+                <tr class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-3 px-4 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0">
+                      ${s.name ? s.name.charAt(0).toUpperCase() : 'S'}
+                    </div>
+                    <div>
+                      <p class="font-bold text-slate-900">${s.name || 'Staff'}</p>
+                      <span class="inline-block px-1.5 py-0.5 rounded text-[10px] bg-blue-50 text-blue-600 font-semibold uppercase tracking-wider">Staff</span>
+                    </div>
+                  </td>
+                  <td class="py-3 px-4 text-slate-600">${s.email}</td>
+                  <td class="py-3 px-4 text-slate-500">${s.phone || '-'}</td>
+                  <td class="py-3 px-4">
+                    ${s.is_active ? `
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/50">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                        ${isAr ? 'نشط' : 'Actif'}
+                      </span>
+                    ` : `
+                      <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        ${isAr ? 'معطل' : 'Désactivé'}
+                      </span>
+                    `}
+                  </td>
+                  <td class="py-3 px-4 text-right rtl:text-left">
+                    <div class="inline-flex items-center gap-1.5">
+                      <button onclick="SettingsView.openStaffModal(document, ${JSON.stringify(s).replace(/"/g, '&quot;')})" class="p-1.5 hover:bg-slate-200/70 text-slate-600 rounded-lg transition-colors" title="${isAr ? 'تعديل' : 'Modifier'}">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                      </button>
+                      <button onclick="SettingsView.deleteStaffMember(document, ${s.id}, '${s.name || s.email}')" class="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors" title="${isAr ? 'حذف' : 'Supprimer'}">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">${e.message || 'Erreur chargement staff'}</div>`;
+    }
+  },
+
+  openStaffModal(container, staff = null) {
+    const isAr = I18n.currentLang === 'ar';
+    const isEdit = !!staff;
+
+    Modal.open({
+      title: isEdit ? (isAr ? 'تعديل حساب مساعد (Staff)' : 'Modifier le compte Staff') : (isAr ? 'إضافة حساب مساعد جديد (Staff)' : 'Nouveau Compte Staff'),
+      html: `
+        <form id="staff-modal-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'الاسم الكامل *' : 'Nom complet *'}</label>
+            <input id="staff-form-name" type="text" required value="${staff ? staff.name || '' : ''}" placeholder="Ex: Ahmed Ayari" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 font-semibold">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'البريد الإلكتروني لتسجيل الدخول *' : 'Email de connexion *'}</label>
+            <input id="staff-form-email" type="email" required value="${staff ? staff.email || '' : ''}" placeholder="staff@mathprof.tn" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'رقم الهاتف' : 'Téléphone'}</label>
+            <input id="staff-form-phone" type="text" value="${staff ? staff.phone || '' : ''}" placeholder="+216 ..." class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              ${isEdit ? (isAr ? 'كلمة المرور الجديدة (اتركها فارغة إن لم ترغب في التغيير)' : 'Nouveau mot de passe (optionnel)') : (isAr ? 'كلمة المرور *' : 'Mot de passe *')}
+            </label>
+            <input id="staff-form-pwd" type="password" ${isEdit ? '' : 'required'} placeholder="${isEdit ? '••••••••' : 'Minimum 6 caractères'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500">
+          </div>
+
+          ${isEdit ? `
+            <div class="flex items-center gap-3 pt-2">
+              <input type="checkbox" id="staff-form-active" ${staff.is_active ? 'checked' : ''} class="w-4 h-4 rounded text-brand-600 focus:ring-brand-500">
+              <label for="staff-form-active" class="text-xs font-bold text-slate-700">${isAr ? 'الحساب مفعّل ونشط' : 'Compte actif et autorisé à se connecter'}</label>
+            </div>
+          ` : ''}
+
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button type="button" onclick="Modal.close()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+              ${isAr ? 'إلغاء' : 'Annuler'}
+            </button>
+            <button type="submit" class="px-5 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+              ${isAr ? 'حفظ الحساب' : 'Enregistrer'}
+            </button>
+          </div>
+        </form>
+      `,
+      onOpen: (content) => {
+        const form = content.querySelector('#staff-modal-form');
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const name = content.querySelector('#staff-form-name').value.trim();
+          const email = content.querySelector('#staff-form-email').value.trim();
+          const phone = content.querySelector('#staff-form-phone').value.trim() || null;
+          const pwd = content.querySelector('#staff-form-pwd').value.trim();
+
+          try {
+            if (isEdit) {
+              const isActive = content.querySelector('#staff-form-active').checked;
+              const payload = { name, email, phone, is_active: isActive };
+              if (pwd) payload.password = pwd;
+              await API.put(`/api/auth/staff/${staff.id}`, payload);
+              Toast.success(isAr ? 'تم تحديث حساب المساعد بنجاح !' : 'Compte Staff mis à jour !');
+            } else {
+              if (!pwd) {
+                Toast.error(isAr ? 'كلمة المرور إجبارية' : 'Mot de passe requis');
+                return;
+              }
+              await API.post('/api/auth/staff', { name, email, password: pwd, phone });
+              Toast.success(isAr ? 'تم إنشاء حساب المساعد بنجاح !' : 'Compte Staff créé avec succès !');
+            }
+            Modal.close();
+            this.loadStaffList(document);
+          } catch (err) {
+            Toast.error(err.message || 'Erreur');
+          }
+        });
+      }
+    });
+  },
+
+  deleteStaffMember(container, staffId, staffName) {
+    const isAr = I18n.currentLang === 'ar';
+    Modal.confirm({
+      title: isAr ? `حذف حساب ${staffName} ؟` : `Supprimer le compte Staff ${staffName} ?`,
+      message: isAr ? "لن يتمكن هذا العضو من تسجيل الدخول مرة أخرى إلى النظام." : "Ce membre ne pourra plus accéder à la plateforme. Les actions qu'il a effectuées resteront tracées dans le journal d'audit.",
+      confirmText: isAr ? "نعم، حذف" : "Oui, Supprimer",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/api/auth/staff/${staffId}`);
+          Toast.success(isAr ? 'تم حذف حساب المساعد !' : 'Compte Staff supprimé !');
+          this.loadStaffList(document);
+        } catch (e) {
+          Toast.error(e.message || 'Erreur suppression');
+        }
+      }
+    });
+  },
+
+  // -------------------------------------------------------------
+  // EXPENSES SECTION (ADMIN ONLY)
+  // -------------------------------------------------------------
+  bindExpensesSection(container) {
+    const addBtn = container.querySelector('#add-expense-btn');
+    if (addBtn) {
+      addBtn.addEventListener('click', () => {
+        this.openExpenseModal(container);
+      });
+    }
+  },
+
+  async loadExpenses(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const wrapper = container.querySelector('#expenses-list-container');
+    if (!wrapper) return;
+
+    try {
+      const summary = await API.get('/api/expenses/summary');
+      if (summary) {
+        const revEl = container.querySelector('#kpi-expenses-revenue');
+        const expEl = container.querySelector('#kpi-expenses-total');
+        const profEl = container.querySelector('#kpi-expenses-profit');
+
+        if (revEl) revEl.textContent = `${(summary.total_revenue || 0).toFixed(3)} DT`;
+        if (expEl) expEl.textContent = `${(summary.total_expenses || 0).toFixed(3)} DT`;
+        if (profEl) {
+          profEl.textContent = `${(summary.net_profit || 0).toFixed(3)} DT`;
+          profEl.className = `text-xl font-black mt-1 ${summary.net_profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`;
+        }
+      }
+
+      const expenses = await API.get('/api/expenses');
+      if (!expenses || expenses.length === 0) {
+        wrapper.innerHTML = `
+          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <div class="w-12 h-12 rounded-2xl bg-rose-50 text-rose-500 mx-auto flex items-center justify-center mb-2 font-bold">
+              <i data-lucide="receipt" class="w-6 h-6"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد مصاريف مسجلة بعد' : 'Aucune dépense enregistrée'}</p>
+            <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">${isAr ? 'سجل مصاريف الكراء والطباعة والتجهيزات لحساب صافي الأرباح تلقائياً.' : 'Enregistrez vos frais fixes et variables pour suivre votre rentabilité nette.'}</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      wrapper.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left rtl:text-right border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                <th class="py-3 px-4">${isAr ? 'التاريخ' : 'Date'}</th>
+                <th class="py-3 px-4">${isAr ? 'الوصف / العنوان' : 'Titre / Description'}</th>
+                <th class="py-3 px-4">${isAr ? 'الصنف' : 'Catégorie'}</th>
+                <th class="py-3 px-4">${isAr ? 'المبلغ' : 'Montant'}</th>
+                <th class="py-3 px-4 text-right rtl:text-left">${isAr ? 'الإجراءات' : 'Actions'}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              ${expenses.map(exp => `
+                <tr class="hover:bg-slate-50/60 transition-colors">
+                  <td class="py-3 px-4 text-slate-500">${exp.expense_date}</td>
+                  <td class="py-3 px-4">
+                    <p class="font-bold text-slate-900">${exp.title}</p>
+                    ${exp.notes ? `<p class="text-[11px] text-slate-400">${exp.notes}</p>` : ''}
+                  </td>
+                  <td class="py-3 px-4">
+                    <span class="inline-block px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-700">
+                      ${exp.category || 'Autre'}
+                    </span>
+                  </td>
+                  <td class="py-3 px-4 font-black text-rose-600">
+                    -${exp.amount.toFixed(3)} DT
+                  </td>
+                  <td class="py-3 px-4 text-right rtl:text-left">
+                    <div class="inline-flex items-center gap-1.5">
+                      <button onclick="SettingsView.openExpenseModal(document, ${JSON.stringify(exp).replace(/"/g, '&quot;')})" class="p-1.5 hover:bg-slate-200/70 text-slate-600 rounded-lg transition-colors" title="${isAr ? 'تعديل' : 'Modifier'}">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                      </button>
+                      <button onclick="SettingsView.deleteExpense(document, ${exp.id}, '${exp.title.replace(/'/g, "\\'")}')" class="p-1.5 hover:bg-rose-50 text-rose-600 rounded-lg transition-colors" title="${isAr ? 'حذف' : 'Supprimer'}">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">${e.message || 'Erreur'}</div>`;
+    }
+  },
+
+  openExpenseModal(container, expense = null) {
+    const isAr = I18n.currentLang === 'ar';
+    const isEdit = !!expense;
+    const today = new Date().toISOString().split('T')[0];
+
+    Modal.open({
+      title: isEdit ? (isAr ? 'تعديل النفقة' : 'Modifier la Dépense') : (isAr ? 'إضافة نفقة جديدة' : 'Ajouter une Dépense'),
+      html: `
+        <form id="expense-modal-form" class="space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'عنوان / بيان النفقة *' : 'Titre / Motif de la dépense *'}</label>
+            <input id="exp-form-title" type="text" required value="${expense ? expense.title : ''}" placeholder="Ex: Loyer du local, Rames de papier..." class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-semibold">
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'المبلغ (DT) *' : 'Montant (DT) *'}</label>
+              <input id="exp-form-amount" type="number" step="0.5" min="0.1" required value="${expense ? expense.amount : ''}" placeholder="Ex: 50.000" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-rose-600">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'التاريخ *' : 'Date de la dépense *'}</label>
+              <input id="exp-form-date" type="date" required value="${expense ? expense.expense_date : today}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'الصنف' : 'Catégorie'}</label>
+            <select id="exp-form-cat" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-medium">
+              <option value="Loyer" ${expense && expense.category === 'Loyer' ? 'selected' : ''}>Loyer / Local</option>
+              <option value="Matériel" ${expense && expense.category === 'Matériel' ? 'selected' : ''}>Matériel & Fournitures</option>
+              <option value="Impression" ${expense && expense.category === 'Impression' ? 'selected' : ''}>Photocopies & Feuilles</option>
+              <option value="Internet" ${expense && expense.category === 'Internet' ? 'selected' : ''}>Internet & Électricité</option>
+              <option value="Transport" ${expense && expense.category === 'Transport' ? 'selected' : ''}>Transport</option>
+              <option value="Autre" ${!expense || expense.category === 'Autre' ? 'selected' : ''}>Autre charge</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'ملاحظات إضافية' : 'Notes / Remarques'}</label>
+            <textarea id="exp-form-notes" rows="2" placeholder="${isAr ? 'تفاصيل إضافية...' : 'Détails ou référence facture...'}" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500">${expense ? (expense.notes || '') : ''}</textarea>
+          </div>
+
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
+            <button type="button" onclick="Modal.close()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all">
+              ${isAr ? 'إلغاء' : 'Annuler'}
+            </button>
+            <button type="submit" class="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-sm transition-all">
+              ${isAr ? 'حفظ النفقة' : 'Enregistrer la Dépense'}
+            </button>
+          </div>
+        </form>
+      `,
+      onOpen: (content) => {
+        const form = content.querySelector('#expense-modal-form');
+        if (!form) return;
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const title = content.querySelector('#exp-form-title').value.trim();
+          const amount = parseFloat(content.querySelector('#exp-form-amount').value);
+          const expense_date = content.querySelector('#exp-form-date').value;
+          const category = content.querySelector('#exp-form-cat').value;
+          const notes = content.querySelector('#exp-form-notes').value.trim() || null;
+
+          try {
+            const payload = { title, amount, expense_date, category, notes };
+            if (isEdit) {
+              await API.put(`/api/expenses/${expense.id}`, payload);
+              Toast.success(isAr ? 'تم تعديل النفقة !' : 'Dépense mise à jour !');
+            } else {
+              await API.post('/api/expenses', payload);
+              Toast.success(isAr ? 'تم تسجيل النفقة بنجاح !' : 'Dépense enregistrée avec succès !');
+            }
+            Modal.close();
+            this.loadExpenses(document);
+          } catch (err) {
+            Toast.error(err.message || 'Erreur');
+          }
+        });
+      }
+    });
+  },
+
+  deleteExpense(container, expId, expTitle) {
+    const isAr = I18n.currentLang === 'ar';
+    Modal.confirm({
+      title: isAr ? `حذف النفقة "${expTitle}" ؟` : `Supprimer la dépense "${expTitle}" ?`,
+      message: isAr ? "سيتم حذف هذه النفقة وإعادة احتساب صافي الأرباح." : "Cette dépense sera définitivement supprimée du calcul de rentabilité.",
+      confirmText: isAr ? "نعم، حذف" : "Oui, Supprimer",
+      onConfirm: async () => {
+        try {
+          await API.delete(`/api/expenses/${expId}`);
+          Toast.success(isAr ? 'تم حذف النفقة !' : 'Dépense supprimée !');
+          this.loadExpenses(document);
+        } catch (e) {
+          Toast.error(e.message || 'Erreur suppression');
+        }
+      }
+    });
+  },
+
+  // -------------------------------------------------------------
+  // AUDIT LOGS SECTION (ADMIN ONLY)
+  // -------------------------------------------------------------
+  bindAuditSection(container) {
+    const refreshBtn = container.querySelector('#refresh-audit-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        this.loadAuditLogs(container);
+      });
+    }
+  },
+
+  async loadAuditLogs(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const wrapper = container.querySelector('#audit-list-container');
+    if (!wrapper) return;
+
+    try {
+      const logs = await API.get('/api/audit-logs?limit=50');
+      if (!logs || logs.length === 0) {
+        wrapper.innerHTML = `
+          <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+            <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-500 mx-auto flex items-center justify-center mb-2 font-bold">
+              <i data-lucide="shield-check" class="w-6 h-6"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد سجلات بعد' : 'Aucune entrée dans le journal'}</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      wrapper.innerHTML = `
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left rtl:text-right border-collapse">
+            <thead>
+              <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[10px] tracking-wider">
+                <th class="py-3 px-4">${isAr ? 'التاريخ والوقت' : 'Date & Heure'}</th>
+                <th class="py-3 px-4">${isAr ? 'المستخدم' : 'Utilisateur'}</th>
+                <th class="py-3 px-4">${isAr ? 'العملية' : 'Action'}</th>
+                <th class="py-3 px-4">${isAr ? 'العنصر' : 'Cible'}</th>
+                <th class="py-3 px-4">${isAr ? 'التفاصيل' : 'Détails'}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+              ${logs.map(log => {
+                const dateObj = new Date(log.created_at);
+                const formattedDate = dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                
+                let actionBadge = 'bg-slate-100 text-slate-700';
+                if (log.action.includes('CREATE')) actionBadge = 'bg-emerald-50 text-emerald-700 border border-emerald-200/50';
+                if (log.action.includes('UPDATE')) actionBadge = 'bg-blue-50 text-blue-700 border border-blue-200/50';
+                if (log.action.includes('DELETE')) actionBadge = 'bg-rose-50 text-rose-700 border border-rose-200/50';
+                
+                return `
+                  <tr class="hover:bg-slate-50/60 transition-colors">
+                    <td class="py-3 px-4 text-slate-400 whitespace-nowrap">${formattedDate}</td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <p class="font-bold text-slate-900">${log.user_name || 'Système'}</p>
+                      <span class="text-[10px] text-slate-400">${log.user_role || 'ADMIN'}</span>
+                    </td>
+                    <td class="py-3 px-4 whitespace-nowrap">
+                      <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold ${actionBadge}">
+                        ${log.action}
+                      </span>
+                    </td>
+                    <td class="py-3 px-4 text-slate-600 whitespace-nowrap font-medium">
+                      ${log.entity_type} ${log.entity_id ? `#${log.entity_id}` : ''}
+                    </td>
+                    <td class="py-3 px-4 text-slate-500 font-mono text-[11px] max-w-xs truncate" title="${(log.details || '').replace(/"/g, '&quot;')}">
+                      ${log.details || '-'}
+                    </td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      if (window.lucide) lucide.createIcons();
+    } catch (e) {
+      wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-xl text-xs">${e.message || 'Erreur'}</div>`;
+    }
+  },
+
+  // -------------------------------------------------------------
+  // BACKUP ACTIONS SECTION (ADMIN ONLY)
+  // -------------------------------------------------------------
   bindBackupActions(container) {
     const isAr = I18n.currentLang === 'ar';
 
@@ -524,7 +1144,7 @@ const SettingsView = {
       });
     }
 
-    // 3. Clear Customer Data (Base Vierge)
+    // 3. Clean Customer Wipe (0 Élèves)
     const cleanBtn = container.querySelector('#clean-client-btn');
     if (cleanBtn) {
       cleanBtn.addEventListener('click', () => {
@@ -562,3 +1182,4 @@ const SettingsView = {
     }
   }
 };
+

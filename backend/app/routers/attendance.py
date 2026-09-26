@@ -4,7 +4,7 @@ from typing import List, Optional
 from ..database import get_db
 from ..models import Attendance, Session as DBSession, Student, Group, User
 from ..schemas import AttendanceBulkCreate, AttendanceOut
-from .auth import get_current_user
+from .auth import get_current_user, get_tenant_admin_id, log_audit
 
 router = APIRouter(prefix="/api/attendance", tags=["attendance"])
 
@@ -14,12 +14,13 @@ def get_session_attendance(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Séance non trouvée")
         
     group = db.query(Group).filter(Group.id == session.group_id).first()
-    students = db.query(Student).filter(Student.group_id == session.group_id, Student.is_active == True, Student.user_id == current_user.id).order_by(Student.last_name.asc(), Student.first_name.asc()).all()
+    students = db.query(Student).filter(Student.group_id == session.group_id, Student.is_active == True, Student.user_id == tenant_id).order_by(Student.last_name.asc(), Student.first_name.asc()).all()
     
     # Existing attendance records for this session
     existing_records = {
@@ -60,8 +61,9 @@ def get_or_create_attendance_for_date(
     db: Session = Depends(get_db)
 ):
     import datetime
+    tenant_id = get_tenant_admin_id(current_user)
     target_date = datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
-    group = db.query(Group).filter(Group.id == group_id, Group.user_id == current_user.id).first()
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
 
@@ -72,7 +74,7 @@ def get_or_create_attendance_for_date(
 
     if not session:
         session = DBSession(
-            user_id=current_user.id,
+            user_id=tenant_id,
             group_id=group_id,
             date=target_date,
             start_time=group.start_time or "17:00",
@@ -92,7 +94,8 @@ def record_bulk_attendance(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    session = db.query(DBSession).join(Group).filter(DBSession.id == data.session_id, Group.user_id == current_user.id).first()
+    tenant_id = get_tenant_admin_id(current_user)
+    session = db.query(DBSession).join(Group).filter(DBSession.id == data.session_id, Group.user_id == tenant_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Séance non trouvée")
         
@@ -104,9 +107,11 @@ def record_bulk_attendance(
     session.status = "completed"
     
     # Process each record
+    present_count = 0
+    absent_count = 0
     for rec in data.records:
-        # Check student belongs to current_user
-        student = db.query(Student).filter(Student.id == rec.student_id, Student.user_id == current_user.id).first()
+        # Check student belongs to tenant
+        student = db.query(Student).filter(Student.id == rec.student_id, Student.user_id == tenant_id).first()
         if not student:
             continue
             
@@ -127,6 +132,27 @@ def record_bulk_attendance(
             )
             db.add(new_att)
             
+        if rec.status in ["present", "late"]:
+            present_count += 1
+        else:
+            absent_count += 1
+            
     db.commit()
+    
+    log_audit(
+        db=db,
+        user=current_user,
+        action="ATTENDANCE_RECORDED",
+        entity_type="Session",
+        entity_id=session.id,
+        new_values={
+            "session_id": session.id,
+            "present_count": present_count,
+            "absent_count": absent_count,
+            "topic": session.topic
+        }
+    )
+    
     return {"success": True, "message": "Présences enregistrées avec succès"}
+
 

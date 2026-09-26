@@ -16,6 +16,9 @@ class User(Base):
     avatar = Column(Text, nullable=True) # Avatar url, preset key or base64 data URI
     currency = Column(String(10), default="DT")
     school_year = Column(String(20), default="2025-2026")
+    role = Column(String(20), default="ADMIN", nullable=False) # "ADMIN", "STAFF"
+    admin_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True) # Parent admin account if STAFF
+    is_active = Column(Boolean, default=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     groups = relationship("Group", back_populates="user", cascade="all, delete-orphan")
@@ -230,5 +233,38 @@ class NotificationLog(Base):
     sent_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     user = relationship("User", back_populates="notification_logs")
+
+class Expense(Base):
+    __tablename__ = "expenses"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, default=1)
+    title = Column(String(200), nullable=False)
+    amount = Column(Float, nullable=False)
+    date = Column(Date, default=datetime.date.today, nullable=False)
+    category = Column(String(50), default="Autre") # "Matériel", "Loyer", "Factures", "Autre"
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    user = relationship("User")
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    admin_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True, default=1)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_name = Column(String(100), nullable=True)
+    role = Column(String(20), nullable=False, default="ADMIN")
+    action = Column(String(50), nullable=False) # "STUDENT_CREATED", "PAYMENT_UPDATED", "SCHEDULE_CREATED", etc.
+    entity_type = Column(String(50), nullable=False) # "student", "payment", "schedule", "expense", etc.
+    entity_id = Column(String(50), nullable=True)
+    old_value = Column(Text, nullable=True)
+    new_value = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+
+    admin = relationship("User", foreign_keys=[admin_id])
+    user = relationship("User", foreign_keys=[user_id])
+
 
 

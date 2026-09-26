@@ -49,10 +49,12 @@ const PlanningView = {
             </a>
 
             <!-- Add Slot / Session Button -->
+            ${State.isAdmin() ? `
             <button onclick="PlanningView.openSchedulerModal()" class="px-4 py-2.5 btn-gold-action text-xs sm:text-sm font-black flex items-center gap-2">
               <i data-lucide="plus" class="w-4 h-4"></i>
               <span>+ ${isAr ? 'برمجة حصة / فوج' : 'Programmer un créneau'}</span>
             </button>
+            ` : ''}
           </div>
         </div>
 
@@ -1120,6 +1122,7 @@ const PlanningView = {
 
   // --- 8. SESSION DETAIL / EDIT / REVERT / DELETE MODAL ---
   async openSessionDetail(groupId, dateStr) {
+    const isAr = I18n.currentLang === 'ar';
     const session = this.sessions.find(s => s.group_id === groupId && s.date === dateStr) || {
       group_id: groupId,
       date: dateStr,
@@ -1132,7 +1135,63 @@ const PlanningView = {
       is_exception: false
     };
 
-    const isAr = I18n.currentLang === 'ar';
+    if (!State.isAdmin()) {
+      // Read-only modal for Staff
+      const groupColor = session.group_color || '#4f46e5';
+      const levelLabel = I18n.getLevelLabel(session.level);
+      Modal.open({
+        title: `${isAr ? 'تفاصيل الحصة' : 'Détail de la Séance'} : ${session.group_name || 'Groupe'}`,
+        size: 'max-w-md',
+        html: `
+          <div class="space-y-4">
+            <div class="p-4 rounded-2xl bg-[#faf8f5] border border-[#ede7db] space-y-2.5 text-xs">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-500 font-semibold">${I18n.t('group')} :</span>
+                <strong class="text-slate-900 font-bold flex items-center gap-1.5">
+                  <span class="w-2.5 h-2.5 rounded-full" style="background-color: ${groupColor};"></span>
+                  ${session.group_name || 'Groupe'} ${levelLabel ? `(${levelLabel})` : ''}
+                </strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-semibold">${I18n.t('date')} :</span>
+                <strong class="text-slate-900">${session.date}</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-semibold">${I18n.t('time')} :</span>
+                <strong class="font-mono text-slate-900">${session.start_time} - ${session.end_time}</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-semibold">${I18n.t('location')} :</span>
+                <strong class="text-slate-900">${session.location || 'Salle 1'}</strong>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-500 font-semibold">${I18n.t('students')} :</span>
+                <strong class="text-slate-900">${session.student_count || 0} élèves</strong>
+              </div>
+              ${session.topic ? `
+              <div class="pt-2 border-t border-[#ede7db]">
+                <span class="text-slate-500 font-semibold">${I18n.t('topic')} :</span>
+                <p class="text-slate-800 font-medium italic mt-0.5">${session.topic}</p>
+              </div>
+              ` : ''}
+            </div>
+
+            <div class="flex items-center justify-end gap-2 pt-3 border-t border-[#ede7db]">
+              <button type="button" onclick="Modal.close()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-[#ede5d8] rounded-2xl">
+                ${I18n.t('cancel')}
+              </button>
+              <button type="button" onclick="Modal.close(); PlanningView.quickTakeAttendance(${session.group_id}, '${session.date}', ${session.id || 'null'})" class="px-4 py-2 btn-gold-action text-xs font-black flex items-center gap-1.5">
+                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                <span>${I18n.t('takeAttendance')}</span>
+              </button>
+            </div>
+          </div>
+        `
+      });
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
     const isException = session.is_exception;
 
     Modal.open({
