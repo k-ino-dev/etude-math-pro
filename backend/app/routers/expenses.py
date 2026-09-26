@@ -61,13 +61,37 @@ def create_expense(
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Create a new expense (ADMIN ONLY)."""
+    """Create a new expense (ADMIN ONLY). Must not exceed available net profit."""
     tenant_id = get_tenant_admin_id(admin_user)
+    amount = float(data.amount)
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Le montant de la dépense doit être supérieur à zéro.")
+
+    # Calculate current net balance
+    student_ids = [s.id for s in db.query(Student.id).filter(Student.user_id == tenant_id).all()]
+    total_income = 0.0
+    if student_ids:
+        total_income = db.query(func.sum(Payment.amount)).filter(
+            Payment.student_id.in_(student_ids)
+        ).scalar() or 0.0
+    
+    total_expenses = db.query(func.sum(Expense.amount)).filter(
+        Expense.user_id == tenant_id
+    ).scalar() or 0.0
+    
+    net_balance = total_income - total_expenses
+
+    if amount > net_balance:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Impossible d'ajouter cette dépense : le montant ({amount:.3f} DT) dépasse le bénéfice net disponible ({net_balance:.3f} DT)."
+        )
+
     exp_date = data.date or data.expense_date or datetime.date.today()
     expense = Expense(
         user_id=tenant_id,
         title=data.title.strip(),
-        amount=float(data.amount),
+        amount=amount,
         date=exp_date,
         category=data.category or "Autre",
         notes=data.notes.strip() if data.notes else None
@@ -95,7 +119,7 @@ def update_expense(
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Update an existing expense (ADMIN ONLY)."""
+    """Update an existing expense (ADMIN ONLY). Must not exceed available net profit."""
     tenant_id = get_tenant_admin_id(admin_user)
     expense = db.query(Expense).filter(
         Expense.id == expense_id,
@@ -106,10 +130,33 @@ def update_expense(
         
     old_data = {"title": expense.title, "amount": expense.amount, "date": str(expense.date)}
     
+    if data.amount is not None:
+        new_amount = float(data.amount)
+        if new_amount <= 0:
+            raise HTTPException(status_code=400, detail="Le montant de la dépense doit être supérieur à zéro.")
+        
+        # Calculate available net balance considering current expense amount
+        student_ids = [s.id for s in db.query(Student.id).filter(Student.user_id == tenant_id).all()]
+        total_income = 0.0
+        if student_ids:
+            total_income = db.query(func.sum(Payment.amount)).filter(
+                Payment.student_id.in_(student_ids)
+            ).scalar() or 0.0
+        
+        total_expenses = db.query(func.sum(Expense.amount)).filter(
+            Expense.user_id == tenant_id
+        ).scalar() or 0.0
+        
+        available_net = (total_income - total_expenses) + expense.amount
+        if new_amount > available_net:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Impossible de modifier cette dépense : le montant ({new_amount:.3f} DT) dépasse le bénéfice net disponible ({available_net:.3f} DT)."
+            )
+        expense.amount = new_amount
+
     if data.title is not None:
         expense.title = data.title.strip()
-    if data.amount is not None:
-        expense.amount = float(data.amount)
     if data.date is not None:
         expense.date = data.date
     if data.category is not None:

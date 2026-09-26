@@ -571,7 +571,7 @@ const PaymentsView = {
 
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'مبلغ الدفع (DT) *' : `Montant du Paiement (${currency}) *`}</label>
-              <input id="pay-amount" type="number" step="5" required value="80.0" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-black text-slate-900">
+              <input id="pay-amount" type="number" step="any" min="0.001" required value="80.0" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-black text-slate-900">
             </div>
           </div>
 
@@ -874,7 +874,7 @@ const PaymentsView = {
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'المبلغ (DT) *' : `Montant (${currency}) *`}</label>
-              <input id="edit-pay-amount" type="number" step="5" required value="${payment.amount}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-black text-slate-900 bg-white">
+              <input id="edit-pay-amount" type="number" step="any" min="0.001" required value="${payment.amount}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-black text-slate-900 bg-white">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'الحالة' : 'Statut'}</label>

@@ -168,6 +168,15 @@ def test_roles_and_permissions_workflow():
     assert res_audit_staff.status_code == 403
 
     # 14. Admin CAN manage expenses & view net balance
+    # Excess expense test (attempting expense > net balance must return 400)
+    res_exp_excess = client.post('/api/expenses', headers=headers_admin, json={
+        'title': 'Huge purchase exceeding profit',
+        'amount': 9999.0,
+        'expense_date': '2026-10-01'
+    })
+    assert res_exp_excess.status_code == 400
+    assert "dépasse le bénéfice net" in res_exp_excess.json()['detail']
+
     res_exp_admin = client.post('/api/expenses', headers=headers_admin, json={
         'title': 'Local rent October',
         'amount': 35.0,

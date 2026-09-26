@@ -1,7 +1,7 @@
 import datetime
 from sqlalchemy.orm import Session
 import json
-from .models import User, Group, Student, Session as DBSession, Attendance, Payment, StudentNote, CorrectionProject
+from .models import User, Group, Student, Session as DBSession, Attendance, Payment, StudentNote, CorrectionProject, Expense, AuditLog, HandwritingProfile, NotificationLog, NotificationSetting
 from .routers.auth import get_password_hash
 from .services.correction_ocr import CorrectionOCRService
 
@@ -20,7 +20,6 @@ def init_virgin_database(db: Session):
         db.add(teacher)
         db.commit()
     
-    from .models import NotificationSetting
     if db.query(NotificationSetting).count() == 0:
         setting = NotificationSetting(
             whatsapp_phone="+216",
@@ -41,6 +40,11 @@ def seed_database(db: Session, reset: bool = False):
         db.query(Student).delete()
         db.query(Group).delete()
         db.query(CorrectionProject).delete()
+        db.query(Expense).delete()
+        db.query(AuditLog).delete()
+        db.query(HandwritingProfile).delete()
+        db.query(NotificationLog).delete()
+        db.query(NotificationSetting).delete()
         db.query(User).delete()
         db.commit()
     elif db.query(User).first() and db.query(Group).first() and db.query(Student).first():

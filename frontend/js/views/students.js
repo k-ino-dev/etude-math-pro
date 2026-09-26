@@ -397,7 +397,7 @@ const StudentsView = {
 
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1">${I18n.t('monthly_price')} (${currency}) *</label>
-            <input id="st-price" type="number" step="5" required value="${student ? student.monthly_price : 80.0}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold">
+            <input id="st-price" type="number" step="any" min="0.001" required value="${student ? student.monthly_price : 80.0}" class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-brand-500 focus:outline-none font-bold">
           </div>
 
           <div>

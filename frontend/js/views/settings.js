@@ -916,7 +916,7 @@ const SettingsView = {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">${isAr ? 'المبلغ (DT) *' : 'Montant (DT) *'}</label>
-              <input id="exp-form-amount" type="number" step="0.5" min="0.1" required value="${expense ? expense.amount : ''}" placeholder="Ex: 50.000" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-rose-600">
+              <input id="exp-form-amount" type="number" step="any" min="0.001" required value="${expense ? expense.amount : ''}" placeholder="Ex: 50.000" class="w-full px-3.5 py-2 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-rose-500 font-bold text-rose-600">
             </div>
 
             <div>
@@ -962,6 +962,29 @@ const SettingsView = {
           const expense_date = content.querySelector('#exp-form-date').value;
           const category = content.querySelector('#exp-form-cat').value;
           const notes = content.querySelector('#exp-form-notes').value.trim() || null;
+
+          if (!amount || isNaN(amount) || amount <= 0) {
+            Toast.error(isAr ? 'يرجى إدخال مبلغ صحيح أكبر من الصفر.' : 'Veuillez saisir un montant valide supérieur à zéro.');
+            return;
+          }
+
+          // Verify available net balance
+          try {
+            const summary = await API.get('/api/expenses/summary');
+            const currentNet = (summary && (summary.net_profit !== undefined ? summary.net_profit : summary.net_balance)) || 0;
+            const availableNet = isEdit ? (currentNet + (expense.amount || 0)) : currentNet;
+
+            if (amount > availableNet) {
+              Toast.error(
+                isAr 
+                  ? `لا يمكن تسجيل نفقة (${amount.toFixed(3)} DT) تتجاوز صافي الأرباح المتوفرة (${availableNet.toFixed(3)} DT).`
+                  : `Impossible d'enregistrer une dépense (${amount.toFixed(3)} DT) supérieure au bénéfice net disponible (${availableNet.toFixed(3)} DT).`
+              );
+              return;
+            }
+          } catch (sumErr) {
+            console.warn('Could not verify net summary in client:', sumErr);
+          }
 
           try {
             const payload = { title, amount, expense_date, category, notes };
