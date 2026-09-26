@@ -928,10 +928,21 @@ const SettingsView = {
           profEl.className = `text-2xl sm:text-3xl font-black tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
         }
 
-        this.cachedCashflow = data.cashflow || [];
+        this.cachedCashflow = Array.isArray(data.cashflow) ? data.cashflow : [];
         // Fallback if cashflow empty but expenses exist
         if (this.cachedCashflow.length === 0 && Array.isArray(data.expenses)) {
           this.cachedCashflow = data.expenses.map(e => ({
+            id: `exp-${e.id}`,
+            type: 'expense',
+            title: e.title,
+            amount: e.amount,
+            date: e.expense_date || e.date,
+            category: e.category || 'Autre',
+            notes: e.notes,
+            expense_id: e.id
+          }));
+        } else if (this.cachedCashflow.length === 0 && Array.isArray(data)) {
+          this.cachedCashflow = data.map(e => ({
             id: `exp-${e.id}`,
             type: 'expense',
             title: e.title,
