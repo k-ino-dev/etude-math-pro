@@ -17,16 +17,12 @@ DATA_DIR = os.path.join(BASE_DIR, "data")
 os.makedirs(DATA_DIR, exist_ok=True)
 DB_PATH = os.path.join(DATA_DIR, "math_prof.db")
 
-raw_db_url = os.getenv("DATABASE_URL", "").strip()
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
-if raw_db_url:
-    # Support postgres:// URL from older providers/Heroku/Render
-    if raw_db_url.startswith("postgres://"):
-        DATABASE_URL = raw_db_url.replace("postgres://", "postgresql://", 1)
-    else:
-        DATABASE_URL = raw_db_url
-else:
-    DATABASE_URL = f"sqlite:///{DB_PATH}"
+if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("postgres://"):
+    SQLALCHEMY_DATABASE_URL = SQLALCHEMY_DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+DATABASE_URL = SQLALCHEMY_DATABASE_URL if SQLALCHEMY_DATABASE_URL else f"sqlite:///{DB_PATH}"
 
 is_sqlite = DATABASE_URL.startswith("sqlite")
 
