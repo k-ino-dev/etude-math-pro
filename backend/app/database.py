@@ -43,48 +43,86 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
-def run_migrations():
-    """Ensure newly added columns exist in existing database tables without data loss."""
-    if is_sqlite and os.path.exists(DB_PATH):
-        try:
-            import sqlite3
-            conn = sqlite3.connect(DB_PATH)
-            cur = conn.cursor()
+def safe_migrate(engine):
+    """Safe, non-destructive migration adding missing columns to users & other tables on PostgreSQL & SQLite."""
+    # 1. Ensure all tables exist (creates missing tables like expenses/audit_logs without touching existing ones)
+    try:
+        from . import models  # noqa
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"[DB SAFE MIGRATION] create_all note: {e}")
 
-            # 1. users table
-            cur.execute("PRAGMA table_info(users)")
-            cols = [r[1] for r in cur.fetchall()]
-            if cols:
-                if "avatar" not in cols:
-                    cur.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
-                if "role" not in cols:
-                    cur.execute("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'ADMIN'")
-                    cur.execute("UPDATE users SET role = 'ADMIN' WHERE role IS NULL")
-                if "admin_id" not in cols:
-                    cur.execute("ALTER TABLE users ADD COLUMN admin_id INTEGER DEFAULT NULL")
-                if "is_active" not in cols:
-                    cur.execute("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1")
-                conn.commit()
+    # 2. Add columns non-destructively
+    if is_sqlite:
+        if os.path.exists(DB_PATH):
+            try:
+                import sqlite3
+                conn = sqlite3.connect(DB_PATH)
+                cur = conn.cursor()
 
-            # Tables requiring user_id
-            user_id_tables = [
-                "groups", "students", "sessions", "monthly_reports", "notification_settings",
-                "notification_logs", "correction_projects", "handwriting_profiles"
-            ]
-
-            for tbl in user_id_tables:
-                cur.execute(f"PRAGMA table_info({tbl})")
-                tbl_cols = [r[1] for r in cur.fetchall()]
-                if tbl_cols and "user_id" not in tbl_cols:
-                    cur.execute(f"ALTER TABLE {tbl} ADD COLUMN user_id INTEGER DEFAULT 1")
-                    cur.execute(f"UPDATE {tbl} SET user_id = 1 WHERE user_id IS NULL")
+                # 1. users table
+                cur.execute("PRAGMA table_info(users)")
+                cols = [r[1] for r in cur.fetchall()]
+                if cols:
+                    if "avatar" not in cols:
+                        cur.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
+                    if "role" not in cols:
+                        cur.execute("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'ADMIN'")
+                        cur.execute("UPDATE users SET role = 'ADMIN' WHERE role IS NULL")
+                    if "admin_id" not in cols:
+                        cur.execute("ALTER TABLE users ADD COLUMN admin_id INTEGER DEFAULT NULL")
+                    if "is_active" not in cols:
+                        cur.execute("ALTER TABLE users ADD COLUMN is_active BOOLEAN DEFAULT 1")
                     conn.commit()
 
-            conn.close()
-        except Exception as e:
-            print(f"[DB MIGRATION NOTICE] SQLite migration check: {e}")
+                # Tables requiring user_id
+                user_id_tables = [
+                    "groups", "students", "sessions", "monthly_reports", "notification_settings",
+                    "notification_logs", "correction_projects", "handwriting_profiles", "expenses"
+                ]
 
-run_migrations()
+                for tbl in user_id_tables:
+                    try:
+                        cur.execute(f"PRAGMA table_info({tbl})")
+                        tbl_cols = [r[1] for r in cur.fetchall()]
+                        if tbl_cols and "user_id" not in tbl_cols:
+                            cur.execute(f"ALTER TABLE {tbl} ADD COLUMN user_id INTEGER DEFAULT 1")
+                            cur.execute(f"UPDATE {tbl} SET user_id = 1 WHERE user_id IS NULL")
+                            conn.commit()
+                    except Exception:
+                        pass
+
+                conn.close()
+            except Exception as e:
+                print(f"[DB SAFE MIGRATION] SQLite migration check note: {e}")
+    else:
+        # PostgreSQL on Render / Cloud
+        try:
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'ADMIN';"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_id INTEGER;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;"))
+                conn.execute(text("UPDATE users SET role = 'ADMIN' WHERE role IS NULL;"))
+                conn.execute(text("UPDATE users SET is_active = TRUE WHERE is_active IS NULL;"))
+
+                user_id_tables = [
+                    "groups", "students", "sessions", "monthly_reports", "notification_settings",
+                    "notification_logs", "correction_projects", "handwriting_profiles", "expenses"
+                ]
+                for tbl in user_id_tables:
+                    try:
+                        conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS user_id INTEGER DEFAULT 1;"))
+                        conn.execute(text(f"UPDATE {tbl} SET user_id = 1 WHERE user_id IS NULL;"))
+                    except Exception:
+                        pass
+
+                conn.commit()
+        except Exception as e:
+            print(f"[DB SAFE MIGRATION] PostgreSQL migration note: {e}")
+
+# Run non-destructive migration on import
+safe_migrate(engine)
 
 def get_db():
     db = SessionLocal()

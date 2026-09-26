@@ -83,6 +83,11 @@ app.add_middleware(
 @app.on_event("startup")
 def on_app_startup():
     try:
+        from .database import engine, safe_migrate
+        safe_migrate(engine)
+    except Exception as e:
+        print(f"[STARTUP NOTICE] Safe migration error: {e}")
+    try:
         with SessionLocal() as db:
             normalize_legacy_db_records(db)
     except Exception as e:
