@@ -54,15 +54,16 @@ def normalize_legacy_db_records(db: Session):
         db.rollback()
         print(f"[MIGRATION NOTICE] Error normalizing legacy records: {e}")
 
-# Initialize database tables
-Base.metadata.create_all(bind=engine)
-
-# Seed virgin initial setup if database is completely new & normalize legacy records
-with SessionLocal() as db_session:
-    if db_session.query(User).count() == 0:
-        init_virgin_database(db_session)
-    else:
-        normalize_legacy_db_records(db_session)
+# Initialize database tables & seed / normalize records
+try:
+    Base.metadata.create_all(bind=engine)
+    with SessionLocal() as db_session:
+        if db_session.query(User).count() == 0:
+            init_virgin_database(db_session)
+        else:
+            normalize_legacy_db_records(db_session)
+except Exception as e:
+    print(f"[MAIN STARTUP DB INIT NOTE]: {e}")
 
 app = FastAPI(
     title="Étude Math Pro API",

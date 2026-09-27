@@ -41,6 +41,35 @@ else:
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Execute safe, non-destructive PostgreSQL column migrations immediately upon engine creation
+if not is_sqlite:
+    try:
+        with engine.connect() as _conn:
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'ADMIN';"))
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_id INTEGER;"))
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;"))
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);"))
+            _conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'DT';"))
+            _conn.execute(text("UPDATE users SET role = 'ADMIN' WHERE role IS NULL;"))
+            _conn.execute(text("UPDATE users SET is_active = TRUE WHERE is_active IS NULL;"))
+
+            user_id_tables = [
+                "groups", "students", "sessions", "monthly_reports", "notification_settings",
+                "notification_logs", "correction_projects", "handwriting_profiles", "expenses"
+            ]
+            for _tbl in user_id_tables:
+                try:
+                    _conn.execute(text(f"ALTER TABLE {_tbl} ADD COLUMN IF NOT EXISTS user_id INTEGER DEFAULT 1;"))
+                    _conn.execute(text(f"UPDATE {_tbl} SET user_id = 1 WHERE user_id IS NULL;"))
+                except Exception:
+                    pass
+
+            _conn.commit()
+            print("[DATABASE] Safe PostgreSQL column migrations completed successfully upon engine creation.")
+    except Exception as _e:
+        print(f"[DATABASE] Immediate PostgreSQL column migration note: {_e}")
+
 Base = declarative_base()
 
 def safe_migrate(engine):
@@ -103,6 +132,8 @@ def safe_migrate(engine):
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_id INTEGER;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(50);"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS currency VARCHAR(10) DEFAULT 'DT';"))
                 conn.execute(text("UPDATE users SET role = 'ADMIN' WHERE role IS NULL;"))
                 conn.execute(text("UPDATE users SET is_active = TRUE WHERE is_active IS NULL;"))
 
