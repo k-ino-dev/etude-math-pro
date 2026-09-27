@@ -175,6 +175,7 @@ const AttendanceView = {
     if (!sheet) return;
     const isAr = I18n.currentLang === 'ar';
 
+    try {
       if (!data.students || data.students.length === 0) {
         sheet.innerHTML = `
           <div class="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-slate-200/70 shadow-sm">

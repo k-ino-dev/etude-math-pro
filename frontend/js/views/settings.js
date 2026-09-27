@@ -309,6 +309,47 @@ const SettingsView = {
                 </button>
               </div>
 
+              <!-- Month & Period Filter Selector Toolbar -->
+              <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 p-4 sm:p-5 rounded-3xl text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 border border-slate-700/60 relative overflow-hidden">
+                <div class="absolute -right-10 -bottom-10 w-36 h-36 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <!-- Left: Quick Month Navigation (◀ / Ce mois-ci / ▶) & Active Period -->
+                <div class="flex items-center gap-3.5 relative z-10">
+                  <div class="flex items-center bg-white/10 backdrop-blur-md rounded-2xl p-1 border border-white/10 shadow-inner shrink-0">
+                    <button type="button" id="cflow-prev-month-btn" class="p-2 hover:bg-white/20 active:scale-90 text-white rounded-xl transition-all duration-200" title="${isAr ? 'الشهر السابق' : 'Mois précédent'}">
+                      <i data-lucide="chevron-left" class="w-4 h-4 rtl:rotate-180"></i>
+                    </button>
+                    <button type="button" id="cflow-today-btn" class="px-3 py-1.5 hover:bg-white/20 active:scale-95 text-xs font-black text-brand-300 hover:text-white rounded-xl transition-all duration-200 flex items-center gap-1.5 whitespace-nowrap">
+                      <i data-lucide="calendar" class="w-3.5 h-3.5 text-brand-400"></i>
+                      <span>${isAr ? 'هذا الشهر' : 'Ce mois-ci'}</span>
+                    </button>
+                    <button type="button" id="cflow-next-month-btn" class="p-2 hover:bg-white/20 active:scale-90 text-white rounded-xl transition-all duration-200" title="${isAr ? 'الشهر الموالي' : 'Mois suivant'}">
+                      <i data-lucide="chevron-right" class="w-4 h-4 rtl:rotate-180"></i>
+                    </button>
+                  </div>
+
+                  <!-- Active Period Title & Status Badge -->
+                  <div class="space-y-0.5 min-w-0">
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">${isAr ? 'الفترة المحاسبية النشطة' : 'Période Comptable'}</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <h3 id="cflow-current-period-label" class="text-sm sm:text-base font-black text-white tracking-tight flex items-center gap-2">
+                        --
+                      </h3>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Right: Dropdown for Month/Year Selection & Global View -->
+                <div class="flex items-center gap-2.5 relative z-10 self-stretch sm:self-auto">
+                  <div class="relative w-full sm:w-auto">
+                    <select id="cflow-period-select" class="w-full sm:w-auto text-xs font-bold bg-slate-900/95 text-white border border-slate-600/80 rounded-2xl px-4 py-2.5 pr-8 focus:ring-2 focus:ring-brand-400 focus:border-brand-400 cursor-pointer shadow-lg appearance-none">
+                      <!-- Populated dynamically -->
+                    </select>
+                    <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none rtl:right-auto rtl:left-3"></i>
+                  </div>
+                </div>
+              </div>
+
               <!-- 3 Top Financial KPI Cards (Exact User Layout) -->
               <div id="expenses-kpis" class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 
@@ -852,16 +893,126 @@ const SettingsView = {
   // -------------------------------------------------------------
   // TRÉSORERIE, FLUX & DÉPENSES SECTION (ADMIN ONLY)
   // -------------------------------------------------------------
+  selectedPeriod: null, // 'YYYY-MM' e.g. '2026-09' or 'all'
   cachedCashflow: [],
   activeCashflowType: 'all', // 'all', 'income', 'expense'
   activeCashflowCategory: 'all',
   cashflowSearchQuery: '',
 
+  getCurrentMonthKey() {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  },
+
+  getItemYearMonth(dateStr) {
+    if (!dateStr) return null;
+    const str = String(dateStr).trim();
+    const match = str.match(/^(\d{4})-(\d{1,2})/);
+    if (match) {
+      const y = parseInt(match[1], 10);
+      const m = parseInt(match[2], 10);
+      return {
+        year: y,
+        month: m,
+        key: `${y}-${String(m).padStart(2, '0')}`
+      };
+    }
+    const d = new Date(dateStr);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = d.getMonth() + 1;
+      return {
+        year: y,
+        month: m,
+        key: `${y}-${String(m).padStart(2, '0')}`
+      };
+    }
+    return null;
+  },
+
+  getMonthName(year, month, isAr) {
+    const monthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const monthsAr = ['جانفي', 'فيفري', 'مارس', 'أفريل', 'ماي', 'جوان', 'جويلية', 'أوت', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    const mIndex = Math.max(0, Math.min(11, month - 1));
+    const name = isAr ? monthsAr[mIndex] : monthsFr[mIndex];
+    return `${name} ${year}`;
+  },
+
   bindExpensesSection(container) {
+    if (!this.selectedPeriod) {
+      this.selectedPeriod = this.getCurrentMonthKey();
+    }
+
     const addBtn = container.querySelector('#add-expense-btn');
     if (addBtn) {
       addBtn.addEventListener('click', () => {
         this.openExpenseModal(container);
+      });
+    }
+
+    // Previous Month ◀
+    const prevBtn = container.querySelector('#cflow-prev-month-btn');
+    if (prevBtn) {
+      prevBtn.addEventListener('click', () => {
+        let period = this.selectedPeriod;
+        if (period === 'all') {
+          period = this.getCurrentMonthKey();
+        }
+        const [yStr, mStr] = period.split('-');
+        let y = parseInt(yStr, 10);
+        let m = parseInt(mStr, 10);
+        if (m === 1) {
+          y -= 1;
+          m = 12;
+        } else {
+          m -= 1;
+        }
+        this.selectedPeriod = `${y}-${String(m).padStart(2, '0')}`;
+        this.updatePeriodSelectorUI(container);
+        this.recalculateAndRenderCashflow(container);
+      });
+    }
+
+    // Next Month ▶
+    const nextBtn = container.querySelector('#cflow-next-month-btn');
+    if (nextBtn) {
+      nextBtn.addEventListener('click', () => {
+        let period = this.selectedPeriod;
+        if (period === 'all') {
+          period = this.getCurrentMonthKey();
+        }
+        const [yStr, mStr] = period.split('-');
+        let y = parseInt(yStr, 10);
+        let m = parseInt(mStr, 10);
+        if (m === 12) {
+          y += 1;
+          m = 1;
+        } else {
+          m += 1;
+        }
+        this.selectedPeriod = `${y}-${String(m).padStart(2, '0')}`;
+        this.updatePeriodSelectorUI(container);
+        this.recalculateAndRenderCashflow(container);
+      });
+    }
+
+    // Today / Current Month (Ce mois-ci)
+    const todayBtn = container.querySelector('#cflow-today-btn');
+    if (todayBtn) {
+      todayBtn.addEventListener('click', () => {
+        this.selectedPeriod = this.getCurrentMonthKey();
+        this.updatePeriodSelectorUI(container);
+        this.recalculateAndRenderCashflow(container);
+      });
+    }
+
+    // Period Select Dropdown
+    const periodSelect = container.querySelector('#cflow-period-select');
+    if (periodSelect) {
+      periodSelect.addEventListener('change', (e) => {
+        this.selectedPeriod = e.target.value;
+        this.updatePeriodSelectorUI(container);
+        this.recalculateAndRenderCashflow(container);
       });
     }
 
@@ -881,7 +1032,7 @@ const SettingsView = {
               }
             }
           });
-          this.renderCashflowList(container);
+          this.recalculateAndRenderCashflow(container);
         });
       }
     });
@@ -891,7 +1042,7 @@ const SettingsView = {
     if (catSelect) {
       catSelect.addEventListener('change', (e) => {
         this.activeCashflowCategory = e.target.value;
-        this.renderCashflowList(container);
+        this.recalculateAndRenderCashflow(container);
       });
     }
 
@@ -900,9 +1051,130 @@ const SettingsView = {
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.cashflowSearchQuery = e.target.value.toLowerCase().trim();
-        this.renderCashflowList(container);
+        this.recalculateAndRenderCashflow(container);
       });
     }
+  },
+
+  updatePeriodSelectorUI(container) {
+    const isAr = I18n.currentLang === 'ar';
+    const labelEl = container.querySelector('#cflow-current-period-label');
+    const selectEl = container.querySelector('#cflow-period-select');
+    if (!labelEl || !selectEl) return;
+
+    if (!this.selectedPeriod) {
+      this.selectedPeriod = this.getCurrentMonthKey();
+    }
+
+    const currentMonthKey = this.getCurrentMonthKey();
+
+    // 1. Build list of all available periods
+    const periodsSet = new Set();
+    periodsSet.add(currentMonthKey);
+
+    // Add surrounding months for current year and previous year
+    const now = new Date();
+    const curYear = now.getFullYear();
+    for (let y = curYear + 1; y >= curYear - 2; y--) {
+      for (let m = 12; m >= 1; m--) {
+        periodsSet.add(`${y}-${String(m).padStart(2, '0')}`);
+      }
+    }
+
+    // Add any dates present in cachedCashflow
+    (this.cachedCashflow || []).forEach(item => {
+      const ym = this.getItemYearMonth(item.date);
+      if (ym) periodsSet.add(ym.key);
+    });
+
+    // Convert to sorted array descending
+    const sortedPeriods = Array.from(periodsSet).sort().reverse();
+
+    // Build select options
+    let optionsHtml = `
+      <option value="all" ${this.selectedPeriod === 'all' ? 'selected' : ''}>
+        ${isAr ? '🌐 عرض شامل (كافة الفترات)' : '🌐 Vue globale (Toutes les périodes)'}
+      </option>
+    `;
+
+    sortedPeriods.forEach(pKey => {
+      const [y, m] = pKey.split('-').map(Number);
+      const isCur = pKey === currentMonthKey;
+      const monthTitle = this.getMonthName(y, m, isAr);
+      const suffix = isCur ? (isAr ? ' (الشهر الحالي)' : ' (En cours)') : '';
+      optionsHtml += `
+        <option value="${pKey}" ${this.selectedPeriod === pKey ? 'selected' : ''}>
+          📅 ${monthTitle}${suffix}
+        </option>
+      `;
+    });
+
+    selectEl.innerHTML = optionsHtml;
+    selectEl.value = this.selectedPeriod;
+
+    // Update active label
+    if (this.selectedPeriod === 'all') {
+      labelEl.innerHTML = `
+        <span class="text-white">${isAr ? 'عرض شامل (كافة الفترات)' : 'Vue globale (Toutes les périodes)'}</span>
+      `;
+    } else {
+      const [y, m] = this.selectedPeriod.split('-').map(Number);
+      const isCur = this.selectedPeriod === currentMonthKey;
+      const monthTitle = this.getMonthName(y, m, isAr);
+      labelEl.innerHTML = `
+        <span class="text-white font-black">${monthTitle}</span>
+        ${isCur ? `
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 whitespace-nowrap">
+            ${isAr ? 'الشهر الحالي' : 'Mois en cours'}
+          </span>
+        ` : ''}
+      `;
+    }
+
+    if (window.lucide) lucide.createIcons();
+  },
+
+  recalculateAndRenderCashflow(container) {
+    if (!this.selectedPeriod) {
+      this.selectedPeriod = this.getCurrentMonthKey();
+    }
+
+    // 1. Filter items strictly for the active period
+    let periodCashflow = [];
+    if (this.selectedPeriod === 'all') {
+      periodCashflow = [...(this.cachedCashflow || [])];
+    } else {
+      periodCashflow = (this.cachedCashflow || []).filter(item => {
+        const ym = this.getItemYearMonth(item.date);
+        return ym && ym.key === this.selectedPeriod;
+      });
+    }
+
+    // 2. Calculate monthly KPIs (Remise à zéro automatique par mois)
+    const periodIncome = periodCashflow
+      .filter(i => i.type === 'income')
+      .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+    const periodExpenses = periodCashflow
+      .filter(i => i.type === 'expense')
+      .reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+
+    const periodNet = periodIncome - periodExpenses;
+
+    // 3. Update 3 Top KPI Cards
+    const revEl = container.querySelector('#kpi-expenses-revenue');
+    const expEl = container.querySelector('#kpi-expenses-total');
+    const profEl = container.querySelector('#kpi-expenses-profit');
+
+    if (revEl) revEl.textContent = `+ ${periodIncome.toFixed(3)} DT`;
+    if (expEl) expEl.textContent = `- ${periodExpenses.toFixed(3)} DT`;
+    if (profEl) {
+      profEl.textContent = `${periodNet.toFixed(3)} DT`;
+      profEl.className = `text-2xl sm:text-3xl font-black tracking-tight ${periodNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+    }
+
+    // 4. Render the filtered transactions list
+    this.renderCashflowList(container, periodCashflow);
   },
 
   async loadExpenses(container) {
@@ -910,24 +1182,13 @@ const SettingsView = {
     const wrapper = container.querySelector('#cashflow-list-container');
     if (!wrapper) return;
 
+    if (!this.selectedPeriod) {
+      this.selectedPeriod = this.getCurrentMonthKey();
+    }
+
     try {
       const data = await API.get('/api/expenses');
       if (data) {
-        const revEl = container.querySelector('#kpi-expenses-revenue');
-        const expEl = container.querySelector('#kpi-expenses-total');
-        const profEl = container.querySelector('#kpi-expenses-profit');
-
-        const totalIncome = data.total_revenue || data.total_income || 0;
-        const totalExpenses = data.total_expenses || 0;
-        const netProfit = data.net_profit !== undefined ? data.net_profit : (data.net_balance || 0);
-
-        if (revEl) revEl.textContent = `+ ${totalIncome.toFixed(3)} DT`;
-        if (expEl) expEl.textContent = `- ${totalExpenses.toFixed(3)} DT`;
-        if (profEl) {
-          profEl.textContent = `${netProfit.toFixed(3)} DT`;
-          profEl.className = `text-2xl sm:text-3xl font-black tracking-tight ${netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-        }
-
         this.cachedCashflow = Array.isArray(data.cashflow) ? data.cashflow : [];
         // Fallback if cashflow empty but expenses exist
         if (this.cachedCashflow.length === 0 && Array.isArray(data.expenses)) {
@@ -954,7 +1215,8 @@ const SettingsView = {
           }));
         }
 
-        this.renderCashflowList(container);
+        this.updatePeriodSelectorUI(container);
+        this.recalculateAndRenderCashflow(container);
       }
     } catch (e) {
       wrapper.innerHTML = `<div class="p-4 bg-rose-50 text-rose-700 rounded-2xl text-xs font-semibold">${e.message || 'Erreur chargement'}</div>`;
@@ -1007,13 +1269,20 @@ const SettingsView = {
     };
   },
 
-  renderCashflowList(container) {
+  renderCashflowList(container, periodItems = null) {
     const isAr = I18n.currentLang === 'ar';
     const wrapper = container.querySelector('#cashflow-list-container');
     const badgeCount = container.querySelector('#cashflow-count-badge');
     if (!wrapper) return;
 
-    let items = [...(this.cachedCashflow || [])];
+    let items = periodItems !== null ? [...periodItems] : (
+      this.selectedPeriod === 'all'
+        ? [...(this.cachedCashflow || [])]
+        : (this.cachedCashflow || []).filter(item => {
+            const ym = this.getItemYearMonth(item.date);
+            return ym && ym.key === this.selectedPeriod;
+          })
+    );
 
     // Filter by type
     if (this.activeCashflowType === 'income') {
@@ -1046,7 +1315,7 @@ const SettingsView = {
           <div class="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-2 font-bold">
             <i data-lucide="receipt" class="w-6 h-6"></i>
           </div>
-          <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد عمليات تطابق البحث أو التصفية' : 'Aucun flux ne correspond aux critères'}</p>
+          <p class="text-xs font-bold text-slate-700">${isAr ? 'لا توجد عمليات تطابق هذا الشهر أو معايير البحث' : 'Aucun flux pour ce mois ou critères sélectionnés'}</p>
           <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">${isAr ? 'أضف عمليات صرف جديدة أو راجع المقبوضات الشهرية.' : 'Enregistrez vos dépenses ou visualisez les règlements de vos élèves.'}</p>
         </div>
       `;
