@@ -9,101 +9,61 @@ from .auth import get_current_user, require_admin, get_tenant_admin_id, log_audi
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
+DAY_NAMES_FR = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
+DAY_NAMES_AR = ["الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
+
 def check_time_overlap(start1: str, end1: str, start2: str, end2: str) -> bool:
     """Return True if time intervals [start1, end1] and [start2, end2] overlap."""
     return (start1 < end2) and (end1 > start2)
 
-def detect_conflicts(session: DBSession, db: Session, user_id: Optional[int] = None) -> tuple[bool, Optional[str]]:
-    """Check if session conflicts with another scheduled session of the same teacher on the same date."""
-    query = db.query(DBSession).join(Group).filter(
-        DBSession.date == session.date,
-        DBSession.id != (session.id or 0),
-        DBSession.status != "cancelled"
-    )
-    if user_id:
-        query = query.filter(Group.user_id == user_id)
-        
-    other_sessions = query.all()
-    
-    for other in other_sessions:
-        if check_time_overlap(session.start_time, session.end_time, other.start_time, other.end_time):
-            other_group_name = other.group.name if other.group else "Autre groupe"
-            return True, f"Chevauchement avec {other_group_name} ({other.start_time} - {other.end_time})"
-            
+def detect_group_conflict(group_id: int, day_of_week: int, start_time: str, end_time: str, db: Session, user_id: int) -> tuple[bool, Optional[str]]:
+    other_groups = db.query(Group).filter(
+        Group.user_id == user_id,
+        Group.id != group_id,
+        Group.day_of_week == day_of_week,
+        Group.start_time.isnot(None),
+        Group.end_time.isnot(None)
+    ).all()
+    for other in other_groups:
+        if check_time_overlap(start_time, end_time, other.start_time, other.end_time):
+            day_name = DAY_NAMES_FR[day_of_week] if 0 <= day_of_week < 7 else "ce jour"
+            return True, f"Chevauchement avec {other.name} le {day_name} ({other.start_time} - {other.end_time})"
     return False, None
 
-def build_session_out(
-    s: DBSession,
-    db: Session,
-    user_id: Optional[int] = None,
-    is_recurring: bool = False,
-    is_exception: bool = False
-) -> dict:
-    group = db.query(Group).filter(Group.id == s.group_id).first()
-    group_name = group.name if group else "Groupe inconnu"
-    group_color = group.color if (group and group.color) else "#4f46e5"
-    level = group.level if group else ""
-    uid = user_id or (group.user_id if group else None)
-    
-    student_count = db.query(Student).filter(Student.group_id == s.group_id, Student.is_active == True).count() if s.group_id else 0
-    attended_count = db.query(Attendance).filter(Attendance.session_id == s.id, Attendance.status.in_(["present", "late"])).count()
-    is_completed = db.query(Attendance).filter(Attendance.session_id == s.id).count() > 0
-    
-    has_conflict, conflict_details = detect_conflicts(s, db, user_id=uid)
-    
-    return {
-        "id": s.id,
-        "group_id": s.group_id,
-        "group_name": group_name,
-        "group_color": group_color,
-        "level": level,
-        "date": s.date,
-        "start_time": s.start_time,
-        "end_time": s.end_time,
-        "topic": s.topic,
-        "location": s.location or (group.location if group else "Salle 1"),
-        "notes": s.notes,
-        "status": s.status,
-        "student_count": student_count,
-        "attended_count": attended_count,
-        "is_completed": is_completed,
-        "has_conflict": has_conflict,
-        "conflict_details": conflict_details,
-        "is_recurring": is_recurring,
-        "is_exception": is_exception,
-        "is_virtual": False,
-        "created_at": s.created_at
-    }
-
-def synthesize_virtual_session(
-    group: Group,
-    target_date: datetime.date,
-    db: Session,
-    user_id: Optional[int] = None
-) -> dict:
+def build_recurring_session_out(group: Group, target_date: datetime.date, db: Session, user_id: int) -> dict:
     student_count = db.query(Student).filter(Student.group_id == group.id, Student.is_active == True).count()
+    
+    # Check if attendance is recorded for this group on this date
+    session_rec = db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.date == target_date).first()
+    s_id = session_rec.id if session_rec else group.id
+    attended_count = 0
+    is_completed = False
+    if session_rec:
+        attended_count = db.query(Attendance).filter(Attendance.session_id == session_rec.id, Attendance.status.in_(["present", "late"])).count()
+        is_completed = db.query(Attendance).filter(Attendance.session_id == session_rec.id).count() > 0
+
     return {
-        "id": None,
+        "id": s_id,
         "group_id": group.id,
         "group_name": group.name,
         "group_color": group.color or "#4f46e5",
-        "level": group.level,
+        "level": group.level or "",
         "date": target_date,
-        "start_time": group.start_time or "17:00",
-        "end_time": group.end_time or "18:30",
-        "topic": None,
+        "start_time": group.start_time or "10:00",
+        "end_time": group.end_time or "12:00",
+        "topic": session_rec.topic if session_rec else None,
         "location": group.location or "Salle 1",
-        "notes": None,
+        "notes": session_rec.notes if session_rec else None,
         "status": "scheduled",
         "student_count": student_count,
-        "attended_count": 0,
-        "is_completed": False,
+        "attended_count": attended_count,
+        "is_completed": is_completed,
         "has_conflict": False,
         "conflict_details": None,
         "is_recurring": True,
         "is_exception": False,
-        "is_virtual": True,
-        "created_at": None
+        "is_virtual": False,
+        "created_at": group.created_at
     }
 
 @router.get("/timetable-summary")
@@ -112,131 +72,78 @@ def get_timetable_summary(
     db: Session = Depends(get_db)
 ):
     tenant_id = get_tenant_admin_id(current_user)
-    groups = db.query(Group).filter(Group.user_id == tenant_id).order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
-    day_names_fr = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-    day_names_ar = ["الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد"]
-    
+    groups = db.query(Group).filter(
+        Group.user_id == tenant_id,
+        Group.day_of_week.isnot(None),
+        Group.start_time.isnot(None),
+        Group.end_time.isnot(None)
+    ).order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
+
     items = []
     total_weekly_minutes = 0
-    
+
     for g in groups:
-        if g.day_of_week is not None and g.start_time and g.end_time:
-            try:
-                h1, m1 = map(int, g.start_time.split(":"))
-                h2, m2 = map(int, g.end_time.split(":"))
-                dur_min = (h2 * 60 + m2) - (h1 * 60 + m1)
-                if dur_min > 0:
-                    total_weekly_minutes += dur_min
-            except Exception:
-                dur_min = 120
-                
-            student_count = db.query(Student).filter(Student.group_id == g.id, Student.is_active == True).count()
+        try:
+            h1, m1 = map(int, g.start_time.split(":"))
+            h2, m2 = map(int, g.end_time.split(":"))
+            dur_min = (h2 * 60 + m2) - (h1 * 60 + m1)
+            if dur_min <= 0: dur_min = 120
+        except Exception:
+            dur_min = 120
             
-            items.append({
-                "group_id": g.id,
-                "group_name": g.name,
-                "level": g.level,
-                "day_of_week": g.day_of_week,
-                "day_name_fr": day_names_fr[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
-                "day_name_ar": day_names_ar[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
-                "start_time": g.start_time,
-                "end_time": g.end_time,
-                "duration_minutes": dur_min,
-                "location": g.location or "Salle 1",
-                "color": g.color or "#4f46e5",
-                "student_count": student_count,
-                "capacity": g.capacity
-            })
-            
+        total_weekly_minutes += dur_min
+        student_count = db.query(Student).filter(Student.group_id == g.id, Student.is_active == True).count()
+
+        items.append({
+            "group_id": g.id,
+            "group_name": g.name,
+            "level": g.level,
+            "day_of_week": g.day_of_week,
+            "day_name_fr": DAY_NAMES_FR[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
+            "day_name_ar": DAY_NAMES_AR[g.day_of_week] if 0 <= g.day_of_week < 7 else "",
+            "start_time": g.start_time,
+            "end_time": g.end_time,
+            "duration_minutes": dur_min,
+            "location": g.location or "Salle 1",
+            "color": g.color or "#4f46e5",
+            "student_count": student_count,
+            "capacity": g.capacity
+        })
+
     total_hours = round(total_weekly_minutes / 60, 1)
-    
-    # Generate structured day-by-day breakdown (0: Lundi ... 6: Dimanche)
+
     days_breakdown = []
     for day_idx in range(7):
         day_items = [it for it in items if it["day_of_week"] == day_idx]
         day_mins = sum(it["duration_minutes"] for it in day_items)
         day_hrs = round(day_mins / 60, 1)
-        
-        # Formatted string like "4h" or "3h30" or "0h"
         if day_mins == 0:
             formatted_hrs = "0h"
         elif day_mins % 60 == 0:
             formatted_hrs = f"{day_mins // 60}h"
         else:
             formatted_hrs = f"{day_mins // 60}h{day_mins % 60:02d}"
-            
+
         days_breakdown.append({
             "day_of_week": day_idx,
-            "day_name_fr": day_names_fr[day_idx],
-            "day_name_ar": day_names_ar[day_idx],
+            "day_name_fr": DAY_NAMES_FR[day_idx],
+            "day_name_ar": DAY_NAMES_AR[day_idx],
             "sessions_count": len(day_items),
             "total_minutes": day_mins,
             "total_hours": day_hrs,
             "total_hours_formatted": formatted_hrs,
             "sessions": day_items
         })
-    
+
+    all_groups_count = db.query(Group).filter(Group.user_id == tenant_id).count()
+
     return {
-        "total_groups": len(groups),
+        "total_groups": all_groups_count,
         "active_scheduled_groups": len(items),
         "total_weekly_hours": total_hours,
         "total_weekly_minutes": total_weekly_minutes,
         "schedule_items": items,
         "days_breakdown": days_breakdown
-    }
-
-@router.post("/set-group-recurring")
-def set_group_recurring_schedule(
-    data: dict,
-    admin_user: User = Depends(require_admin),
-    db: Session = Depends(get_db)
-):
-    tenant_id = get_tenant_admin_id(admin_user)
-    group_id = data.get("group_id")
-    day_of_week = data.get("day_of_week")
-    start_time = data.get("start_time")
-    end_time = data.get("end_time")
-    location = data.get("location", "Salle 1")
-    
-    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
-    if not group:
-        raise HTTPException(status_code=404, detail="Groupe non trouvé")
-        
-    day_names = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-    day_name = day_names[day_of_week] if 0 <= int(day_of_week) < 7 else "Jour"
-    
-    old_sched = group.schedule
-    group.day_of_week = int(day_of_week)
-    group.start_time = start_time
-    group.end_time = end_time
-    group.location = location or group.location
-    group.schedule = f"{day_name} {start_time} - {end_time}"
-    
-    db.commit()
-    db.refresh(group)
-
-    log_audit(
-        db=db,
-        user=admin_user,
-        action="SCHEDULE_UPDATED",
-        entity_type="schedule",
-        entity_id=group.id,
-        old_value={"schedule": old_sched},
-        new_value={"schedule": group.schedule, "day_of_week": group.day_of_week, "start_time": group.start_time, "end_time": group.end_time}
-    )
-
-    return {
-        "success": True,
-        "message": f"Horaire fixe récurrent mis à jour : {group.schedule}",
-        "group": {
-            "id": group.id,
-            "name": group.name,
-            "day_of_week": group.day_of_week,
-            "start_time": group.start_time,
-            "end_time": group.end_time,
-            "schedule": group.schedule,
-            "color": group.color
-        }
     }
 
 @router.get("", response_model=List[SessionOut])
@@ -249,431 +156,218 @@ def list_sessions(
 ):
     tenant_id = get_tenant_admin_id(current_user)
     today = datetime.date.today()
+
     if start_date:
-        d_start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        try:
+            d_start = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+        except Exception:
+            d_start = today - datetime.timedelta(days=today.weekday())
     else:
-        # Default window: 4 weeks before today
-        d_start = today - datetime.timedelta(days=28)
-        
+        d_start = today - datetime.timedelta(days=today.weekday())
+
     if end_date:
-        d_end = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+        try:
+            d_end = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+        except Exception:
+            d_end = d_start + datetime.timedelta(days=6)
     else:
-        # Default window: 12 weeks after today
-        d_end = today + datetime.timedelta(days=84)
+        d_end = d_start + datetime.timedelta(days=6)
 
-    # 1. Fetch real DBSession records in range
-    db_query = db.query(DBSession).join(Group).filter(
-        Group.user_id == tenant_id,
-        DBSession.date >= d_start,
-        DBSession.date <= d_end
-    )
-    if group_id and group_id > 0:
-        db_query = db_query.filter(DBSession.group_id == group_id)
-        
-    db_sessions = db_query.all()
-    db_sessions_map = {(s.group_id, s.date): s for s in db_sessions}
-
-    # 2. Fetch recurring groups
-    grp_query = db.query(Group).filter(
+    query = db.query(Group).filter(
         Group.user_id == tenant_id,
         Group.day_of_week.isnot(None),
         Group.start_time.isnot(None),
         Group.end_time.isnot(None)
     )
     if group_id and group_id > 0:
-        grp_query = grp_query.filter(Group.id == group_id)
-        
-    recurring_groups = grp_query.all()
+        query = query.filter(Group.id == group_id)
+
+    scheduled_groups = query.order_by(Group.day_of_week.asc(), Group.start_time.asc()).all()
 
     result_sessions = []
-    processed_keys = set()
-
-    # 3. For each recurring group, iterate through dates matching its day_of_week
-    for grp in recurring_groups:
+    for grp in scheduled_groups:
         cur_d = d_start
         while cur_d <= d_end:
             if cur_d.weekday() == grp.day_of_week:
-                key = (grp.id, cur_d)
-                processed_keys.add(key)
-                
-                if key in db_sessions_map:
-                    s = db_sessions_map[key]
-                    if s.status == "cancelled":
-                        cur_d += datetime.timedelta(days=1)
-                        continue
-                    is_time_changed = (s.start_time != grp.start_time or s.end_time != grp.end_time)
-                    is_loc_changed = (s.location != grp.location)
-                    is_exception = is_time_changed or bool(s.topic) or is_loc_changed
-                    result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=True, is_exception=is_exception))
-                else:
-                    result_sessions.append(synthesize_virtual_session(grp, cur_d, db, user_id=tenant_id))
+                result_sessions.append(build_recurring_session_out(grp, cur_d, db, tenant_id))
             cur_d += datetime.timedelta(days=1)
-
-    # 4. Add standalone/non-recurring DBSessions
-    for (gid, d), s in db_sessions_map.items():
-        if (gid, d) not in processed_keys:
-            if s.status == "cancelled":
-                continue
-            result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=False, is_exception=True))
 
     result_sessions.sort(key=lambda x: (x["date"], x["start_time"]))
     return result_sessions
 
-@router.post("/resolve", response_model=SessionOut)
-def resolve_or_create_session(
-    data: SessionCreate,
+@router.post("/set-group-recurring")
+@router.post("/schedule")
+def set_group_schedule(
+    data: dict,
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """
-    Given a group_id and date, either returns the existing DBSession (updating it)
-    or creates/materializes it into a permanent DBSession with exception support.
-    (ADMIN ONLY)
-    """
     tenant_id = get_tenant_admin_id(admin_user)
-    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
+    group_id = data.get("group_id")
+    day_of_week = int(data.get("day_of_week", 0))
+    start_time = str(data.get("start_time", "10:00")).strip()
+    end_time = str(data.get("end_time", "12:00")).strip()
+    location = str(data.get("location", "Salle 1")).strip() or "Salle 1"
+    force = bool(data.get("force", False))
+
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
-        
-    if data.is_permanent_move:
-        # Update group's recurring schedule permanently
-        day_names = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"]
-        d_idx = data.date.weekday()
-        day_name = day_names[d_idx]
-        group.day_of_week = d_idx
-        group.start_time = data.start_time
-        group.end_time = data.end_time
-        group.schedule = f"{day_name} {data.start_time} - {data.end_time}"
-        group.location = data.location or group.location
-        db.commit()
-        db.refresh(group)
-        
-    existing = db.query(DBSession).filter(
-        DBSession.group_id == data.group_id,
-        DBSession.date == data.date
-    ).first()
-    
-    if existing:
-        existing.start_time = data.start_time or existing.start_time
-        existing.end_time = data.end_time or existing.end_time
-        if data.topic is not None: existing.topic = data.topic
-        if data.location is not None: existing.location = data.location
-        if data.notes is not None: existing.notes = data.notes
-        if data.status is not None: existing.status = data.status
-        db.commit()
-        db.refresh(existing)
 
-        log_audit(
-            db=db,
-            user=admin_user,
-            action="SCHEDULE_UPDATED",
-            entity_type="session",
-            entity_id=existing.id,
-            new_value={"group_id": existing.group_id, "date": str(existing.date), "start_time": existing.start_time, "end_time": existing.end_time}
-        )
-
-        return build_session_out(existing, db, user_id=tenant_id, is_recurring=True, is_exception=not data.is_permanent_move)
-    else:
-        new_sess = DBSession(
-            user_id=tenant_id,
-            group_id=data.group_id,
-            date=data.date,
-            start_time=data.start_time or group.start_time or "17:00",
-            end_time=data.end_time or group.end_time or "18:30",
-            topic=data.topic,
-            location=data.location or group.location or "Salle 1",
-            notes=data.notes,
-            status=data.status or "scheduled"
-        )
-        db.add(new_sess)
-        db.commit()
-        db.refresh(new_sess)
-
-        log_audit(
-            db=db,
-            user=admin_user,
-            action="SCHEDULE_CREATED",
-            entity_type="session",
-            entity_id=new_sess.id,
-            new_value={"group_id": new_sess.group_id, "date": str(new_sess.date), "start_time": new_sess.start_time, "end_time": new_sess.end_time}
-        )
-
-        return build_session_out(new_sess, db, user_id=tenant_id, is_recurring=True, is_exception=not data.is_permanent_move)
-
-@router.post("/revert-to-recurring")
-def revert_to_recurring(
-    group_id: int,
-    date: datetime.date,
-    admin_user: User = Depends(require_admin),
-    db: Session = Depends(get_db)
-):
-    """Revert a single session exception to the group's recurring schedule (ADMIN ONLY)."""
-    tenant_id = get_tenant_admin_id(admin_user)
-    session = db.query(DBSession).join(Group).filter(
-        DBSession.group_id == group_id,
-        DBSession.date == date,
-        Group.user_id == tenant_id
-    ).first()
-    if session:
-        s_id = session.id
-        db.delete(session)
-        db.commit()
-
-        log_audit(
-            db=db,
-            user=admin_user,
-            action="SCHEDULE_DELETED",
-            entity_type="session_exception",
-            entity_id=s_id,
-            old_value={"group_id": group_id, "date": str(date)}
-        )
-
-    return {"success": True, "message": "Horaire rétabli à l'horaire habituel du groupe."}
-
-@router.post("", response_model=SessionOut)
-def create_session(
-    data: SessionCreate,
-    admin_user: User = Depends(require_admin),
-    db: Session = Depends(get_db)
-):
-    """Create a new session (ADMIN ONLY)."""
-    tenant_id = get_tenant_admin_id(admin_user)
-    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
-    if not group:
-        raise HTTPException(status_code=404, detail="Groupe non trouvé")
-        
-    # Check conflicts
-    temp_session = DBSession(
-        group_id=data.group_id,
-        date=data.date,
-        start_time=data.start_time,
-        end_time=data.end_time
-    )
-    has_conflict, conflict_details = detect_conflicts(temp_session, db, user_id=tenant_id)
-    
-    if has_conflict and not data.force:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "message": f"Conflit d'horaire détecté : {conflict_details}",
-                "conflict_details": conflict_details
-            }
-        )
-        
-    # If a session already exists for this group on this date, update it as an override/exception
-    existing = db.query(DBSession).filter(
-        DBSession.group_id == data.group_id,
-        DBSession.date == data.date
-    ).first()
-    
-    if existing:
-        existing.start_time = data.start_time
-        existing.end_time = data.end_time
-        existing.topic = data.topic
-        existing.location = data.location or group.location
-        existing.notes = data.notes
-        existing.status = data.status
-        db.commit()
-        db.refresh(existing)
-
-        log_audit(
-            db=db,
-            user=admin_user,
-            action="SCHEDULE_UPDATED",
-            entity_type="session",
-            entity_id=existing.id,
-            new_value={"group_id": existing.group_id, "date": str(existing.date), "start_time": existing.start_time, "end_time": existing.end_time}
-        )
-
-        return build_session_out(existing, db, user_id=tenant_id, is_recurring=True, is_exception=True)
-        
-    session = DBSession(
-        user_id=tenant_id,
-        group_id=data.group_id,
-        date=data.date,
-        start_time=data.start_time,
-        end_time=data.end_time,
-        topic=data.topic,
-        location=data.location or group.location,
-        notes=data.notes,
-        status=data.status
-    )
-    db.add(session)
-    db.commit()
-    db.refresh(session)
-
-    log_audit(
-        db=db,
-        user=admin_user,
-        action="SCHEDULE_CREATED",
-        entity_type="session",
-        entity_id=session.id,
-        new_value={"group_id": session.group_id, "date": str(session.date), "start_time": session.start_time, "end_time": session.end_time}
-    )
-
-    return build_session_out(session, db, user_id=tenant_id, is_recurring=True, is_exception=True)
-
-@router.get("/{session_id}", response_model=SessionOut)
-def get_session(
-    session_id: int,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    tenant_id = get_tenant_admin_id(current_user)
-    s = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
-    if not s:
-        raise HTTPException(status_code=404, detail="Séance non trouvée")
-    return build_session_out(s, db, user_id=tenant_id)
-
-@router.put("/{session_id}", response_model=SessionOut)
-def update_session(
-    session_id: int,
-    data: SessionUpdate,
-    force: bool = False,
-    admin_user: User = Depends(require_admin),
-    db: Session = Depends(get_db)
-):
-    """Update a session (ADMIN ONLY)."""
-    tenant_id = get_tenant_admin_id(admin_user)
-    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Séance non trouvée")
-        
-    old_val = {"start_time": session.start_time, "end_time": session.end_time, "date": str(session.date)}
-
-    if data.group_id is not None:
-        target_grp = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
-        if not target_grp:
-            raise HTTPException(status_code=404, detail="Groupe non trouvé")
-        session.group_id = data.group_id
-    if data.date is not None:
-        session.date = data.date
-    if data.start_time is not None:
-        session.start_time = data.start_time
-    if data.end_time is not None:
-        session.end_time = data.end_time
-    if data.topic is not None:
-        session.topic = data.topic
-    if data.location is not None:
-        session.location = data.location
-    if data.notes is not None:
-        session.notes = data.notes
-    if data.status is not None:
-        session.status = data.status
-        
-    # Check conflicts
-    has_conflict, conflict_details = detect_conflicts(session, db, user_id=tenant_id)
+    # Conflict check
+    has_conflict, conflict_msg = detect_group_conflict(group.id, day_of_week, start_time, end_time, db, tenant_id)
     if has_conflict and not force:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail={
-                "message": f"Conflit d'horaire détecté : {conflict_details}",
-                "conflict_details": conflict_details
-            }
+            detail={"message": conflict_msg, "conflict_details": conflict_msg}
         )
-        
+
+    day_name = DAY_NAMES_FR[day_of_week] if 0 <= day_of_week < 7 else "Jour"
+    old_sched = group.schedule
+
+    group.day_of_week = day_of_week
+    group.start_time = start_time
+    group.end_time = end_time
+    group.location = location
+    group.schedule = f"{day_name} {start_time} - {end_time}"
+
+    # Clean any old standalone DBSession rows for this group
+    db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.user_id == tenant_id).delete()
+
     db.commit()
-    db.refresh(session)
+    db.refresh(group)
 
     log_audit(
         db=db,
         user=admin_user,
         action="SCHEDULE_UPDATED",
-        entity_type="session",
-        entity_id=session.id,
-        old_value=old_val,
-        new_value={"start_time": session.start_time, "end_time": session.end_time, "date": str(session.date)}
+        entity_type="group_schedule",
+        entity_id=group.id,
+        old_value={"schedule": old_sched},
+        new_value={"schedule": group.schedule, "day_of_week": group.day_of_week, "start_time": group.start_time, "end_time": group.end_time}
     )
 
-    return build_session_out(session, db, user_id=tenant_id, is_recurring=True, is_exception=True)
+    return {
+        "success": True,
+        "message": f"Programmation hebdomadaire enregistrée : {group.name} chaque {group.schedule}",
+        "group": {
+            "id": group.id,
+            "name": group.name,
+            "day_of_week": group.day_of_week,
+            "start_time": group.start_time,
+            "end_time": group.end_time,
+            "schedule": group.schedule,
+            "location": group.location,
+            "color": group.color
+        }
+    }
 
-@router.delete("/by-date/{group_id}/{date_str}")
-def delete_session_by_date(
-    group_id: int,
-    date_str: str,
+@router.post("", response_model=SessionOut)
+@router.post("/resolve", response_model=SessionOut)
+def save_or_update_session(
+    data: SessionCreate,
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Delete / Cancel a session for a specific group and date (ADMIN ONLY)."""
     tenant_id = get_tenant_admin_id(admin_user)
-    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
+    group = db.query(Group).filter(Group.id == data.group_id, Group.user_id == tenant_id).first()
     if not group:
         raise HTTPException(status_code=404, detail="Groupe non trouvé")
-        
-    try:
-        session_date = datetime.date.fromisoformat(date_str)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Date invalide (format attendu YYYY-MM-DD)")
 
-    existing = db.query(DBSession).filter(
-        DBSession.group_id == group_id,
-        DBSession.date == session_date,
-        DBSession.user_id == tenant_id
-    ).first()
+    day_idx = data.date.weekday() if data.date else (group.day_of_week if group.day_of_week is not None else 0)
+    day_name = DAY_NAMES_FR[day_idx] if 0 <= day_idx < 7 else "Jour"
+    start_time = data.start_time or group.start_time or "10:00"
+    end_time = data.end_time or group.end_time or "12:00"
 
-    if existing:
-        if group.day_of_week == session_date.weekday():
-            existing.status = "cancelled"
-            db.commit()
-        else:
-            db.delete(existing)
-            db.commit()
-        s_id = existing.id
-    else:
-        new_sess = DBSession(
-            user_id=tenant_id,
-            group_id=group_id,
-            date=session_date,
-            start_time=group.start_time or "10:00",
-            end_time=group.end_time or "12:00",
-            status="cancelled"
+    # Conflict check
+    has_conflict, conflict_msg = detect_group_conflict(group.id, day_idx, start_time, end_time, db, tenant_id)
+    if has_conflict and not data.force:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": conflict_msg, "conflict_details": conflict_msg}
         )
-        db.add(new_sess)
-        db.commit()
-        s_id = new_sess.id
 
-    log_audit(
-        db=db,
-        user=admin_user,
-        action="SCHEDULE_DELETED",
-        entity_type="session",
-        entity_id=s_id,
-        old_value={"group_id": group_id, "date": date_str}
-    )
+    group.day_of_week = day_idx
+    group.start_time = start_time
+    group.end_time = end_time
+    group.location = data.location or group.location or "Salle 1"
+    group.schedule = f"{day_name} {group.start_time} - {group.end_time}"
 
-    return {"success": True, "message": "Séance supprimée avec succès du planning."}
+    target_date = data.date or datetime.date.today()
+    sess = db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.date == target_date).first()
+    if not sess:
+        sess = DBSession(
+            group_id=group.id,
+            user_id=tenant_id,
+            date=target_date,
+            start_time=group.start_time,
+            end_time=group.end_time,
+            topic=data.topic,
+            location=group.location,
+            notes=data.notes,
+            status=data.status or "scheduled"
+        )
+        db.add(sess)
+    else:
+        sess.start_time = group.start_time
+        sess.end_time = group.end_time
+        sess.location = group.location
+        if data.topic:
+            sess.topic = data.topic
+        if data.notes:
+            sess.notes = data.notes
 
+    db.commit()
+    db.refresh(group)
+    db.refresh(sess)
+
+    res = build_recurring_session_out(group, target_date, db, tenant_id)
+    res["id"] = sess.id
+    return res
+
+@router.delete("/group/{group_id}")
+@router.delete("/by-date/{group_id}/{date_str}")
 @router.delete("/{session_id}")
-def delete_session(
-    session_id: int,
+def delete_schedule(
+    session_id: Optional[int] = None,
+    group_id: Optional[int] = None,
+    date_str: Optional[str] = None,
     admin_user: User = Depends(require_admin),
     db: Session = Depends(get_db)
 ):
-    """Delete a session (ADMIN ONLY)."""
+    """Delete a weekly recurring schedule completely for a group (ADMIN ONLY)."""
     tenant_id = get_tenant_admin_id(admin_user)
-    session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Séance non trouvée")
-        
-    s_info = {"group_id": session.group_id, "date": str(session.date), "start_time": session.start_time}
-    group = session.group
+    
+    target_group_id = group_id or session_id
+    group = db.query(Group).filter(Group.id == target_group_id, Group.user_id == tenant_id).first()
+    
+    if not group and session_id:
+        sess = db.query(DBSession).filter(DBSession.id == session_id, DBSession.user_id == tenant_id).first()
+        if sess:
+            group = db.query(Group).filter(Group.id == sess.group_id, Group.user_id == tenant_id).first()
 
-    if group and group.day_of_week == session.date.weekday():
-        session.status = "cancelled"
-        db.commit()
-    else:
-        db.delete(session)
-        db.commit()
+    if not group:
+        raise HTTPException(status_code=404, detail="Groupe non trouvé")
+
+    old_sched = group.schedule
+    group.day_of_week = None
+    group.start_time = None
+    group.end_time = None
+    group.schedule = None
+
+    db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.user_id == tenant_id).delete()
+    db.commit()
 
     log_audit(
         db=db,
         user=admin_user,
         action="SCHEDULE_DELETED",
-        entity_type="session",
-        entity_id=session_id,
-        old_value=s_info
+        entity_type="group_schedule",
+        entity_id=group.id,
+        old_value={"schedule": old_sched}
     )
 
-    return {"success": True, "message": "Séance supprimée avec succès du planning."}
-
-
+    return {
+        "success": True,
+        "message": f"Programmation hebdomadaire supprimée pour {group.name}."
+    }

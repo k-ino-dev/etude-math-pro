@@ -17,7 +17,26 @@ def get_session_attendance(
     tenant_id = get_tenant_admin_id(current_user)
     session = db.query(DBSession).join(Group).filter(DBSession.id == session_id, Group.user_id == tenant_id).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Séance non trouvée")
+        group = db.query(Group).filter(Group.id == session_id, Group.user_id == tenant_id).first()
+        if group:
+            import datetime
+            today = datetime.date.today()
+            session = db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.date == today).first()
+            if not session:
+                session = DBSession(
+                    group_id=group.id,
+                    user_id=tenant_id,
+                    date=today,
+                    start_time=group.start_time or "10:00",
+                    end_time=group.end_time or "12:00",
+                    location=group.location or "Salle 1",
+                    status="completed"
+                )
+                db.add(session)
+                db.commit()
+                db.refresh(session)
+        else:
+            raise HTTPException(status_code=404, detail="Séance non trouvée")
         
     group = db.query(Group).filter(Group.id == session.group_id).first()
     students = db.query(Student).filter(Student.group_id == session.group_id, Student.is_active == True, Student.user_id == tenant_id).order_by(Student.last_name.asc(), Student.first_name.asc()).all()
@@ -97,7 +116,26 @@ def record_bulk_attendance(
     tenant_id = get_tenant_admin_id(current_user)
     session = db.query(DBSession).join(Group).filter(DBSession.id == data.session_id, Group.user_id == tenant_id).first()
     if not session:
-        raise HTTPException(status_code=404, detail="Séance non trouvée")
+        group = db.query(Group).filter(Group.id == data.session_id, Group.user_id == tenant_id).first()
+        if group:
+            import datetime
+            today = datetime.date.today()
+            session = db.query(DBSession).filter(DBSession.group_id == group.id, DBSession.date == today).first()
+            if not session:
+                session = DBSession(
+                    group_id=group.id,
+                    user_id=tenant_id,
+                    date=today,
+                    start_time=group.start_time or "10:00",
+                    end_time=group.end_time or "12:00",
+                    location=group.location or "Salle 1",
+                    status="completed"
+                )
+                db.add(session)
+                db.commit()
+                db.refresh(session)
+        else:
+            raise HTTPException(status_code=404, detail="Séance non trouvée")
         
     # Update session topic and notes
     if data.topic is not None:
@@ -116,7 +154,7 @@ def record_bulk_attendance(
             continue
             
         existing = db.query(Attendance).filter(
-            Attendance.session_id == data.session_id,
+            Attendance.session_id == session.id,
             Attendance.student_id == rec.student_id
         ).first()
         
@@ -125,7 +163,7 @@ def record_bulk_attendance(
             existing.notes = rec.notes
         else:
             new_att = Attendance(
-                session_id=data.session_id,
+                session_id=session.id,
                 student_id=rec.student_id,
                 status=rec.status,
                 notes=rec.notes

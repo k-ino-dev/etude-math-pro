@@ -6,7 +6,6 @@ from ..database import get_db
 from ..models import Student, Group, Session as DBSession, Attendance, Payment, User
 from ..schemas import DashboardStats, SessionOut
 from .students import get_current_month_str, get_active_month
-from .sessions import build_session_out
 from .auth import get_current_user, get_tenant_admin_id
 
 router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
