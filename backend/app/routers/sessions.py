@@ -298,10 +298,12 @@ def list_sessions(
                 
                 if key in db_sessions_map:
                     s = db_sessions_map[key]
+                    if s.status == "cancelled":
+                        cur_d += datetime.timedelta(days=1)
+                        continue
                     is_time_changed = (s.start_time != grp.start_time or s.end_time != grp.end_time)
-                    is_cancelled = (s.status == "cancelled")
                     is_loc_changed = (s.location != grp.location)
-                    is_exception = is_time_changed or is_cancelled or bool(s.topic) or is_loc_changed
+                    is_exception = is_time_changed or bool(s.topic) or is_loc_changed
                     result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=True, is_exception=is_exception))
                 else:
                     result_sessions.append(synthesize_virtual_session(grp, cur_d, db, user_id=tenant_id))
@@ -310,6 +312,8 @@ def list_sessions(
     # 4. Add standalone/non-recurring DBSessions
     for (gid, d), s in db_sessions_map.items():
         if (gid, d) not in processed_keys:
+            if s.status == "cancelled":
+                continue
             result_sessions.append(build_session_out(s, db, user_id=tenant_id, is_recurring=False, is_exception=True))
 
     result_sessions.sort(key=lambda x: (x["date"], x["start_time"]))
@@ -583,6 +587,62 @@ def update_session(
 
     return build_session_out(session, db, user_id=tenant_id, is_recurring=True, is_exception=True)
 
+@router.delete("/by-date/{group_id}/{date_str}")
+def delete_session_by_date(
+    group_id: int,
+    date_str: str,
+    admin_user: User = Depends(require_admin),
+    db: Session = Depends(get_db)
+):
+    """Delete / Cancel a session for a specific group and date (ADMIN ONLY)."""
+    tenant_id = get_tenant_admin_id(admin_user)
+    group = db.query(Group).filter(Group.id == group_id, Group.user_id == tenant_id).first()
+    if not group:
+        raise HTTPException(status_code=404, detail="Groupe non trouvé")
+        
+    try:
+        session_date = datetime.date.fromisoformat(date_str)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Date invalide (format attendu YYYY-MM-DD)")
+
+    existing = db.query(DBSession).filter(
+        DBSession.group_id == group_id,
+        DBSession.date == session_date,
+        DBSession.user_id == tenant_id
+    ).first()
+
+    if existing:
+        if group.day_of_week == session_date.weekday():
+            existing.status = "cancelled"
+            db.commit()
+        else:
+            db.delete(existing)
+            db.commit()
+        s_id = existing.id
+    else:
+        new_sess = DBSession(
+            user_id=tenant_id,
+            group_id=group_id,
+            date=session_date,
+            start_time=group.start_time or "10:00",
+            end_time=group.end_time or "12:00",
+            status="cancelled"
+        )
+        db.add(new_sess)
+        db.commit()
+        s_id = new_sess.id
+
+    log_audit(
+        db=db,
+        user=admin_user,
+        action="SCHEDULE_DELETED",
+        entity_type="session",
+        entity_id=s_id,
+        old_value={"group_id": group_id, "date": date_str}
+    )
+
+    return {"success": True, "message": "Séance supprimée avec succès du planning."}
+
 @router.delete("/{session_id}")
 def delete_session(
     session_id: int,
@@ -596,8 +656,14 @@ def delete_session(
         raise HTTPException(status_code=404, detail="Séance non trouvée")
         
     s_info = {"group_id": session.group_id, "date": str(session.date), "start_time": session.start_time}
-    db.delete(session)
-    db.commit()
+    group = session.group
+
+    if group and group.day_of_week == session.date.weekday():
+        session.status = "cancelled"
+        db.commit()
+    else:
+        db.delete(session)
+        db.commit()
 
     log_audit(
         db=db,
@@ -608,6 +674,6 @@ def delete_session(
         old_value=s_info
     )
 
-    return {"success": True, "message": "Séance supprimée / Exception retirée. L'horaire fixe du groupe s'applique à nouveau."}
+    return {"success": True, "message": "Séance supprimée avec succès du planning."}
 
 

@@ -337,6 +337,12 @@ const PlanningView = {
                             <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" title="Modifier" class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
                               <i data-lucide="edit-2" class="w-3 h-3"></i>
                             </button>
+                            ${State.isAdmin() ? `
+                            <button onclick="PlanningView.confirmDirectDelete(${s.id || 'null'}, ${s.group_id}, '${s.date}')" title="${isAr ? 'حذف الحصة' : 'Supprimer la séance'}" class="px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[9px] font-bold">
+                              <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
+                              <span>${isAr ? 'حذف' : 'Supprimer'}</span>
+                            </button>
+                            ` : ''}
                           </div>
                         </div>
 
@@ -466,6 +472,12 @@ const PlanningView = {
                           <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" title="Modifier" class="p-1 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
                             <i data-lucide="edit-2" class="w-3 h-3"></i>
                           </button>
+                          ${State.isAdmin() ? `
+                          <button onclick="PlanningView.confirmDirectDelete(${s.id || 'null'}, ${s.group_id}, '${s.date}')" title="${isAr ? 'حذف الحصة' : 'Supprimer la séance'}" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[10px] font-bold">
+                            <i data-lucide="trash-2" class="w-3 h-3"></i>
+                            <span>${isAr ? 'حذف' : 'Supprimer'}</span>
+                          </button>
+                          ` : ''}
                         </div>
                       </div>
 
@@ -537,9 +549,15 @@ const PlanningView = {
                   <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" class="px-3 py-1.5 rounded-xl ${s.is_completed ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'btn-gold-action'} text-xs font-black">
                     ${s.is_completed ? I18n.t('editAttendance') : I18n.t('takeAttendance')}
                   </button>
-                  <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-[#ede5d8]">
+                  <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-[#ede5d8]" title="Modifier">
                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                   </button>
+                  ${State.isAdmin() ? `
+                  <button onclick="PlanningView.confirmDirectDelete(${s.id || 'null'}, ${s.group_id}, '${s.date}')" class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 flex items-center gap-1.5 transition-colors" title="${isAr ? 'حذف الحصة' : 'Supprimer la séance'}">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    <span>${isAr ? 'حذف' : 'Supprimer'}</span>
+                  </button>
+                  ` : ''}
                 </div>
               </div>
             </div>
@@ -659,12 +677,18 @@ const PlanningView = {
                 </td>
                 <td class="px-6 py-4 text-right rtl:text-left">
                   <div class="flex items-center justify-end rtl:justify-start gap-1.5">
-                    <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-xl transition-colors">
+                    <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}', ${s.id || 'null'})" class="p-1.5 text-slate-400 hover:text-emerald-600 rounded-xl transition-colors" title="Faire l'appel">
                       <i data-lucide="check-circle-2" class="w-4 h-4"></i>
                     </button>
-                    <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors">
+                    <button onclick="PlanningView.openSessionDetail(${s.group_id}, '${s.date}')" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors" title="Modifier">
                       <i data-lucide="edit-3" class="w-4 h-4"></i>
                     </button>
+                    ${State.isAdmin() ? `
+                    <button onclick="PlanningView.confirmDirectDelete(${s.id || 'null'}, ${s.group_id}, '${s.date}')" class="px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 flex items-center gap-1 transition-colors" title="${isAr ? 'حذف الحصة' : 'Supprimer la séance'}">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                      <span>${isAr ? 'حذف' : 'Supprimer'}</span>
+                    </button>
+                    ` : ''}
                   </div>
                 </td>
               </tr>
@@ -1325,26 +1349,35 @@ const PlanningView = {
     }
   },
 
-  deleteSession(sessionId, groupId = null, dateStr = null) {
+  confirmDirectDelete(sessionId, groupId, dateStr) {
     const isAr = I18n.currentLang === 'ar';
     Modal.confirm({
-      title: isAr ? 'حذف الحصة' : 'Supprimer la séance',
-      message: isAr ? 'هل أنت متأكد من حذف هذه الحصة ؟ سيتم استرجاع التوقيت الأصلي أو إزالتها.' : 'Supprimer cette séance ?',
-      confirmText: isAr ? 'حذف' : 'Supprimer',
+      title: isAr ? '🗑️ تأكيد حذف الحصة' : '🗑️ Confirmation de suppression',
+      message: isAr 
+        ? 'هل أنت متأكد من رغبتك في حذف هذه الحصة من جدول الأوقات ؟ سيتم حذفها مباشرة وتحديث الجدول فوراً.' 
+        : 'Êtes-vous sûr de vouloir supprimer cette séance ? Elle sera immédiatement retirée du planning.',
+      confirmText: isAr ? '🗑 حذف الحصة' : '🗑 Supprimer',
+      cancelText: isAr ? 'إلغاء' : 'Annuler',
+      confirmClass: 'bg-rose-600 hover:bg-rose-700 text-white font-bold',
       onConfirm: async () => {
         try {
           if (sessionId) {
             await API.delete(`/api/sessions/${sessionId}`);
           } else if (groupId && dateStr) {
-            await API.post(`/api/sessions/revert-to-recurring?group_id=${groupId}&date=${dateStr}`);
+            await API.delete(`/api/sessions/by-date/${groupId}/${dateStr}`);
           }
-          Toast.success(isAr ? 'تم حذف الحصة.' : 'Séance supprimée.');
+          Toast.success(isAr ? 'تم حذف الحصة بنجاح من جدول الأوقات.' : 'Séance supprimée avec succès du planning.');
+          await State.loadInitialData();
           await PlanningView.loadSessions(document.getElementById('main-view'));
         } catch (e) {
-          Toast.error(e.message);
+          Toast.error(e.message || (isAr ? 'حدث خطأ أثناء حذف الحصة.' : 'Erreur lors de la suppression de la séance.'));
         }
       }
     });
+  },
+
+  deleteSession(sessionId, groupId = null, dateStr = null) {
+    this.confirmDirectDelete(sessionId, groupId, dateStr);
   }
 };
 

@@ -71,10 +71,10 @@ def seed_database(db: Session, reset: bool = False):
             "level": "Bac — Mathématiques",
             "subject": "Mathématiques",
             "capacity": 15,
-            "schedule": "Samedi 10:00 - 12:00",
-            "day_of_week": 5,
-            "start_time": "10:00",
-            "end_time": "12:00",
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
             "location": "Salle Principale A",
             "color": "#4f46e5"
         },
@@ -83,10 +83,10 @@ def seed_database(db: Session, reset: bool = False):
             "level": "Bac — Sciences",
             "subject": "Mathématiques",
             "capacity": 15,
-            "schedule": "Dimanche 10:00 - 12:00",
-            "day_of_week": 6,
-            "start_time": "10:00",
-            "end_time": "12:00",
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
             "location": "Salle Principale A",
             "color": "#7c3aed"
         },
@@ -95,10 +95,10 @@ def seed_database(db: Session, reset: bool = False):
             "level": "3ème — Mathématiques",
             "subject": "Mathématiques",
             "capacity": 12,
-            "schedule": "Mercredi 15:30 - 17:30",
-            "day_of_week": 2,
-            "start_time": "15:30",
-            "end_time": "17:30",
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
             "location": "Salle B",
             "color": "#0284c7"
         },
@@ -107,10 +107,10 @@ def seed_database(db: Session, reset: bool = False):
             "level": "2ème — Sciences",
             "subject": "Mathématiques",
             "capacity": 12,
-            "schedule": "Vendredi 17:00 - 19:00",
-            "day_of_week": 4,
-            "start_time": "17:00",
-            "end_time": "19:00",
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
             "location": "Salle B",
             "color": "#0d9488"
         },
@@ -119,10 +119,10 @@ def seed_database(db: Session, reset: bool = False):
             "level": "1ère",
             "subject": "Mathématiques",
             "capacity": 10,
-            "schedule": "Samedi 15:00 - 16:30",
-            "day_of_week": 5,
-            "start_time": "15:00",
-            "end_time": "16:30",
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
             "location": "Salle C",
             "color": "#d97706"
         },
@@ -217,76 +217,8 @@ def seed_database(db: Session, reset: bool = False):
         db.add(StudentNote(student_id=st_id, content=note_txt))
     db.commit()
 
-    # 5. Sessions (Past with attendance, Today's sessions, Upcoming)
-    today = datetime.date.today()
-    sessions_to_create = [
-        # Past session 1 (Bac Math A)
-        {
-            "group_id": created_groups[0].id,
-            "date": today - datetime.timedelta(days=7),
-            "start_time": "10:00",
-            "end_time": "12:00",
-            "topic": "Fonctions Logarithmes & Continuité",
-            "location": "Salle Principale A",
-            "notes": "Cours magistral et résolution de la série d'exercices n°3",
-            "status": "completed"
-        },
-        # Past session 2 (2ème Sci A)
-        {
-            "group_id": created_groups[2].id,
-            "date": today - datetime.timedelta(days=3),
-            "start_time": "15:30",
-            "end_time": "17:30",
-            "topic": "Polynômes du second degré & Factorisation",
-            "location": "Salle B",
-            "notes": "Exercices d'application directe",
-            "status": "completed"
-        },
-        # Today's Session 1 (Bac Math A)
-        {
-            "group_id": created_groups[0].id,
-            "date": today,
-            "start_time": "17:00",
-            "end_time": "18:30",
-            "topic": "Nombres Complexes - Forme trigonométrique et exponentielle",
-            "location": "Salle Principale A",
-            "notes": "Préparation aux exercices de type Bac",
-            "status": "scheduled"
-        },
-        # Today's Session 2 (9ème Base A)
-        {
-            "group_id": created_groups[4].id,
-            "date": today,
-            "start_time": "18:30",
-            "end_time": "20:00",
-            "topic": "Théorème de Thalès & Réciproque",
-            "location": "Salle C",
-            "notes": "Séance pratique avec figures géométriques",
-            "status": "scheduled"
-        },
-        # Upcoming Session (Bac Math B)
-        {
-            "group_id": created_groups[1].id,
-            "date": today + datetime.timedelta(days=1),
-            "start_time": "10:00",
-            "end_time": "12:00",
-            "topic": "Géométrie dans l'espace & Produit scalaire",
-            "location": "Salle Principale A",
-            "notes": "Représentation 3D",
-            "status": "scheduled"
-        },
-        # Upcoming Session (2ème Sci B)
-        {
-            "group_id": created_groups[3].id,
-            "date": today + datetime.timedelta(days=5),
-            "start_time": "17:00",
-            "end_time": "19:00",
-            "topic": "Trigonométrie & Formules d'addition",
-            "location": "Salle B",
-            "notes": "Série 4",
-            "status": "scheduled"
-        }
-    ]
+    # 5. Sessions (Planning starts completely empty)
+    sessions_to_create = []
 
     created_sessions = []
     for s_dict in sessions_to_create:
@@ -297,25 +229,8 @@ def seed_database(db: Session, reset: bool = False):
     for s_obj in created_sessions:
         db.refresh(s_obj)
 
-    # 6. Attendances for past sessions
-    # Past session 1 (Bac Math A - 8 students)
-    bac_a_students = [s for s in created_students if s.group_id == created_groups[0].id]
-    for idx, st in enumerate(bac_a_students):
-        status = "present"
-        if idx == 2:
-            status = "absent"
-        elif idx == 7:
-            status = "late"
-        db.add(Attendance(session_id=created_sessions[0].id, student_id=st.id, status=status))
-
-    # Past session 2 (2ème Sci A - 6 students)
-    sci_a_students = [s for s in created_students if s.group_id == created_groups[2].id]
-    for idx, st in enumerate(sci_a_students):
-        status = "present"
-        if idx == 4:
-            status = "late"
-        db.add(Attendance(session_id=created_sessions[1].id, student_id=st.id, status=status))
-    db.commit()
+    # 6. Attendances for past sessions (None if no initial sessions)
+    # (Any attendance created by teacher during classes will be stored normally)
 
     # 7. Payments History
     months_to_seed = ["Septembre 2025", "Octobre 2025", "Novembre 2025"]

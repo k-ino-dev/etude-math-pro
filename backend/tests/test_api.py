@@ -135,21 +135,32 @@ def test_conflict_detection_in_sessions():
 
 def test_bulk_attendance_flow():
     sessions = client.get("/api/sessions").json()
-    assert len(sessions) > 0
-    target_session = sessions[0]
-    
-    if target_session["id"] is None:
-        # Materialize virtual session via resolve endpoint
-        res = client.post("/api/sessions/resolve", json={
-            "group_id": target_session["group_id"],
-            "date": target_session["date"],
-            "start_time": target_session["start_time"],
-            "end_time": target_session["end_time"]
+    if len(sessions) == 0:
+        groups = client.get("/api/groups").json()
+        target_group = groups[0]
+        res = client.post("/api/sessions", json={
+            "group_id": target_group["id"],
+            "date": datetime.date.today().isoformat(),
+            "start_time": "10:00",
+            "end_time": "12:00",
+            "topic": "Séance Test Présences"
         })
         assert res.status_code == 200
         session_id = res.json()["id"]
     else:
-        session_id = target_session["id"]
+        target_session = sessions[0]
+        if target_session["id"] is None:
+            # Materialize virtual session via resolve endpoint
+            res = client.post("/api/sessions/resolve", json={
+                "group_id": target_session["group_id"],
+                "date": target_session["date"],
+                "start_time": target_session["start_time"],
+                "end_time": target_session["end_time"]
+            })
+            assert res.status_code == 200
+            session_id = res.json()["id"]
+        else:
+            session_id = target_session["id"]
     
     att_res = client.get(f"/api/attendance/session/{session_id}")
     assert att_res.status_code == 200
@@ -247,6 +258,76 @@ def test_recurring_group_schedules_and_exceptions():
     assert res_list3[0]["start_time"] == "10:00"
     assert res_list3[0]["is_virtual"] is True
     assert res_list3[0]["is_exception"] is False
+
+
+def test_direct_session_deletion():
+    # 1. Create a standalone group
+    grp_res = client.post("/api/groups", json={
+        "name": "Groupe Test Suppression",
+        "level": "Bac",
+        "capacity": 12
+    })
+    assert grp_res.status_code == 200
+    grp_id = grp_res.json()["id"]
+
+    # 2. Create a session
+    test_date = (datetime.date.today() + datetime.timedelta(days=10)).isoformat()
+    sess_res = client.post("/api/sessions", json={
+        "group_id": grp_id,
+        "date": test_date,
+        "start_time": "14:00",
+        "end_time": "16:00",
+        "topic": "Cours à supprimer"
+    })
+    assert sess_res.status_code == 200
+    sess_id = sess_res.json()["id"]
+
+    # Check session is in planning
+    list1 = client.get(f"/api/sessions?group_id={grp_id}&start_date={test_date}&end_date={test_date}").json()
+    assert len(list1) == 1
+    assert list1[0]["id"] == sess_id
+
+    # 3. Direct delete by session_id
+    del_res = client.delete(f"/api/sessions/{sess_id}")
+    assert del_res.status_code == 200
+    assert del_res.json()["success"] is True
+
+    # 4. Check session immediately disappeared from planning
+    list2 = client.get(f"/api/sessions?group_id={grp_id}&start_date={test_date}&end_date={test_date}").json()
+    assert len(list2) == 0
+
+    # 5. Test direct delete by date (virtual/recurring slot deletion)
+    grp2_res = client.post("/api/groups", json={
+        "name": "Groupe Test Suppr By Date",
+        "level": "Bac",
+        "day_of_week": 1, # Mardi
+        "start_time": "09:00",
+        "end_time": "11:00",
+        "schedule": "Mardi 09:00 - 11:00"
+    })
+    assert grp2_res.status_code == 200
+    grp2_id = grp2_res.json()["id"]
+
+    # Calculate next Tuesday
+    today = datetime.date.today()
+    days_to_tue = (1 - today.weekday()) % 7
+    if days_to_tue == 0:
+        days_to_tue = 7
+    tue_date = (today + datetime.timedelta(days=days_to_tue)).isoformat()
+
+    # Verify virtual session appears
+    list_tue = client.get(f"/api/sessions?group_id={grp2_id}&start_date={tue_date}&end_date={tue_date}").json()
+    assert len(list_tue) == 1
+    assert list_tue[0]["date"] == tue_date
+
+    # Delete by date endpoint
+    del_by_date_res = client.delete(f"/api/sessions/by-date/{grp2_id}/{tue_date}")
+    assert del_by_date_res.status_code == 200
+    assert del_by_date_res.json()["success"] is True
+
+    # Verify it immediately disappeared from planning
+    list_tue_after = client.get(f"/api/sessions?group_id={grp2_id}&start_date={tue_date}&end_date={tue_date}").json()
+    assert len(list_tue_after) == 0
 
 
 def test_payments_and_receipt():
