@@ -1,4 +1,4 @@
-// Planning & Timetable View — Simple Weekly Recurring Model (Étude Math Pro)
+// Planning View — Date-Specific Non-Recurring Sessions (Étude Math Pro)
 const PlanningView = {
   viewMode: 'week', // 'week' (7-day columns), 'grid' (Timetable 08:00-22:00), 'list'
   currentDate: new Date(),
@@ -19,12 +19,12 @@ const PlanningView = {
               <div class="w-9 h-9 rounded-2xl bg-[#fdfaf3] border border-[#ebd9b5] text-[#a27e38] flex items-center justify-center font-bold shadow-xs">
                 <i data-lucide="calendar-clock" class="w-5 h-5"></i>
               </div>
-              <span>${isAr ? 'جدول الأوقات والبرنامج الأسبوعي' : 'Emploi du Temps & Planning'}</span>
+              <span>${isAr ? 'جدول الأوقات والحصص' : 'Emploi du Temps & Planning'}</span>
             </h1>
             <p class="text-xs sm:text-sm text-slate-500 mt-1">
               ${isAr 
-                ? 'برمجة أسبوعية قارة وسهلة للحصص: كل حصة مبرمجة تتكرر أسبوعياً تلقائياً.' 
-                : 'Planning hebdomadaire récurrent : chaque groupe programmé se répète automatiquement chaque semaine.'}
+                ? 'حصص مسجلة حسب التاريخ واليوم دون تكرار تلقائي.' 
+                : 'Planning des séances : chaque séance est enregistrée uniquement pour sa date spécifique.'}
             </p>
           </div>
 
@@ -36,23 +36,17 @@ const PlanningView = {
               <button onclick="PlanningView.setViewMode('list')" id="plan-btn-list" class="px-3 py-1.5 rounded-xl transition-all ${this.viewMode === 'list' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'}">${I18n.t('list')}</button>
             </div>
 
-            <!-- Master Timetable Overview Button -->
-            <a href="#timetable" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-800 border border-[#ded7ca] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-1.5">
-              <i data-lucide="layout-grid" class="w-4 h-4 text-[#a27e38]"></i>
-              <span>${isAr ? 'عرض جدول الأوقات العام' : 'Vue récapitulative'}</span>
-            </a>
-
             <!-- Download Tomorrow's PDF -->
             <a href="/api/reports/daily/tomorrow/pdf" target="_blank" class="px-3.5 py-2.5 bg-white hover:bg-[#fbf9f4] text-slate-700 border border-[#ded7ca] text-xs sm:text-sm font-bold rounded-2xl shadow-xs transition-all flex items-center gap-1.5 hidden sm:inline-flex">
               <i data-lucide="file-text" class="w-4 h-4 text-[#a27e38]"></i>
               <span>${I18n.t('downloadTomorrowPdf')}</span>
             </a>
 
-            <!-- Add Slot Button -->
+            <!-- Add Session Button -->
             ${State.isAdmin() ? `
             <button onclick="PlanningView.openSchedulerModal()" class="px-4 py-2.5 btn-gold-action text-xs sm:text-sm font-black flex items-center gap-2">
               <i data-lucide="plus" class="w-4 h-4"></i>
-              <span>+ ${isAr ? 'برمجة حصة أسبوعية' : 'Programmer un créneau'}</span>
+              <span>+ ${isAr ? 'إضافة حصة' : 'Ajouter une séance'}</span>
             </button>
             ` : ''}
           </div>
@@ -77,7 +71,7 @@ const PlanningView = {
           </h3>
 
           <div class="flex items-center justify-center sm:justify-end gap-3 text-xs font-semibold text-slate-500 flex-wrap">
-            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#c5a059]"></span> ${isAr ? 'حصة أسبوعية قارة' : 'Horaire récurrent hebdomadaire'}</span>
+            <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-[#c5a059]"></span> ${isAr ? 'حصة مبرمجة' : 'Séance programmée'}</span>
             <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> ${I18n.t('attendanceTaken')}</span>
           </div>
         </div>
@@ -107,15 +101,15 @@ const PlanningView = {
 
   navigateDate(delta) {
     this.currentDate.setDate(this.currentDate.getDate() + (delta * 7));
-    this.renderCalendar();
+    this.loadSessions();
   },
 
   today() {
     this.currentDate = new Date();
-    this.renderCalendar();
+    this.loadSessions();
   },
 
-  async loadSessions(container) {
+  async loadSessions() {
     try {
       const weekDates = this.getWeekDates();
       const startStr = weekDates[0].toISOString().split('T')[0];
@@ -211,7 +205,7 @@ const PlanningView = {
                 </div>
 
                 ${State.isAdmin() ? `
-                <button onclick="PlanningView.openSchedulerModal(${idx})" title="Programmer un groupe ce jour" class="p-1.5 text-slate-400 hover:text-[#856428] hover:bg-white rounded-xl transition-all shadow-2xs">
+                <button onclick="PlanningView.openSchedulerModal('${dateStr}')" title="Ajouter une séance ce jour" class="p-1.5 text-slate-400 hover:text-[#856428] hover:bg-white rounded-xl transition-all shadow-2xs">
                   <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                 </button>
                 ` : ''}
@@ -220,12 +214,12 @@ const PlanningView = {
               <!-- Sessions List for this day -->
               <div class="space-y-2.5 flex-1 overflow-y-auto pr-0.5">
                 ${daySessions.length === 0 ? `
-                  <div onclick="PlanningView.openSchedulerModal(${idx})" class="h-36 rounded-2xl border-2 border-dashed border-[#e8dfd1] hover:border-[#c5a059] hover:bg-white/60 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all group">
+                  <div onclick="PlanningView.openSchedulerModal('${dateStr}')" class="h-36 rounded-2xl border-2 border-dashed border-[#e8dfd1] hover:border-[#c5a059] hover:bg-white/60 flex flex-col items-center justify-center p-3 text-center cursor-pointer transition-all group">
                     <i data-lucide="plus-circle" class="w-5 h-5 text-slate-300 group-hover:text-[#a27e38] transition-colors mb-1.5"></i>
                     <p class="text-[11px] font-bold text-slate-400 group-hover:text-slate-700 transition-colors">
                       ${I18n.t('noLessons')}
                     </p>
-                    <span class="text-[9px] text-slate-400 group-hover:text-[#856428] mt-0.5">+ Programmer</span>
+                    <span class="text-[9px] text-slate-400 group-hover:text-[#856428] mt-0.5">+ Ajouter</span>
                   </div>
                 ` : daySessions.map(s => {
                   const levelLabel = I18n.getLevelLabel(s.level);
@@ -241,7 +235,7 @@ const PlanningView = {
                         </span>
 
                         <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-md bg-[#eee7db] text-slate-700">
-                          🔁 Hebdo
+                          ${levelLabel}
                         </span>
                       </div>
 
@@ -251,7 +245,7 @@ const PlanningView = {
                           <span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${groupColor};"></span>
                           <span class="truncate text-slate-900">${s.group_name}</span>
                         </h4>
-                        <p class="text-[10px] text-slate-500 font-semibold truncate mt-0.5">${levelLabel} • 📍 ${s.location || 'Salle 1'}</p>
+                        <p class="text-[10px] text-slate-500 font-semibold truncate mt-0.5">📍 ${s.location || 'Salle 1'}</p>
                       </div>
 
                       <!-- Bottom Line: Attendance Status & Actions -->
@@ -266,10 +260,10 @@ const PlanningView = {
                           </button>
                           
                           ${State.isAdmin() ? `
-                          <button onclick="PlanningView.openEditModal(${s.group_id})" title="Modifier l'horaire" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
+                          <button onclick="PlanningView.openEditModal(${s.id})" title="Modifier la séance" class="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors">
                             <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
                           </button>
-                          <button onclick="PlanningView.confirmDirectDelete(${s.group_id}, '${s.group_name}')" title="Supprimer la programmation" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[10px] font-bold">
+                          <button onclick="PlanningView.confirmDirectDelete(${s.id}, '${s.group_name}', '${s.date}')" title="Supprimer la séance" class="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[10px] font-bold">
                             <i data-lucide="trash-2" class="w-3 h-3"></i>
                             <span>${isAr ? 'حذف' : 'Supprimer'}</span>
                           </button>
@@ -373,9 +367,9 @@ const PlanningView = {
                     const slotHour = String(this.minHour + hIdx).padStart(2, '0') + ':00';
                     return `
                       <div 
-                        onclick="PlanningView.openSchedulerModal(${idx}, '${slotHour}')"
+                        onclick="PlanningView.openSchedulerModal('${dStr}', '${slotHour}')"
                         class="h-[60px] border-b border-[#f2ece1] hover:bg-[#c5a059]/10 cursor-pointer transition-colors relative group/cell"
-                        title="Programmer ${dayNames[idx]} à ${slotHour}"
+                        title="Ajouter séance ${dStr} à ${slotHour}"
                       >
                         <span class="absolute top-1 left-1.5 text-[9px] font-bold text-[#c5a059] opacity-0 group-hover/cell:opacity-100 transition-opacity pointer-events-none">
                           + ${slotHour}
@@ -405,7 +399,7 @@ const PlanningView = {
                           <span class="font-mono px-1.5 py-0.5 rounded bg-black/5 text-slate-800">
                             ${s.start_time} - ${s.end_time}
                           </span>
-                          <span class="px-1 py-0.2 rounded bg-[#eee7db] text-slate-700 font-bold text-[8px]">🔁 Hebdo</span>
+                          <span class="px-1 py-0.2 rounded bg-[#eee7db] text-slate-700 font-bold text-[8px]">${s.level || ''}</span>
                         </div>
 
                         <div class="my-auto py-0.5">
@@ -428,10 +422,10 @@ const PlanningView = {
                               <i data-lucide="check-circle" class="w-3 h-3"></i>
                             </button>
                             ${State.isAdmin() ? `
-                            <button onclick="PlanningView.openEditModal(${s.group_id})" title="Modifier" class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
+                            <button onclick="PlanningView.openEditModal(${s.id})" title="Modifier" class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors">
                               <i data-lucide="edit-2" class="w-3 h-3"></i>
                             </button>
-                            <button onclick="PlanningView.confirmDirectDelete(${s.group_id}, '${s.group_name}')" title="Supprimer la programmation" class="px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[9px] font-bold">
+                            <button onclick="PlanningView.confirmDirectDelete(${s.id}, '${s.group_name}', '${s.date}')" title="Supprimer la séance" class="px-1.5 py-0.5 rounded bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition-colors flex items-center gap-1 text-[9px] font-bold">
                               <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
                               <span>${isAr ? 'حذف' : 'Supprimer'}</span>
                             </button>
@@ -460,20 +454,20 @@ const PlanningView = {
     const dayNamesAr = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
     const dayNames = isAr ? dayNamesAr : dayNamesFr;
 
-    if (labelEl) labelEl.innerText = isAr ? 'جميع الحصص الأسبوعية' : 'Liste des Créneaux Hebdomadaires';
+    if (labelEl) labelEl.innerText = isAr ? 'قائمة الحصص للأسبوع المحدد' : 'Liste des Séances de la Semaine';
 
-    const groups = (State.groups || []).filter(g => g.day_of_week !== null && g.day_of_week !== undefined && g.start_time && g.end_time);
-    groups.sort((a, b) => (a.day_of_week - b.day_of_week) || (a.start_time || '').localeCompare(b.start_time || ''));
+    const sessions = (this.sessions || []).slice();
+    sessions.sort((a, b) => (a.date || '').localeCompare(b.date || '') || (a.start_time || '').localeCompare(b.start_time || ''));
 
-    if (groups.length === 0) {
+    if (sessions.length === 0) {
       container.innerHTML = `
         <div class="p-12 text-center text-slate-400 text-sm">
           <i data-lucide="calendar" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
           <p class="font-bold text-slate-700">${I18n.t('noLessons')}</p>
-          <p class="text-xs text-slate-400 mt-1">${isAr ? 'لم تتم برمجة أي فوج بعد.' : 'Aucun groupe n\'a encore d\'horaire programmé.'}</p>
+          <p class="text-xs text-slate-400 mt-1">${isAr ? 'لا توجد حصص مسجلة في هذا الأسبوع.' : 'Aucune séance enregistrée pour cette semaine.'}</p>
           ${State.isAdmin() ? `
           <button onclick="PlanningView.openSchedulerModal()" class="mt-4 px-4 py-2.5 btn-gold-action text-xs font-black">
-            + ${isAr ? 'برمجة فوج' : 'Programmer un créneau'}
+            + ${isAr ? 'إضافة حصة' : 'Ajouter une séance'}
           </button>
           ` : ''}
         </div>
@@ -486,7 +480,7 @@ const PlanningView = {
         <table class="w-full text-left rtl:text-right text-xs sm:text-sm">
           <thead class="bg-[#faf8f5] text-slate-500 font-bold uppercase text-[11px] tracking-wider border-b border-[#ede7db]">
             <tr>
-              <th class="px-6 py-3.5">${isAr ? 'اليوم' : 'Jour de la semaine'}</th>
+              <th class="px-6 py-3.5">${isAr ? 'التاريخ واليوم' : 'Date & Jour'}</th>
               <th class="px-6 py-3.5">${I18n.t('time')}</th>
               <th class="px-6 py-3.5">${I18n.t('group')}</th>
               <th class="px-6 py-3.5">${isAr ? 'القاعة' : 'Salle'}</th>
@@ -495,34 +489,45 @@ const PlanningView = {
             </tr>
           </thead>
           <tbody class="divide-y divide-[#f2ece1]">
-            ${groups.map(g => `
-              <tr class="hover:bg-[#fdfbf7] transition-colors">
-                <td class="px-6 py-4 font-black text-slate-900">${dayNames[g.day_of_week] || 'Jour'}</td>
-                <td class="px-6 py-4 font-mono font-bold text-slate-700 bg-[#fbf9f5] rounded-lg">${g.start_time} — ${g.end_time}</td>
-                <td class="px-6 py-4 font-black text-slate-900">
-                  <div class="flex items-center gap-1.5">
-                    <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${g.color || '#4f46e5'};"></span>
-                    <span>${g.name}</span>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eee7db] text-slate-700">${g.level}</span>
-                  </div>
-                </td>
-                <td class="px-6 py-4 text-slate-600 font-medium">📍 ${g.location || 'Salle 1'}</td>
-                <td class="px-6 py-4 font-bold">${g.student_count || 0} / ${g.capacity || 15} élèves</td>
-                <td class="px-6 py-4 text-right rtl:text-left">
-                  <div class="flex items-center justify-end rtl:justify-start gap-2">
-                    ${State.isAdmin() ? `
-                    <button onclick="PlanningView.openEditModal(${g.id})" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors" title="Modifier">
-                      <i data-lucide="edit-3" class="w-4 h-4"></i>
-                    </button>
-                    <button onclick="PlanningView.confirmDirectDelete(${g.id}, '${g.name}')" class="px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 flex items-center gap-1 transition-colors" title="Supprimer">
-                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                      <span>${isAr ? 'حذف' : 'Supprimer'}</span>
-                    </button>
-                    ` : ''}
-                  </div>
-                </td>
-              </tr>
-            `).join('')}
+            ${sessions.map(s => {
+              const dObj = new Date(s.date + 'T00:00:00');
+              const dayIdx = (dObj.getDay() === 0) ? 6 : dObj.getDay() - 1;
+              const dayName = dayNames[dayIdx] || '';
+              return `
+                <tr class="hover:bg-[#fdfbf7] transition-colors">
+                  <td class="px-6 py-4 font-black text-slate-900">
+                    <span class="text-xs font-black uppercase text-[#856428]">${dayName}</span>
+                    <span class="text-xs text-slate-500 font-medium block">${s.date}</span>
+                  </td>
+                  <td class="px-6 py-4 font-mono font-bold text-slate-700 bg-[#fbf9f5] rounded-lg">${s.start_time} — ${s.end_time}</td>
+                  <td class="px-6 py-4 font-black text-slate-900">
+                    <div class="flex items-center gap-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background-color: ${s.group_color || '#4f46e5'};"></span>
+                      <span>${s.group_name}</span>
+                      <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-[#eee7db] text-slate-700">${s.level}</span>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4 text-slate-600 font-medium">📍 ${s.location || 'Salle 1'}</td>
+                  <td class="px-6 py-4 font-bold">${s.student_count || 0} élèves</td>
+                  <td class="px-6 py-4 text-right rtl:text-left">
+                    <div class="flex items-center justify-end rtl:justify-start gap-2">
+                      <button onclick="PlanningView.quickTakeAttendance(${s.group_id}, '${s.date}')" class="p-1.5 text-emerald-700 hover:bg-emerald-50 rounded-xl transition-colors" title="Faire l'appel">
+                        <i data-lucide="check-circle" class="w-4 h-4"></i>
+                      </button>
+                      ${State.isAdmin() ? `
+                      <button onclick="PlanningView.openEditModal(${s.id})" class="p-1.5 text-slate-400 hover:text-[#a27e38] rounded-xl transition-colors" title="Modifier">
+                        <i data-lucide="edit-3" class="w-4 h-4"></i>
+                      </button>
+                      <button onclick="PlanningView.confirmDirectDelete(${s.id}, '${s.group_name}', '${s.date}')" class="px-2.5 py-1 text-xs font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-xl border border-rose-200 flex items-center gap-1 transition-colors" title="Supprimer">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>${isAr ? 'حذف' : 'Supprimer'}</span>
+                      </button>
+                      ` : ''}
+                    </div>
+                  </td>
+                </tr>
+              `;
+            }).join('')}
           </tbody>
         </table>
       </div>
@@ -533,57 +538,46 @@ const PlanningView = {
     if (window.AttendanceView && AttendanceView.openForGroupAndDate) {
       AttendanceView.openForGroupAndDate(groupId, dateStr);
     } else {
-      window.location.hash = '#attendance';
+      window.location.hash = `#attendance?group_id=${groupId}&date=${dateStr}`;
     }
   },
 
-  // --- 4. ADD / SCHEDULE MODAL ---
-  openSchedulerModal(defaultDayIdx = null, defaultStartHour = null) {
+  // --- 4. ADD MODAL ---
+  openSchedulerModal(defaultDateStr = null, defaultStartHour = null) {
     const groups = State.groups || [];
     const isAr = I18n.currentLang === 'ar';
-    const weekdaysFr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-    const weekdaysAr = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
-    const weekdays = isAr ? weekdaysAr : weekdaysFr;
-
-    const initialDayIndex = defaultDayIdx !== null && defaultDayIdx !== undefined ? defaultDayIdx : 0;
+    const todayStr = defaultDateStr || new Date().toISOString().split('T')[0];
     const startTime = defaultStartHour || '10:00';
     const [h, m] = startTime.split(':').map(Number);
     const endH = Math.min(22, h + 2);
     const endTime = `${String(endH).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
     Modal.open({
-      title: isAr ? '🗓️ برمجة حصة أسبوعية للفوج' : '🗓️ Programmer un créneau hebdomadaire',
+      title: isAr ? '🗓️ إضافة حصة جديدة' : '🗓️ Ajouter une séance',
       size: 'max-w-lg',
       html: `
         <form id="scheduler-form" class="space-y-4">
           
           <!-- Group Select -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'الفوج المعني *' : 'Groupe concerné *'}</label>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'الفوج *' : 'Groupe *'}</label>
             <select id="sched-group-id" required class="w-full px-3.5 py-2.5 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 bg-white font-bold text-slate-900">
               <option value="">-- ${isAr ? 'اختر الفوج' : 'Sélectionner un groupe'} --</option>
               ${groups.map(g => {
                 const levelLabel = I18n.getLevelLabel(g.level);
                 return `
                   <option value="${g.id}">
-                    ${g.name} (${levelLabel} • ${g.student_count || 0} élèves) ${g.schedule ? `[Actuel: ${g.schedule}]` : ''}
+                    ${g.name} (${levelLabel} • ${g.student_count || 0} élèves)
                   </option>
                 `;
               }).join('')}
             </select>
           </div>
 
-          <!-- Day of week Pills -->
+          <!-- Date -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'يوم الحصة في الأسبوع (يتكرر كل أسبوع) *' : 'Jour de la semaine (Répété chaque semaine) *'}</label>
-            <div class="grid grid-cols-7 gap-1.5" id="sched-weekday-pills">
-              ${weekdays.map((wName, idx) => `
-                <button type="button" class="weekday-pill py-2.5 text-center rounded-xl border border-[#ded7ca] bg-white font-black text-xs transition-all ${idx === initialDayIndex ? 'active bg-[#c5a059] text-white border-[#c5a059]' : 'text-slate-700 hover:bg-[#faf6ee]'}" data-idx="${idx}">
-                  ${wName.substring(0, 3)}
-                </button>
-              `).join('')}
-            </div>
-            <input type="hidden" id="sched-day-idx" value="${initialDayIndex}">
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'تاريخ الحصة *' : 'Date de la séance *'}</label>
+            <input id="sched-date" type="date" required value="${todayStr}" class="w-full px-3.5 py-2.5 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-bold bg-white">
           </div>
 
           <!-- Hours & Duration -->
@@ -622,7 +616,7 @@ const PlanningView = {
             </button>
             <button type="submit" class="px-5 py-2.5 btn-gold-action text-xs sm:text-sm font-black flex items-center gap-1.5">
               <i data-lucide="calendar-check" class="w-4 h-4"></i>
-              <span>${isAr ? 'تأكيد التسجيل في الجدول' : 'Enregistrer dans le planning'}</span>
+              <span>${isAr ? 'حفظ الحصة' : 'Enregistrer la séance'}</span>
             </button>
           </div>
         </form>
@@ -630,43 +624,27 @@ const PlanningView = {
       onOpen: (content) => {
         if (window.lucide) lucide.createIcons();
 
-        const dayInput = content.querySelector('#sched-day-idx');
-        const weekdayPills = content.querySelectorAll('#sched-weekday-pills .weekday-pill');
-
-        weekdayPills.forEach(p => {
-          p.addEventListener('click', () => {
-            weekdayPills.forEach(pill => {
-              pill.classList.remove('active', 'bg-[#c5a059]', 'text-white', 'border-[#c5a059]');
-              pill.classList.add('text-slate-700', 'bg-white', 'border-[#ded7ca]');
-            });
-            p.classList.add('active', 'bg-[#c5a059]', 'text-white', 'border-[#c5a059]');
-            p.classList.remove('text-slate-700', 'bg-white', 'border-[#ded7ca]');
-            dayInput.value = p.getAttribute('data-idx');
-          });
-        });
-
         const form = content.querySelector('#scheduler-form');
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
           const groupId = parseInt(content.querySelector('#sched-group-id').value);
-          const dayIdx = parseInt(dayInput.value);
+          const dateStr = content.querySelector('#sched-date').value;
           const startTime = content.querySelector('#sched-start-time').value;
           const endTime = content.querySelector('#sched-end-time').value;
           const location = content.querySelector('#sched-location').value.trim() || 'Salle 1';
 
           try {
-            await API.post('/api/sessions/set-group-recurring', {
+            await API.post('/api/sessions', {
               group_id: groupId,
-              day_of_week: dayIdx,
+              date: dateStr,
               start_time: startTime,
               end_time: endTime,
               location: location
             });
 
-            Toast.success(isAr ? 'تم تسجيل التوقيت الأسبوعي للفوج بنجاح.' : 'Créneau hebdomadaire enregistré avec succès !');
+            Toast.success(isAr ? 'تمت إضافة الحصة بنجاح.' : 'Séance enregistrée avec succès !');
             Modal.close();
-            await State.loadInitialData();
-            await PlanningView.loadSessions(document.getElementById('main-view'));
+            await PlanningView.loadSessions();
           } catch (err) {
             Toast.error(err.message || 'Erreur lors de l\'enregistrement.');
           }
@@ -676,45 +654,44 @@ const PlanningView = {
   },
 
   // --- 5. EDIT MODAL ---
-  openEditModal(groupId) {
-    const group = (State.groups || []).find(g => g.id === groupId);
-    if (!group) return;
+  openEditModal(sessionId) {
+    const session = (this.sessions || []).find(s => s.id === sessionId);
+    if (!session) return;
 
     const isAr = I18n.currentLang === 'ar';
-    const weekdaysFr = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
-    const weekdaysAr = ['الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد'];
-    const weekdays = isAr ? weekdaysAr : weekdaysFr;
-
-    const currentDay = (group.day_of_week !== null && group.day_of_week !== undefined) ? group.day_of_week : 0;
-    const currentStart = group.start_time || '10:00';
-    const currentEnd = group.end_time || '12:00';
+    const groups = State.groups || [];
 
     Modal.open({
-      title: `${isAr ? 'تعديل التوقيت الأسبوعي' : 'Modifier le créneau'} : ${group.name}`,
+      title: `${isAr ? 'تعديل الحصة' : 'Modifier la séance'} : ${session.group_name}`,
       size: 'max-w-lg',
       html: `
         <form id="edit-scheduler-form" class="space-y-4">
           
           <div class="p-3 bg-[#faf8f5] rounded-2xl border border-[#ede7db] flex items-center justify-between">
             <div class="flex items-center gap-2">
-              <span class="w-3 h-3 rounded-full" style="background-color: ${group.color || '#4f46e5'};"></span>
-              <strong class="text-sm font-black text-slate-900">${group.name}</strong>
-              <span class="text-xs font-bold px-2 py-0.5 rounded bg-[#eee7db] text-slate-700">${group.level}</span>
+              <span class="w-3 h-3 rounded-full" style="background-color: ${session.group_color || '#4f46e5'};"></span>
+              <strong class="text-sm font-black text-slate-900">${session.group_name}</strong>
+              <span class="text-xs font-bold px-2 py-0.5 rounded bg-[#eee7db] text-slate-700">${session.level}</span>
             </div>
-            <span class="text-xs text-slate-500 font-bold">${group.student_count || 0} élèves</span>
+            <span class="text-xs text-slate-500 font-bold">${session.student_count || 0} élèves</span>
           </div>
 
-          <!-- Day of week Pills -->
+          <!-- Group Select -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'يوم الحصة في الأسبوع *' : 'Jour de la semaine *'}</label>
-            <div class="grid grid-cols-7 gap-1.5" id="edit-weekday-pills">
-              ${weekdays.map((wName, idx) => `
-                <button type="button" class="weekday-pill py-2.5 text-center rounded-xl border border-[#ded7ca] bg-white font-black text-xs transition-all ${idx === currentDay ? 'active bg-[#c5a059] text-white border-[#c5a059]' : 'text-slate-700 hover:bg-[#faf6ee]'}" data-idx="${idx}">
-                  ${wName.substring(0, 3)}
-                </button>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'الفوج *' : 'Groupe *'}</label>
+            <select id="edit-group-id" required class="w-full px-3.5 py-2.5 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 bg-white font-bold text-slate-900">
+              ${groups.map(g => `
+                <option value="${g.id}" ${g.id === session.group_id ? 'selected' : ''}>
+                  ${g.name} (${g.level})
+                </option>
               `).join('')}
-            </div>
-            <input type="hidden" id="edit-day-idx" value="${currentDay}">
+            </select>
+          </div>
+
+          <!-- Date -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'تاريخ الحصة *' : 'Date de la séance *'}</label>
+            <input id="edit-date" type="date" required value="${session.date}" class="w-full px-3.5 py-2.5 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-bold bg-white">
           </div>
 
           <!-- Hours & Duration -->
@@ -722,11 +699,11 @@ const PlanningView = {
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'وقت البداية *' : 'Heure de début *'}</label>
-                <input id="edit-start-time" type="time" required value="${currentStart}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-mono font-bold">
+                <input id="edit-start-time" type="time" required value="${session.start_time}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-mono font-bold">
               </div>
               <div>
                 <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'وقت النهاية *' : 'Heure de fin *'}</label>
-                <input id="edit-end-time" type="time" required value="${currentEnd}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-mono font-bold">
+                <input id="edit-end-time" type="time" required value="${session.end_time}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-mono font-bold">
               </div>
             </div>
 
@@ -743,14 +720,14 @@ const PlanningView = {
           <!-- Location -->
           <div>
             <label class="block text-xs font-bold text-slate-700 uppercase mb-1.5">${isAr ? 'المكان / القاعة' : 'Salle / Lieu'}</label>
-            <input id="edit-location" type="text" value="${group.location || 'Salle 1'}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium">
+            <input id="edit-location" type="text" value="${session.location || 'Salle 1'}" class="w-full px-3 py-2 text-sm border border-[#ded7ca] rounded-2xl focus:ring-2 focus:ring-[#c5a059]/40 font-medium">
           </div>
 
           <!-- Footer Buttons -->
           <div class="flex items-center justify-between pt-4 border-t border-[#ede7db]">
-            <button type="button" onclick="Modal.close(); PlanningView.confirmDirectDelete(${group.id}, '${group.name}')" class="px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors flex items-center gap-1.5">
+            <button type="button" onclick="Modal.close(); PlanningView.confirmDirectDelete(${session.id}, '${session.group_name}', '${session.date}')" class="px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 rounded-2xl transition-colors flex items-center gap-1.5">
               <i data-lucide="trash-2" class="w-4 h-4"></i>
-              <span>${isAr ? 'حذف من الجدول' : 'Supprimer le créneau'}</span>
+              <span>${isAr ? 'حذف الحصة' : 'Supprimer la séance'}</span>
             </button>
 
             <div class="flex items-center gap-2">
@@ -768,42 +745,27 @@ const PlanningView = {
       onOpen: (content) => {
         if (window.lucide) lucide.createIcons();
 
-        const dayInput = content.querySelector('#edit-day-idx');
-        const weekdayPills = content.querySelectorAll('#edit-weekday-pills .weekday-pill');
-
-        weekdayPills.forEach(p => {
-          p.addEventListener('click', () => {
-            weekdayPills.forEach(pill => {
-              pill.classList.remove('active', 'bg-[#c5a059]', 'text-white', 'border-[#c5a059]');
-              pill.classList.add('text-slate-700', 'bg-white', 'border-[#ded7ca]');
-            });
-            p.classList.add('active', 'bg-[#c5a059]', 'text-white', 'border-[#c5a059]');
-            p.classList.remove('text-slate-700', 'bg-white', 'border-[#ded7ca]');
-            dayInput.value = p.getAttribute('data-idx');
-          });
-        });
-
         const form = content.querySelector('#edit-scheduler-form');
         form.addEventListener('submit', async (e) => {
           e.preventDefault();
-          const dayIdx = parseInt(dayInput.value);
+          const groupId = parseInt(content.querySelector('#edit-group-id').value);
+          const dateStr = content.querySelector('#edit-date').value;
           const startTime = content.querySelector('#edit-start-time').value;
           const endTime = content.querySelector('#edit-end-time').value;
           const location = content.querySelector('#edit-location').value.trim() || 'Salle 1';
 
           try {
-            await API.post('/api/sessions/set-group-recurring', {
+            await API.put(`/api/sessions/${sessionId}`, {
               group_id: groupId,
-              day_of_week: dayIdx,
+              date: dateStr,
               start_time: startTime,
               end_time: endTime,
               location: location
             });
 
-            Toast.success(isAr ? 'تم تحديث التوقيت الأسبوعي بنجاح.' : 'Créneau mis à jour avec succès !');
+            Toast.success(isAr ? 'تم تعديل الحصة بنجاح.' : 'Séance mise à jour avec succès !');
             Modal.close();
-            await State.loadInitialData();
-            await PlanningView.loadSessions(document.getElementById('main-view'));
+            await PlanningView.loadSessions();
           } catch (err) {
             Toast.error(err.message || 'Erreur lors de la mise à jour.');
           }
@@ -837,22 +799,21 @@ const PlanningView = {
   },
 
   // --- 6. DIRECT DELETE METHOD ---
-  confirmDirectDelete(groupId, groupName = '') {
+  confirmDirectDelete(sessionId, groupName = '', dateStr = '') {
     const isAr = I18n.currentLang === 'ar';
     Modal.confirm({
-      title: isAr ? '🗑️ تأكيد حذف الحصة من الجدول' : '🗑️ Confirmation de suppression',
+      title: isAr ? '🗑️ تأكيد حذف الحصة' : '🗑️ Confirmation de suppression',
       message: isAr 
-        ? `هل أنت متأكد من رغبتك في حذف التوقيت الأسبوعي لـ "${groupName || 'هذا الفوج'}" ؟ سيتم حذفه نهائياً من جميع الأسابيع.` 
-        : `Êtes-vous sûr de vouloir supprimer la programmation hebdomadaire de "${groupName || 'ce groupe'}" ? Ce créneau sera supprimé de toutes les semaines.`,
-      confirmText: isAr ? '🗑 حذف نهائي' : '🗑 Supprimer',
+        ? `هل أنت متأكد من رغبتك في حذف حصة "${groupName || 'الفوج'}" بتاريخ ${dateStr || ''} ؟ سيتم حذف هذه الحصة فقط.` 
+        : `Êtes-vous sûr de vouloir supprimer la séance de "${groupName || 'ce groupe'}" (${dateStr || ''}) ? Seule cette séance sera supprimée.`,
+      confirmText: isAr ? '🗑 حذف الحصة' : '🗑 Supprimer',
       cancelText: isAr ? 'إلغاء' : 'Annuler',
       confirmClass: 'bg-rose-600 hover:bg-rose-700 text-white font-bold',
       onConfirm: async () => {
         try {
-          await API.delete(`/api/sessions/group/${groupId}`);
-          Toast.success(isAr ? 'تم حذف الحصة الأسبوعية بنجاح.' : 'Programmation hebdomadaire supprimée avec succès.');
-          await State.loadInitialData();
-          await PlanningView.loadSessions(document.getElementById('main-view'));
+          await API.delete(`/api/sessions/${sessionId}`);
+          Toast.success(isAr ? 'تم حذف الحصة بنجاح.' : 'Séance supprimée avec succès.');
+          await PlanningView.loadSessions();
         } catch (e) {
           Toast.error(e.message || (isAr ? 'حدث خطأ أثناء الحذف.' : 'Erreur lors de la suppression.'));
         }
@@ -861,11 +822,11 @@ const PlanningView = {
   },
 
   deleteSession(sessionId, groupId = null, dateStr = null) {
-    const targetGroupId = groupId || sessionId;
-    this.confirmDirectDelete(targetGroupId);
+    this.confirmDirectDelete(sessionId, '', dateStr);
   },
 
-  openSessionDetail(groupId, dateStr) {
-    this.openEditModal(groupId);
+  openSessionDetail(sessionId) {
+    this.openEditModal(sessionId);
   }
 };
+

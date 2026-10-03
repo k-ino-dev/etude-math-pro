@@ -180,80 +180,50 @@ def test_bulk_attendance_flow():
     assert save_res.status_code == 200
     assert save_res.json()["success"] == True
 
-def test_weekly_recurring_planning():
+def test_date_specific_planning():
     # 1. Create a group
     grp_res = client.post("/api/groups", json={
-        "name": "Groupe Hebdo Test",
+        "name": "Groupe Date Specifique Test",
         "level": "Bac",
         "capacity": 15
     })
     assert grp_res.status_code == 200
     grp_id = grp_res.json()["id"]
 
-    # 2. Schedule group on Monday (day_of_week=0), 10:00 -> 12:00
-    sched_res = client.post("/api/sessions/set-group-recurring", json={
+    # 2. Add a single session on a specific Monday (2026-10-05), 10:00 -> 12:00
+    test_date1 = "2026-10-05"
+    test_date2 = "2026-10-12"
+
+    sess_res = client.post("/api/sessions", json={
         "group_id": grp_id,
-        "day_of_week": 0, # Lundi
+        "date": test_date1,
         "start_time": "10:00",
         "end_time": "12:00",
         "location": "Salle Principale",
         "force": True
     })
-    assert sched_res.status_code == 200
-    assert sched_res.json()["success"] is True
+    assert sess_res.status_code == 200
+    sess_data = sess_res.json()
+    sess_id = sess_data["id"]
 
-    # 3. Verify it appears on next Monday AND the Monday after that (recurring)
-    today = datetime.date.today()
-    days_to_mon1 = (0 - today.weekday()) % 7
-    if days_to_mon1 == 0:
-        days_to_mon1 = 7
-    mon1 = today + datetime.timedelta(days=days_to_mon1)
-    mon2 = mon1 + datetime.timedelta(days=7)
+    # 3. Verify it appears ONLY on test_date1 (2026-10-05)
+    res_list1 = client.get(f"/api/sessions?group_id={grp_id}&start_date={test_date1}&end_date={test_date1}").json()
+    assert len(res_list1) == 1
+    assert res_list1[0]["date"] == test_date1
+    assert res_list1[0]["start_time"] == "10:00"
+    assert res_list1[0]["end_time"] == "12:00"
 
-    res_list = client.get(f"/api/sessions?group_id={grp_id}&start_date={str(mon1)}&end_date={str(mon2)}").json()
-    assert len(res_list) == 2
-    assert res_list[0]["date"] == str(mon1)
-    assert res_list[0]["start_time"] == "10:00"
-    assert res_list[0]["end_time"] == "12:00"
-    assert res_list[1]["date"] == str(mon2)
-    assert res_list[1]["start_time"] == "10:00"
-    assert res_list[1]["end_time"] == "12:00"
+    # 4. Verify it does NOT automatically exist next week (2026-10-12)
+    res_list2 = client.get(f"/api/sessions?group_id={grp_id}&start_date={test_date2}&end_date={test_date2}").json()
+    assert len(res_list2) == 0
 
-    # 4. Change day from Monday to Saturday (day_of_week=5), 14:00 -> 16:00
-    change_res = client.post("/api/sessions/set-group-recurring", json={
-        "group_id": grp_id,
-        "day_of_week": 5, # Samedi
-        "start_time": "14:00",
-        "end_time": "16:00",
-        "location": "Salle B",
-        "force": True
-    })
-    assert change_res.status_code == 200
-
-    # Verify Monday is now GONE (0 sessions on Mondays)
-    res_mon1_after = client.get(f"/api/sessions?group_id={grp_id}&start_date={str(mon1)}&end_date={str(mon1)}").json()
-    assert len(res_mon1_after) == 0
-    res_mon2_after = client.get(f"/api/sessions?group_id={grp_id}&start_date={str(mon2)}&end_date={str(mon2)}").json()
-    assert len(res_mon2_after) == 0
-
-    # Verify Saturday is now scheduled
-    days_to_sat = (5 - today.weekday()) % 7
-    if days_to_sat == 0:
-        days_to_sat = 7
-    sat1 = today + datetime.timedelta(days=days_to_sat)
-    res_sat = client.get(f"/api/sessions?group_id={grp_id}&start_date={str(sat1)}&end_date={str(sat1)}").json()
-    assert len(res_sat) == 1
-    assert res_sat[0]["date"] == str(sat1)
-    assert res_sat[0]["start_time"] == "14:00"
-    assert res_sat[0]["end_time"] == "16:00"
-
-    # 5. Delete schedule completely
-    del_res = client.delete(f"/api/sessions/group/{grp_id}")
+    # 5. Delete this specific session
+    del_res = client.delete(f"/api/sessions/{sess_id}")
     assert del_res.status_code == 200
     assert del_res.json()["success"] is True
 
-    # Verify it is completely gone from all weeks
-    res_final = client.get(f"/api/sessions?group_id={grp_id}&start_date={str(today)}&end_date={str(today + datetime.timedelta(days=60))}").json()
+    # Verify it is gone from test_date1
+    res_final = client.get(f"/api/sessions?group_id={grp_id}&start_date={test_date1}&end_date={test_date1}").json()
     assert len(res_final) == 0
 
 
@@ -431,7 +401,7 @@ def test_set_group_recurring_and_timetable_summary():
     }).json()
     g_id = grp["id"]
 
-    # 2. Set recurring schedule: Mercredi 14:00 -> 16:00 (day_of_week = 2 for Wednesday, 0=Monday)
+    # 2. Add session for this group
     res_set = client.post("/api/sessions/set-group-recurring", json={
         "group_id": g_id,
         "day_of_week": 2,
@@ -441,9 +411,6 @@ def test_set_group_recurring_and_timetable_summary():
     assert res_set.status_code == 200
     data = res_set.json()
     assert data["success"] is True
-    assert data["group"]["day_of_week"] == 2
-    assert data["group"]["start_time"] == "14:00"
-    assert data["group"]["end_time"] == "16:00"
 
     # 3. Check timetable summary endpoint
     sum_res = client.get("/api/sessions/timetable-summary")
@@ -451,40 +418,30 @@ def test_set_group_recurring_and_timetable_summary():
     summary = sum_res.json()
     assert summary["total_weekly_hours"] > 0
     assert summary["active_scheduled_groups"] >= 1
-    # Check that our group is in the timetable items
-    found = any(item["group_id"] == g_id and item["day_of_week"] == 2 for item in summary["schedule_items"])
-    assert found
 
 def test_permanent_move_session():
-    # 1. Create a group on Lundi (day_of_week=0)
+    # 1. Create a group
     grp = client.post("/api/groups", json={
-        "name": "Groupe Permanent Move Test",
+        "name": "Groupe Move Test",
         "level": "2ème — Sciences",
         "capacity": 10,
-        "day_of_week": 0,
-        "start_time": "10:00",
-        "end_time": "12:00",
         "color": "#8b5cf6"
     }).json()
     g_id = grp["id"]
 
-    # 2. Perform a permanent move to Vendredi (2026-09-25 is Friday, weekday()=4) 16:00-18:00
+    # 2. Create a session on Vendredi (2026-09-25) 16:00-18:00
     res_move = client.post("/api/sessions/resolve", json={
         "group_id": g_id,
         "date": "2026-09-25",
         "start_time": "16:00",
-        "end_time": "18:00",
-        "is_permanent_move": True
+        "end_time": "18:00"
     })
     assert res_move.status_code == 200
     session_data = res_move.json()
     assert session_data["group_id"] == g_id
-
-    # 3. Verify that the group's default recurring day is now 4 (Vendredi) and time is 16:00-18:00
-    updated_grp = client.get(f"/api/groups/{g_id}").json()
-    assert updated_grp["day_of_week"] == 4
-    assert updated_grp["start_time"] == "16:00"
-    assert updated_grp["end_time"] == "18:00"
+    assert session_data["date"] == "2026-09-25"
+    assert session_data["start_time"] == "16:00"
+    assert session_data["end_time"] == "18:00"
 
 
 

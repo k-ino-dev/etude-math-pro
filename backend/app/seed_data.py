@@ -126,6 +126,126 @@ def seed_database(db: Session, reset: bool = False):
             "location": "Salle C",
             "color": "#d97706"
         },
+        {
+            "name": "1ère G1",
+            "level": "1ère",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#d97706"
+        },
+        {
+            "name": "1ère G2",
+            "level": "1ère",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#b45309"
+        },
+        {
+            "name": "1ère G3",
+            "level": "1ère",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#92400e"
+        },
+        {
+            "name": "Bac Éco G1",
+            "level": "Bac — Économie",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#059669"
+        },
+        {
+            "name": "Bac Éco G2",
+            "level": "Bac — Économie",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#047857"
+        },
+        {
+            "name": "3ème Info 1",
+            "level": "3ème — Informatique",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#2563eb"
+        },
+        {
+            "name": "Bac Info G1",
+            "level": "Bac — Informatique",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#4f46e5"
+        },
+        {
+            "name": "Bac Info G2",
+            "level": "Bac — Informatique",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#6366f1"
+        },
+        {
+            "name": "2ème Info G1",
+            "level": "2ème — Informatique",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#0891b2"
+        },
+        {
+            "name": "2ème Éco G1",
+            "level": "2ème — Économie",
+            "subject": "Mathématiques",
+            "capacity": 15,
+            "schedule": None,
+            "day_of_week": None,
+            "start_time": None,
+            "end_time": None,
+            "location": "Salle 1",
+            "color": "#10b981"
+        },
     ]
 
     created_groups = []
@@ -217,8 +337,35 @@ def seed_database(db: Session, reset: bool = False):
         db.add(StudentNote(student_id=st_id, content=note_txt))
     db.commit()
 
-    # 5. Sessions (Planning starts completely empty)
-    sessions_to_create = []
+    # 5. Sessions (Date-specific sessions for current week: Friday, Saturday, Sunday)
+    today = datetime.date.today()
+    curr_mon = today - datetime.timedelta(days=today.weekday())
+    friday_date = curr_mon + datetime.timedelta(days=4)
+    saturday_date = curr_mon + datetime.timedelta(days=5)
+    sunday_date = curr_mon + datetime.timedelta(days=6)
+
+    grp_by_name = {g.name: g.id for g in created_groups}
+
+    sessions_to_create = [
+        # VENDREDI
+        {"group_id": grp_by_name["Bac Info G1"], "date": friday_date, "start_time": "14:00", "end_time": "16:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["Bac Info G2"], "date": friday_date, "start_time": "16:00", "end_time": "18:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["2ème Éco G1"], "date": friday_date, "start_time": "18:00", "end_time": "20:00", "location": "Salle 1", "status": "scheduled"},
+
+        # SAMEDI
+        {"group_id": grp_by_name["1ère G1"], "date": saturday_date, "start_time": "13:00", "end_time": "15:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["1ère G2"], "date": saturday_date, "start_time": "15:00", "end_time": "17:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["1ère G3"], "date": saturday_date, "start_time": "17:00", "end_time": "19:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["2ème Info G1"], "date": saturday_date, "start_time": "19:00", "end_time": "21:00", "location": "Salle 1", "status": "scheduled"},
+
+        # DIMANCHE
+        {"group_id": grp_by_name["1ère G1"], "date": sunday_date, "start_time": "08:00", "end_time": "10:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["1ère G2"], "date": sunday_date, "start_time": "10:00", "end_time": "12:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["Bac Éco G1"], "date": sunday_date, "start_time": "12:00", "end_time": "14:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["3ème Info 1"], "date": sunday_date, "start_time": "14:00", "end_time": "16:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["Bac Éco G2"], "date": sunday_date, "start_time": "16:00", "end_time": "18:00", "location": "Salle 1", "status": "scheduled"},
+        {"group_id": grp_by_name["Bac Info G1"], "date": sunday_date, "start_time": "18:00", "end_time": "20:00", "location": "Salle 1", "status": "scheduled"},
+    ]
 
     created_sessions = []
     for s_dict in sessions_to_create:
