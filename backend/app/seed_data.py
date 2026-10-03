@@ -9,8 +9,8 @@ def init_virgin_database(db: Session):
     """Initialize a virgin database with admin user and default settings (0 students, 0 groups)."""
     if db.query(User).count() == 0:
         teacher = User(
-            name="Enseignant",
-            email="admin@mathprof.tn",
+            name="Prof. Sofien Lafi",
+            email="sofienlafi333@gmail.com",
             password_hash=get_password_hash("password123"),
             phone="+216",
             currency="DT",
@@ -53,8 +53,8 @@ def seed_database(db: Session, reset: bool = False):
 
     # 1. Admin Teacher User
     teacher = User(
-        name="Prof. Mohamed Ben Salem",
-        email="admin@mathprof.tn",
+        name="Prof. Sofien Lafi",
+        email="sofienlafi333@gmail.com",
         password_hash=get_password_hash("password123"),
         phone="+216 98 123 456",
         currency="DT",

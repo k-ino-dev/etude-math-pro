@@ -82,6 +82,8 @@ def get_current_user(
         user = db.query(User).filter(User.id == user_id).first()
     elif email:
         user = db.query(User).filter(User.email.ilike(email)).first()
+        if not user and email.lower() in ("admin@mathprof.tn", "sofienlafi333@gmail.com"):
+            user = db.query(User).filter(User.email.in_(["sofienlafi333@gmail.com", "admin@mathprof.tn"])).first()
         
     if user is None:
         raise credentials_exception
@@ -204,6 +206,8 @@ def register(data: UserRegister, db: Session = Depends(get_db)):
 def login(credentials: UserLogin, db: Session = Depends(get_db)):
     clean_email = credentials.email.strip().lower()
     user = db.query(User).filter(User.email.ilike(clean_email)).first()
+    if not user and clean_email in ("admin@mathprof.tn", "sofienlafi333@gmail.com"):
+        user = db.query(User).filter(User.email.in_(["sofienlafi333@gmail.com", "admin@mathprof.tn"])).first()
     if not user or not verify_password(credentials.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

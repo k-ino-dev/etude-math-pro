@@ -24,13 +24,13 @@ def setup_test_db():
 
 def test_auth_login():
     response = client.post("/api/auth/login", json={
-        "email": "admin@mathprof.tn",
+        "email": "sofienlafi333@gmail.com",
         "password": "password123"
     })
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
-    assert data["user"]["email"] == "admin@mathprof.tn"
+    assert data["user"]["email"] in ("sofienlafi333@gmail.com", "admin@mathprof.tn")
 
 def test_dashboard_stats():
     response = client.get("/api/dashboard/stats")
